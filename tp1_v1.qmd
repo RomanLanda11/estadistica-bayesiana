@@ -1,0 +1,93 @@
+---
+title: " Trabajo Práctico 1: The Multiarmed Bandit "
+format:
+  html:
+    self-contained: true
+    toc: true
+    toc-title: "Tabla de Contenidos"
+    number-sections: true
+    code-fold: true
+    highlight-style: pygments
+    html-math-method: katex
+    code-copy: true
+    code-tools: true
+    grid: # TODO: ir modificando.. (con otro documento más corto)
+      body-width: 2000px # cuerpo documento
+      sidebar-width: 100px # margen lateral en blanco
+      margin-width: 350px # tabla de contenido
+execute:
+  warning: false
+---
+
+# Introducción
+
+El *multi-armed bandit* nos enfrenta a tres máquinas tragamonedas. El juego de las maquinitas consiste en hacer girar sus rodillos (analógicos o digitales) con el objetivo de obtener una combinación de símbolos ganadora y así acceder a un premio monetario.
+
+Cada máquina tiene una probabilidad de éxito desconocida y potencialmente diferente, es decir, una probabilidad distinta de entregar un premio. El desafío consiste en decidir a cuál máquina dedicar nuestras tiradas con el objetivo de maximizar las ganancias totales. Aquí es donde entra el dilema: ¿conviene *"explotar"* la máquina que hasta ahora ha dado mejores resultados, o *"explorar"* otras máquinas que podrían tener una tasa de éxito mayor pero aún desconocida?
+
+En la fase inicial, cuando se sabe poco sobre las máquinas, podría ser más prudente *"explorar"*, probando cada máquina varias veces para obtener una estimación aproximada de sus probabilidades de éxito. A medida que se acumulan datos sobre el rendimiento de cada máquina, la estrategia podría cambiar a *"explotar"* la máquina que ha demostrado ser la más rentable. Sin embargo, siempre existe la incertidumbre y la posibilidad de que una de las máquinas menos utilizadas tenga en realidad una tasa de éxito mayor. Este problema se complica aún más por el hecho de que cada elección de máquina proporciona información que podría alterar nuestra comprensión de cuál es la mejor opción. La solución óptima a este problema involucra un equilibrio cuidadoso entre explorar para ganar información y explotar esa información para maximizar las ganancias.
+
+En este trabajo práctico consideraremos la situación simplificada e imaginaria en la que no cuesta dinero jugar con una máquina. Es decir, si obtenemos una combinación ganadora, sumamos una unidad monetaria, pero si no, no perdemos nada. Supondremos, además, un escenario ficticio en que el deseo por descubrir cual es la máquina ganadora nos tendrá jugando los 366 días del año 2024. Lo que sí, cada día jugaremos con una sola máquina y volveremos al día siguiente...
+
+# Objetivo
+
+El objetivo del trabajo consiste en evaluar y comparar diferentes estrategias de juego. Se analizarán mediante simulaciones diferentes estrategias de exploración y explotación de la máquina. ¿Dónde aparece la inferencia bayesiana? Partiremos de una creencia *a priori* para la probabilidad de éxito de cada máquina y la iremos actualizando con cada jugada.
+
+Para el estudio mediante simulaciones, consideraremos que las probabilidades de éxito de las tres máquinas son $\theta_a = 0.30$, $\theta_b = 0.55$ y $\theta_c = 0.45$. Recordemos que estas probabilidades son desconocidas (no podemos basar nuestras estrategias en esos valores, sino en las estimaciones que vamos haciendo de ellos).
+
+# Desarrollo
+
+### Recursos
+
+```{r}
+#| echo: true
+#| label: requeriments
+library(ggplot2)
+library(dplyr)
+library(cowplot)
+library(gridExtra)
+```
+
+### Funciones
+
+```{r}
+#| echo: true
+#| label: functions
+al_azar <- function(lista) {
+  alphas <- lista[[1]]
+  betas <- lista[[2]]
+  tethas <- lista[[3]]
+  prior_df <- lista[[4]]
+  x1 <- lista[[5]]
+  cont <- lista[[6]]
+
+  
+  sample <- sample(1:length(alphas), 1)
+  rst_juego <- rbinom(1, 1, tethas[sample])
+  postirior <- dbeta(x1, alphas[sample] + rst_juego, betas[sample] + 1 - rst_juego)
+  prior_df[, sample] <- postirior
+  alphas[sample] <- alphas[sample] + rst_juego
+  betas[sample] <- betas[sample] + 1 - rst_juego
+  cont[sample] = cont[sample] + 1
+  
+  salida_list <- list(alphas, betas, tethas, prior_df, x1, cont, rst_juego)
+  return(salida_list)
+}
+
+greedy_tasa_obs<-function(lista2){
+  t <- lista2[[2]]
+  tethas <- lista2[[1]]
+  sample<-  case_when(
+    t[1] > t[2] & t[1] > t[3] ~  1,
+    t[2] > t[1] & t[2] > t[3] ~  2,
+    t[3] > t[1] & t[3] > t[2] ~  3,
+    t[1] == t[2] & t[1] == t[3] ~ sample(1:3, 1),
+    t[1] == t[2] & t[1] > t[3] ~ sample(1:2, 1),
+    t[1] == t[3] & t[1] > t[2] ~ sample(c(1, 3), 1),
+    t[2] == t[3] & t[2] > t[1] ~ sample(2:3, 1)
+  )
+  juego <- rbinom(1, 1, tethas[sample])
+  lista2_salida<-list(tethas, t, juego, sample)
+  return(lista2_salida)
+}
+```

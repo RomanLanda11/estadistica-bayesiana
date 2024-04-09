@@ -1,0 +1,36 @@
+set.seed(412)
+greedy_tasa_obs<-function(lista2){
+  t <- lista2[[2]]
+  tethas <- lista2[[1]]
+  sample<-  case_when(
+    t[1] > t[2] & t[1] > t[3] ~  1,
+    t[2] > t[1] & t[2] > t[3] ~  2,
+    t[3] > t[1] & t[3] > t[2] ~  3,
+    t[1] == t[2] & t[1] == t[3] ~ sample(1:3, 1),
+    t[1] == t[2] & t[1] > t[3] ~ sample(1:2, 1),
+    t[1] == t[3] & t[1] > t[2] ~ sample(c(1, 3), 1),
+    t[2] == t[3] & t[2] > t[1] ~ sample(2:3, 1)
+  )
+  juego <- rbinom(1, 1, tethas[sample])
+  lista2_salida<-list(tethas, t, juego, sample)
+  return(lista2_salida)
+}
+
+# Defino variables necesarias
+tethas=c(0.3,0.55,0.45)
+t = c(0.5,0.5,0.5)
+cont_exitos= c(0,0,0)
+cont_tiradas = c(0, 0, 0)
+juego=0
+sample=0
+lista2_entrada=list(tethas, t, juego, sample)
+
+for(i in 1:366){
+  lista2_entrada <- greedy_tasa_obs(lista2 = lista2_entrada)
+  juego <- lista2_entrada[[3]]
+  sample <- lista2_entrada[[4]]
+  t <- lista2_entrada[[2]]
+  cont_exitos[sample] <- cont_exitos[sample] + juego
+  cont_tiradas[sample] <- cont_tiradas[sample] + 1
+  t[sample] <- cont_exitos[sample] / cont_tiradas[sample]
+}
