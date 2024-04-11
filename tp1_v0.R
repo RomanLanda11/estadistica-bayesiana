@@ -25,60 +25,62 @@ ggplot(data.frame(x = resultados), aes(x)) +
 
 ## Estrategia 1: Completamente al azar
 ####################### 1
-al_azar <- function(lista) {
-  alphas <- lista[[1]]
-  betas <- lista[[2]]
-  tethas <- lista[[3]]
-  prior_df <- lista[[4]]
-  x1 <- lista[[5]]
-  cont <- lista[[6]]
+al_azar <- function(lista1) {
+  alphas <- lista1[[1]]
+  betas <- lista1[[2]]
+  tethas <- lista1[[3]]
+  prior_df <- lista1[[4]]
+  x1=seq(0,1,length.out =200)
 
-  
   sample <- sample(1:length(alphas), 1)
-  rst_juego <- rbinom(1, 1, tethas[sample])
-  postirior <- dbeta(x1, alphas[sample] + rst_juego, betas[sample] + 1 - rst_juego)
-  prior_df[, sample] <- postirior
-  alphas[sample] <- alphas[sample] + rst_juego
-  betas[sample] <- betas[sample] + 1 - rst_juego
-  cont[sample] = cont[sample] + 1
+  juego <- rbinom(1, 1, tethas[sample])
+  alphas[sample] <- alphas[sample] + juego
+  betas[sample] <- betas[sample] + 1 - juego
   
-  salida_list <- list(alphas, betas, tethas, prior_df, x1, cont, rst_juego)
-  return(salida_list)
+  postirior <- dbeta(x1, alphas[sample],  betas[sample])
+  prior_df[, sample] <- postirior
+  salida1_list <- list(alphas, betas, tethas, prior_df, sample, juego)
+  return(salida1_list)
 }
 
 ####################### 2
-
 set.seed(491)
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
 tethas=c(0.3,0.55,0.45)
 
 x1=seq(0,1,length.out =200)
-prior1=dbeta(x1,alphas[1],betas[1])
-prior2=dbeta(x1,alphas[2],betas[2])
-prior3=dbeta(x1,alphas[3],betas[3])
-prior_df <- data.frame(prior1, prior2, prior3)
+prior_df <- data.frame(prior1=dbeta(x1,alphas[1],betas[1]), 
+                       prior2=dbeta(x1,alphas[2],betas[2]), 
+                       prior3=dbeta(x1,alphas[3],betas[3]))
 
 wins=numeric(366)
-cont<-c(0,0,0)
-rst_juego=0
-entrada_list = list(alphas, betas, tethas, prior_df, x1, cont, rst_juego)
+cont_exitos= c(0,0,0)
+cont_tiradas = c(0, 0, 0)
+juego=0
+sample=0
+entrada1_list = list(alphas, betas, tethas, prior_df, sample, juego)
 graf_list=list()
 
 for (i in 1:366) {
-  entrada_list=al_azar(lista=entrada_list)
+  entrada1_list=al_azar(lista1=entrada1_list)
+  sample <- entrada1_list[[5]]
+  juego <- entrada1_list[[6]]
+  cont_exitos[sample] <- cont_exitos[sample] + juego
+  cont_tiradas[sample] <- cont_tiradas[sample] + 1
+  prior_df <- entrada1_list[[4]]
 
   if(i==1){
-    wins[i]=entrada_list[[7]]
+    wins[i]=juego
   }else{
-    wins[i]=wins[i-1]+entrada_list[[7]]
+    wins[i]=wins[i-1]+juego
   }
   prior_df_largo <- data.frame(
-    theta = entrada_list[[5]],
-    posterior = rep(c(entrada_list[[4]]$prior1, 
-                      entrada_list[[4]]$prior2, 
-                      entrada_list[[4]]$prior3), time = 1),
-    maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(entrada_list[[5]]))
+    theta = x1,
+    posterior = rep(c(prior_df$prior1, 
+                      prior_df$prior2, 
+                      prior_df$prior3), time = 1),
+    maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = 200)
   )
   graf_list[[i]] <- ggplot(prior_df_largo)+
     aes(x = theta, y = posterior, color = maquina)+
@@ -93,14 +95,17 @@ grid.arrange(graf_list[[1]],graf_list[[2]],graf_list[[3]],graf_list[[4]],
              ncol = 4)
 
 
-prior_df <- entrada_list[[4]]
-
 # Crear el gráfico de barras
 
 df <- data.frame(maq = c("Maquina 1", "Maquina 2", "Maquina 3"),
-                 freq = entrada_list[[6]])
-ggplot(df, aes(x = maq, y = freq, fill = maq)) +
-  geom_bar(stat = "identity", color = "black") +
+                 freq = cont_tiradas,
+                 exitos = cont_exitos,
+                 fracasos = cont_tiradas - cont_exitos)
+ggplot(df, aes(x = maq, fill = maq)) +
+  geom_bar(aes(y = freq ), stat = "identity", color = "black") +
+  geom_bar(aes(y = exitos ), stat = "identity", color = "black") +
+  geom_text(aes(y = exitos, label = "exitos"), position = position_stack(vjust = 0.5)) +
+  geom_text(aes(y = freq, label = "fracasos"), position = position_stack(vjust = 0.8)) +
   labs(title = "Comparación de frecuencias",
        x = "Máquina",
        y = "Frecuencia") +
@@ -118,38 +123,42 @@ ggplot(df, aes(x = dias, y = wins)) +
 
 
 ######################## 3 1000 de 365 dias
-wins_anio = numeric(n_simulaciones)
+wins1_anio = numeric(n_simulaciones)
 
 for (anio in 1:n_simulaciones) {
-  # Definimos parametros
   alphas<-c(2,2,2)
   betas<-c(2,2,2)
   tethas=c(0.3,0.55,0.45)
-  
   x1=seq(0,1,length.out =200)
-  prior1=dbeta(x1,alphas[1],betas[1])
-  prior2=dbeta(x1,alphas[2],betas[2])
-  prior3=dbeta(x1,alphas[3],betas[3])
-  prior_df <- data.frame(prior1, prior2, prior3)
-  
+  prior_df <- data.frame(prior1=dbeta(x1,alphas[1],betas[1]), 
+                         prior2=dbeta(x1,alphas[2],betas[2]), 
+                         prior3=dbeta(x1,alphas[3],betas[3]))
   wins=numeric(366)
-  cont<-c(0,0,0)
-  rst_juego=0
-  entrada_list = list(alphas, betas, tethas, prior_df, x1, cont, rst_juego)
+  cont_exitos= c(0,0,0)
+  cont_tiradas = c(0, 0, 0)
+  juego=0
+  sample=0
+  entrada1_list = list(alphas, betas, tethas, prior_df, sample, juego)
   graf_list=list()
-  # Simulamos anio
+  
   for (i in 1:366) {
-    entrada_list=al_azar(lista=entrada_list)
+    entrada1_list=al_azar(lista1=entrada1_list)
+    sample <- entrada1_list[[5]]
+    juego <- entrada1_list[[6]]
+    cont_exitos[sample] <- cont_exitos[sample] + juego
+    cont_tiradas[sample] <- cont_tiradas[sample] + 1
+    prior_df <- entrada1_list[[4]]
+    
     if(i==1){
-      wins[i]=entrada_list[[7]]
+      wins[i]=juego
     }else{
-      wins[i]=wins[i-1]+entrada_list[[7]]
+      wins[i]=wins[i-1]+juego
     }
-  }  
-  wins_anio[anio] <- wins[366]
+  }
+  wins1_anio[anio] <- wins[366]
 }
 
-ganacias_df <- data.frame(anios=1:n_simulaciones, ganacias=wins_anio)
+ganacias_df <- data.frame(anios=1:n_simulaciones, ganacias=wins1_anio)
 ggplot(ganacias_df) +
   aes(x = ganacias) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
@@ -344,7 +353,8 @@ alphas<-c(2,2,2)
 betas<-c(2,2,2)
 juego=0
 sample=0
-cont<-c(0,0,0)
+cont_exitos= c(0,0,0) 
+cont_tiradas = c(0, 0, 0)
 
 wins=numeric(366)
 lista3_entrada=list(tethas, alphas, betas, juego, sample)
@@ -355,7 +365,8 @@ for(i in 1:366){
   alphas <- lista3_entrada[[2]]
   betas <- lista3_entrada[[3]]
   sample <- lista3_entrada[[5]]
-  cont[sample] <- cont[sample] + 1
+  cont_exitos[sample] = cont_exitos[sample] + juego 
+  cont_tiradas[sample] = cont_tiradas[sample] + 1
   if(i==1){
     wins[i]=juego
   }else{
@@ -367,7 +378,7 @@ for(i in 1:366){
 # Crear el gráfico de barras
 
 df <- data.frame(maq = c("Maquina 1", "Maquina 2", "Maquina 3"),
-                 freq = cont)
+                 freq = cont_tiradas)
 ggplot(df, aes(x = maq, y = freq, fill = maq)) +
   geom_bar(stat = "identity", color = "black") +
   labs(title = "Comparación de frecuencias",
@@ -414,7 +425,8 @@ for (anio in 1:n_simulaciones) {
   betas<-c(2,2,2)
   juego=0
   sample=0
-  cont<-c(0,0,0)
+  cont_exitos= c(0,0,0) 
+  cont_tiradas = c(0, 0, 0)
   
   wins=numeric(366)
   lista3_entrada=list(tethas, alphas, betas, juego, sample)
@@ -425,7 +437,8 @@ for (anio in 1:n_simulaciones) {
     alphas <- lista3_entrada[[2]]
     betas <- lista3_entrada[[3]]
     sample <- lista3_entrada[[5]]
-    cont[sample] <- cont[sample] + 1
+    cont_exitos[sample] = cont_exitos[sample] + juego 
+    cont_tiradas[sample] = cont_tiradas[sample] + 1
     if(i==1){
       wins[i]=juego
     }else{
@@ -452,12 +465,14 @@ mean(wins_anio)
 ################################################################################
 # Estrategia 4: e-greedy con tasa obs
 
-
 set.seed(412)
 e_greedy_tasa_obs<-function(lista4){
   e<-lista4[[3]]
   explote<-runif(1)
+  lista4[[6]] = 0
+  lista4[[7]] = 0
   if(explote<=1-e){#Elige el mejor
+    lista4[[7]] = 1 # exploto
     sample <-  case_when(
       t[1] == t[2] & t[1] == t[3] ~ as.numeric(sample(1:3, 1)),
       t[1] == t[2] & t[1] > t[3] ~ as.numeric(sample(1:2, 1)),
@@ -466,34 +481,38 @@ e_greedy_tasa_obs<-function(lista4){
       .default = order(t, decreasing = TRUE)[1]
     )
   }else{#Elige aleatoriamente 
+    lista4[[6]] = 1 # exploro
     sample <-  as.numeric(sample(1:3, 1))
   }
 
   juego <- rbinom(1, 1, tethas[sample])
-  lista4_salida<-list(tethas, t, e, juego, sample)
+  lista4_salida<-list(tethas, t, e, juego, sample, lista4[[6]], lista4[[7]])
   return(lista4_salida)
 }
 
 # Defino variables necesarias
 tethas=c(0.3,0.55,0.45)
 t = c(0.5,0.5,0.5)
-cont_exitos= c(0,0,0) #Q
 e=0.3
+cont_exitos= c(0,0,0) 
 cont_tiradas = c(0, 0, 0)
 juego=0
 sample=0
+exploro=0
+exploto=0
 
 wins=numeric(366)
-lista2_entrada=list(tethas, t, e, juego, sample)
+lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
 
 for(i in 1:366){
-
-  lista2_entrada <- greedy_tasa_obs(lista2 = lista2_entrada)
-  juego <- lista2_entrada[[3]]
-  sample <- lista2_entrada[[4]]
+  lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
+  juego <- lista4_entrada[[4]]
+  sample <- lista4_entrada[[5]]
+  exploro <- exploro + lista4_entrada[[6]]
+  exploto <- exploto + lista4_entrada[[7]]
   cont_exitos[sample] <- cont_exitos[sample] + juego
   cont_tiradas[sample] <- cont_tiradas[sample] + 1
-  lista2_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
+  lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
   if(i==1){
     wins[i]=juego
   }else{
@@ -501,5 +520,24 @@ for(i in 1:366){
   }
 }
 
+# Graficos
+df <- data.frame(cont = c("Maquina 1", "Maquina 2", "Maquina 3"),
+                 freq = cont_tiradas)
 
+ggplot(df, aes(x = cont, y = freq, fill = cont)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(title = "Gráfico de Barras de la frecuencia de cada máquina",
+       x = "Máquina",
+       y = "Frecuencia") +
+  theme_minimal() + 
+  guides(fill = guide_legend(title = "Máquinas"))
+
+
+df <- data.frame(dias = 1:366, wins=wins)
+# Crear el gráfico de barras
+ggplot(df, aes(x = dias, y = wins)) +
+  geom_line(color = "blue")+
+  labs(title = "Valores acumulados en 366 días",
+       x = "Día",
+       y = "Valor acumulado")
 
