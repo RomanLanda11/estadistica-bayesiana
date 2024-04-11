@@ -341,7 +341,6 @@ greedy_prob_posterior<-function(lista3){
   juego <- rbinom(1, 1, tethas[sample])
   alphas[sample] <- alphas[sample] + juego
   betas[sample] <- betas[sample] + 1 - juego
-  cont[sample] = cont[sample] + 1
   
   lista3_salida<-list(tethas, alphas, betas, juego, sample)
   return(lista3_salida)
@@ -491,7 +490,7 @@ e_greedy_tasa_obs<-function(lista4){
 }
 
 ############# e = 0.2 ######################
-e=0.05
+e=0.2
 # Defino variables necesarias
 tethas=c(0.3,0.55,0.45)
 t = c(0.5,0.5,0.5)
@@ -599,3 +598,61 @@ ggplot(ganancia_df) +
   aes(x = wins) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
+
+
+###### 3 e distintos
+graf_list <- list()
+j=1
+for (e in c(0.1, 0.2, 0.3)){
+  wins4_anio=numeric(n_simulaciones)
+  for (anio in 1:n_simulaciones) {
+    # Defino variables necesarias
+    tethas=c(0.3,0.55,0.45)
+    t = c(0.5,0.5,0.5)
+    cont_exitos= c(0,0,0) 
+    cont_tiradas = c(0, 0, 0)
+    juego=0
+    sample=0
+    exploro=0
+    exploto=0
+    
+    wins=numeric(366)
+    lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
+    
+    for(i in 1:366){
+      lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
+      juego <- lista4_entrada[[4]]
+      sample <- lista4_entrada[[5]]
+      exploro <- exploro + lista4_entrada[[6]]
+      exploto <- exploto + lista4_entrada[[7]]
+      cont_exitos[sample] <- cont_exitos[sample] + juego
+      cont_tiradas[sample] <- cont_tiradas[sample] + 1
+      lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
+      if(i==1){
+        wins[i]=juego
+      }else{
+        wins[i]=wins[i-1]+juego
+      }
+    }
+    wins4_anio[anio]<-wins[366]
+  }
+  
+  ganancia_df <- data.frame(wins = wins4_anio)
+  graf_list[[j]] <-ggplot(ganancia_df) + #Reemplazar por boxplots
+        aes(x = wins) +
+        geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
+        geom_density(color = "blue", size = 1)
+  j=j+1
+}
+
+grid.arrange(graf_list[[1]],
+             graf_list[[2]],
+             graf_list[[3]],
+             ncol=1)
+
+#4 es bayesiano?
+
+################################################################################
+################################################################################
+################################################################################
+# Estrategia 5: soft max
