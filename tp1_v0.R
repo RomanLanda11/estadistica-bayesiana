@@ -490,17 +490,17 @@ e_greedy_tasa_obs<-function(lista4){
   return(lista4_salida)
 }
 
+############# e = 0.2 ######################
+e=0.05
 # Defino variables necesarias
 tethas=c(0.3,0.55,0.45)
 t = c(0.5,0.5,0.5)
-e=0.3
 cont_exitos= c(0,0,0) 
 cont_tiradas = c(0, 0, 0)
 juego=0
 sample=0
 exploro=0
 exploto=0
-
 wins=numeric(366)
 lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
 
@@ -541,3 +541,61 @@ ggplot(df, aes(x = dias, y = wins)) +
        x = "Día",
        y = "Valor acumulado")
 
+# Crear el gráfico de postiriors
+x1=seq(0,1,length.out =200)
+posterior1=dbeta(x1,2+cont_exitos[1],2+cont_tiradas[1]-cont_exitos[1])
+posterior2=dbeta(x1,2+cont_exitos[2],2+cont_tiradas[2]-cont_exitos[2])
+posterior3=dbeta(x1,2+cont_exitos[3],2+cont_tiradas[3]-cont_exitos[3])
+
+df <- data.frame(
+  theta = x1,
+  posterior = rep(c(posterior1,posterior2, posterior3), time = 1),
+  maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
+)
+
+ggplot(df)+
+  aes(x = theta, y = posterior, color = maquina)+
+  theme(legend.position = "right")+
+  geom_line() +
+  geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
+  labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
+
+######################## 3 1000 de 365 dias
+wins4_anio=numeric(n_simulaciones)
+for (anio in 1:n_simulaciones) {
+  # Defino variables necesarias
+  tethas=c(0.3,0.55,0.45)
+  t = c(0.5,0.5,0.5)
+  cont_exitos= c(0,0,0) 
+  cont_tiradas = c(0, 0, 0)
+  juego=0
+  sample=0
+  exploro=0
+  exploto=0
+  
+  wins=numeric(366)
+  lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
+  
+  for(i in 1:366){
+    lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
+    juego <- lista4_entrada[[4]]
+    sample <- lista4_entrada[[5]]
+    exploro <- exploro + lista4_entrada[[6]]
+    exploto <- exploto + lista4_entrada[[7]]
+    cont_exitos[sample] <- cont_exitos[sample] + juego
+    cont_tiradas[sample] <- cont_tiradas[sample] + 1
+    lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
+    if(i==1){
+      wins[i]=juego
+    }else{
+      wins[i]=wins[i-1]+juego
+    }
+  }
+  wins4_anio[anio]<-wins[366]
+}
+
+ganancia_df <- data.frame(wins = wins4_anio)
+ggplot(ganancia_df) +
+  aes(x = wins) +
+  geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
+  geom_density(color = "blue", size = 1)
