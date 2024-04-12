@@ -171,7 +171,26 @@ e_greedy_tasa_obs<-function(lista4){
 ##############################################################################
 
 ##############################################################################
-
+upper_bound <- function(lista6){
+  tethas <- lista6[[1]]
+  alphas <- lista6[[2]]
+  betas <- lista6[[3]]
+  
+  esperanzas = c(alphas[1]/(alphas[1]+betas[1]),
+                 alphas[2]/(alphas[2]+betas[2]),
+                 alphas[3]/(alphas[3]+betas[3]))
+  #print(esperanzas)
+  UCB <- c(qbeta(0.95, alphas[1], betas[1]), 
+           qbeta(0.95, alphas[2], betas[2]), 
+           qbeta(0.95, alphas[3], betas[3]))
+  sample <- order(UCB + runif(3, 0.001, 0.009), decreasing = TRUE)[1]
+  juego <- rbinom(1, 1, tethas[sample])
+  alphas[sample] <- alphas[sample] + juego
+  betas[sample] <- betas[sample] + 1 - juego
+  
+  lista6_salida<-list(tethas, alphas, betas, UCB, juego, sample, cont_exitos, cont_tiradas)
+  return(lista6_salida)
+}
 ##############################################################################
 thompson_sampling <- function(lista7){
   alphas <- lista7[[1]]
