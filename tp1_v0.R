@@ -579,6 +579,97 @@ grid.arrange(graf_list[[1]],
 ################################################################################
 ################################################################################
 # Estrategia 6: upper bound
+set.seed(412)
+upper_bound <- function(lista6){
+  tethas <- lista6[[1]]
+  alphas <- lista6[[2]]
+  betas <- lista6[[3]]
+  
+  esperanzas = c(alphas[1]/(alphas[1]+betas[1]),
+                 alphas[2]/(alphas[2]+betas[2]),
+                 alphas[3]/(alphas[3]+betas[3]))
+  #print(esperanzas)
+  UCB <- c(qbeta(0.95, alphas[1], betas[1]), 
+           qbeta(0.95, alphas[2], betas[2]), 
+           qbeta(0.95, alphas[3], betas[3]))
+  sample <- order(UCB + runif(3, 0.001, 0.009), decreasing = TRUE)[1]
+  juego <- rbinom(1, 1, tethas[sample])
+  alphas[sample] <- alphas[sample] + juego
+  betas[sample] <- betas[sample] + 1 - juego
+  
+  lista6_salida<-list(tethas, alphas, betas, UCB, juego, sample, cont_exitos, cont_tiradas)
+  return(lista6_salida)
+}
+
+tethas=c(0.3,0.55,0.45)
+cont_exitos= c(0,0,0) 
+cont_tiradas = c(0, 0, 0)
+juego=0
+UCB <- c(0, 0, 0)
+alphas <- c(2, 2, 2)
+betas <- c(2, 2, 2)
+wins <- c(0, 0, 0)
+lista6_entrada <- list(tethas, alphas, betas, UCB, juego, sample, cont_exitos, cont_tiradas)
+
+for(i in 1:366){
+  lista6_entrada <- upper_bound(lista6 = lista6_entrada)
+  juego <- lista6_entrada[[5]]
+  alphas <- lista6_entrada[[2]]
+  betas <- lista6_entrada[[3]]
+  sample <- lista6_entrada[[6]]
+  cont_exitos <- lista6_entrada[[7]]
+  cont_tiradas <- lista6_entrada[[8]]
+  cont_exitos[sample] = cont_exitos[sample] + juego 
+  cont_tiradas[sample] = cont_tiradas[sample] + 1
+  if(i==1){
+    wins[i]=juego
+  }else{
+    wins[i]=wins[i-1]+juego
+  }
+}
+
+#Graficos
+graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
+
+######################## 3 1000 de 365 dias
+wins6_anio=numeric(n_simulaciones)
+for (anio in 1:n_simulaciones) {
+  # Defino variables necesarias
+  tethas=c(0.3,0.55,0.45)
+  alphas<-c(2,2,2)
+  betas<-c(2,2,2)
+  juego=0
+  sample=0
+  cont_exitos= c(0,0,0) 
+  cont_tiradas = c(0, 0, 0)
+  
+  wins=numeric(366)
+  lista6_entrada <- list(tethas, alphas, betas, UCB, juego, sample, cont_exitos, cont_tiradas)
+  
+  for(i in 1:366){
+    lista6_entrada <- upper_bound(lista6 = lista6_entrada)
+    juego <- lista6_entrada[[5]]
+    alphas <- lista6_entrada[[2]]
+    betas <- lista6_entrada[[3]]
+    sample <- lista6_entrada[[6]]
+    cont_exitos <- lista6_entrada[[7]]
+    cont_tiradas <- lista6_entrada[[8]]
+    cont_exitos[sample] = cont_exitos[sample] + juego 
+    cont_tiradas[sample] = cont_tiradas[sample] + 1
+    if(i==1){
+      wins[i]=juego
+    }else{
+      wins[i]=wins[i-1]+juego
+    }
+  }
+  wins6_anio[anio]<-wins[366]
+}
+
+ganancia_df <- data.frame(wins = wins6_anio)
+ggplot(ganancia_df) +
+  aes(x = wins) +
+  geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
+  geom_density(color = "blue", size = 1)
 
 
 ################################################################################
