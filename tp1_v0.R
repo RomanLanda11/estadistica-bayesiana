@@ -183,17 +183,7 @@ greedy_tasa_obs<-function(lista2){
     sample <- sample(1:3, 1)
   }
   else{
-    #Recomendo Nacho: sample <- order(t, decreasing = TRUE)[1] 
-    sample <-  case_when(
-      # t[1] > t[2] & t[1] > t[3] ~ as.numeric(1),
-      # t[2] > t[1] & t[2] > t[3] ~  as.numeric(2),
-      # t[3] > t[1] & t[3] > t[2] ~  as.numeric(3),
-      t[1] == t[2] & t[1] == t[3] ~ as.numeric(sample(1:3, 1)),
-      t[1] == t[2] & t[1] > t[3] ~ as.numeric(sample(1:2, 1)),
-      t[1] == t[3] & t[1] > t[2] ~ as.numeric(sample(c(1, 3), 1)),
-      t[2] == t[3] & t[2] > t[1] ~ as.numeric(sample(2:3, 1)),
-      .default = order(t, decreasing = TRUE)[1]
-    )
+    sample <- order(t + runif(3,0.001, 0.009), decreasing = TRUE)[1]
   }
   juego <- rbinom(1, 1, tethas[sample])
   lista2_salida<-list(tethas, t, juego, sample, fl_calentamineto)
@@ -207,7 +197,7 @@ cont_exitos= c(0,0,0)
 cont_tiradas = c(0, 0, 0)
 juego=0
 sample=0
-fl_calentamineto=TRUE
+fl_calentamineto=FALSE
 wins=numeric(366)
 lista2_entrada=list(tethas, t, juego, sample, fl_calentamineto)
 
@@ -331,13 +321,7 @@ greedy_prob_posterior<-function(lista3){
                 alphas[2]/(alphas[2]+betas[2]),
                 alphas[3]/(alphas[3]+betas[3]))
   #print(esperanzas)
-  sample <-  case_when(
-    esperanzas[1] == esperanzas[2] & esperanzas[1] == esperanzas[3] ~ as.numeric(sample(1:3, 1)),
-    esperanzas[1] == esperanzas[2] & esperanzas[1] > esperanzas[3] ~ as.numeric(sample(1:2, 1)),
-    esperanzas[1] == esperanzas[3] & esperanzas[1] > esperanzas[2] ~ as.numeric(sample(c(1, 3), 1)),
-    esperanzas[2] == esperanzas[3] & esperanzas[2] > esperanzas[1] ~ as.numeric(sample(2:3, 1)),
-    .default = order(esperanzas, decreasing = TRUE)[1]
-  )
+  sample <- order(esperanzas + runif(3,0.001, 0.009)  , decreasing = TRUE)[1]
   juego <- rbinom(1, 1, tethas[sample])
   alphas[sample] <- alphas[sample] + juego
   betas[sample] <- betas[sample] + 1 - juego
@@ -472,13 +456,7 @@ e_greedy_tasa_obs<-function(lista4){
   lista4[[7]] = 0
   if(explote<=1-e){#Elige el mejor
     lista4[[7]] = 1 # exploto
-    sample <-  case_when(
-      t[1] == t[2] & t[1] == t[3] ~ as.numeric(sample(1:3, 1)),
-      t[1] == t[2] & t[1] > t[3] ~ as.numeric(sample(1:2, 1)),
-      t[1] == t[3] & t[1] > t[2] ~ as.numeric(sample(c(1, 3), 1)),
-      t[2] == t[3] & t[2] > t[1] ~ as.numeric(sample(2:3, 1)),
-      .default = order(t, decreasing = TRUE)[1]
-    )
+    sample <-  order(t + runif(3,0.001, 0.009), decreasing = TRUE)[1]
   }else{#Elige aleatoriamente 
     lista4[[6]] = 1 # exploro
     sample <-  as.numeric(sample(1:3, 1))
@@ -668,3 +646,87 @@ grid.arrange(graf_list[[1]],
 ################################################################################
 ################################################################################
 # Estrategia 7: thompson sampling
+# Se usa la media para comparar muestras
+thompson_sampling <- function(lista7){
+  alphas <- lista7[[1]]
+  betas <- lista7[[2]]
+  tethas <- lista7[[3]]
+  muestra<- c(rbeta(1,alphas[1],betas[1]), 
+               rbeta(1,alphas[2],betas[2]), 
+               rbeta(1,alphas[3],betas[3]))
+  print(muestra)
+  sample <- order(muestra, decreasing = TRUE)[1]
+  juego <- rbinom(1, 1, tethas[sample])
+  alphas[sample] <- alphas[sample] + juego
+  betas[sample] <- betas[sample] + 1 - juego
+  
+  lista7_salida<-list(alphas, betas, tethas,  muestra, juego,  sample)
+  return(lista7_salida)
+}
+
+#### 2 
+set.seed(491)
+alphas<-c(2,2,2)
+betas<-c(2,2,2)
+tethas=c(0.3,0.55,0.45)
+wins=numeric(366)
+cont_exitos= c(0,0,0)
+cont_tiradas = c(0, 0, 0)
+juego=0
+sample=0
+muestra=c()
+
+lista7_entrada<-list(alphas, betas, tethas,  muestra, juego,  sample)
+
+for(i in 1:366){
+  lista7_entrada <- thompson_sampling( lista7_entrada )
+  juego <- lista7_entrada[[5]]
+  sample <- lista7_entrada[[6]]
+  cont_exitos[sample] <- cont_exitos[sample] + juego
+  cont_tiradas[sample] <- cont_tiradas[sample] + 1
+
+  if(i==1){
+    wins[i]=juego
+  }else{
+    wins[i]=wins[i-1]+juego
+  }
+}
+# Graficos
+df <- data.frame(cont = c("Maquina 1", "Maquina 2", "Maquina 3"),
+                 freq = cont_tiradas)
+
+ggplot(df, aes(x = cont, y = freq, fill = cont)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(title = "Gráfico de Barras de la frecuencia de cada máquina",
+       x = "Máquina",
+       y = "Frecuencia") +
+  theme_minimal() + 
+  guides(fill = guide_legend(title = "Máquinas"))
+
+
+df <- data.frame(dias = 1:366, wins=wins)
+# Crear el gráfico de barras
+ggplot(df, aes(x = dias, y = wins)) +
+  geom_line(color = "blue")+
+  labs(title = "Valores acumulados en 366 días",
+       x = "Día",
+       y = "Valor acumulado")
+
+# Crear el gráfico de postiriors
+x1=seq(0,1,length.out =200)
+posterior1=dbeta(x1,2+cont_exitos[1],2+cont_tiradas[1]-cont_exitos[1])
+posterior2=dbeta(x1,2+cont_exitos[2],2+cont_tiradas[2]-cont_exitos[2])
+posterior3=dbeta(x1,2+cont_exitos[3],2+cont_tiradas[3]-cont_exitos[3])
+
+df <- data.frame(
+  theta = x1,
+  posterior = rep(c(posterior1,posterior2, posterior3), time = 1),
+  maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
+)
+
+ggplot(df)+
+  aes(x = theta, y = posterior, color = maquina)+
+  theme(legend.position = "right")+
+  geom_line() +
+  geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
+  labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
