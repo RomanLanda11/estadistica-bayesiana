@@ -20,6 +20,54 @@ ggplot(data.frame(x = resultados), aes(x)) +
 
 
 ################################################################################
+######################### funcion para graficar ################################
+graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
+  df <- data.frame(maq = c("Maquina 1", "Maquina 2", "Maquina 3"),
+                   freq = cont_tiradas,
+                   exitos = cont_exitos,
+                   fracasos = cont_tiradas - cont_exitos)
+  g1<-ggplot(df, aes(x = maq, fill = maq)) +
+    geom_bar(aes(y = freq ), stat = "identity", color = "black") +
+    geom_bar(aes(y = exitos ), stat = "identity", color = "black") +
+    geom_text(aes(y = exitos, label = "exitos"), position = position_stack(vjust = 0.5)) +
+    geom_text(aes(y = freq, label = "fracasos"), position = position_stack(vjust = 0.8)) +
+    labs(title = "Comparación de frecuencias",
+         x = "Máquina",
+         y = "Frecuencia") +
+    theme_minimal() +
+    guides(fill = guide_legend(title = "Máquinas"))
+  
+  
+  # Crear el gráfico de ganancias
+  df <- data.frame(dias = 1:366, wins=wins)
+  g2<-ggplot(df, aes(x = dias, y = wins)) +
+    geom_line(color = "blue")+
+    labs(title = "Valores acumulados en 366 días",
+         x = "Día",
+         y = "Valor acumulado")
+  
+  # Crear el gráfico de postiriors
+  x1=seq(0,1,length.out =200)
+  posterior1=dbeta(x1,alphas[1],betas[1])
+  posterior2=dbeta(x1,alphas[2],betas[2])
+  posterior3=dbeta(x1,alphas[3],betas[3])
+  
+  df <- data.frame(
+    theta = x1,
+    posterior = rep(c(posterior1,posterior2, posterior3), time = 1),
+    maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
+  )
+  
+  g3<-ggplot(df)+
+    aes(x = theta, y = posterior, color = maquina)+
+    theme(legend.position = "right")+
+    geom_line() +
+    geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
+    labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
+  print(g1)
+  print(g2)
+  print(g3)
+}
 ################################################################################
 ################################################################################
 
@@ -96,7 +144,6 @@ grid.arrange(graf_list[[1]],graf_list[[2]],graf_list[[3]],graf_list[[4]],
 
 
 # Crear el gráfico de barras
-
 df <- data.frame(maq = c("Maquina 1", "Maquina 2", "Maquina 3"),
                  freq = cont_tiradas,
                  exitos = cont_exitos,
@@ -114,6 +161,7 @@ ggplot(df, aes(x = maq, fill = maq)) +
 
 
 df <- data.frame(dias = 1:366, wins=wins)
+
 # Crear el gráfico evolucion ganancia
 ggplot(df, aes(x = dias, y = wins)) +
   geom_line(color = "blue")+
@@ -172,7 +220,6 @@ ggplot(ganacias_df) +
 
 ## Estrategia 2: Greedy con tasa obs
 
-
 ###### 1 Fijamos la semilla
 set.seed(412)
 greedy_tasa_obs<-function(lista2){
@@ -217,47 +264,12 @@ for(i in 1:366){
   }
 }
 
-
+alphas <- c(2+cont_exitos[1], 2+cont_exitos[2], 2+cont_exitos[3])
+betas <- c(2+cont_tiradas[1]-cont_exitos[1],
+           2+cont_tiradas[2]-cont_exitos[2],
+           2+cont_tiradas[3]-cont_exitos[3])
 # Graficos
-df <- data.frame(cont = c("Maquina 1", "Maquina 2", "Maquina 3"),
-                 freq = cont_tiradas)
-
-ggplot(df, aes(x = cont, y = freq, fill = cont)) +
-  geom_bar(stat = "identity", color = "black") +
-  labs(title = "Gráfico de Barras de la frecuencia de cada máquina",
-       x = "Máquina",
-       y = "Frecuencia") +
-  theme_minimal() + 
-  guides(fill = guide_legend(title = "Máquinas"))
-
-
-df <- data.frame(dias = 1:366, wins=wins)
-# Crear el gráfico de barras
-ggplot(df, aes(x = dias, y = wins)) +
-  geom_line(color = "blue")+
-  labs(title = "Valores acumulados en 366 días",
-       x = "Día",
-       y = "Valor acumulado")
-
-
-# Crear el gráfico de postiriors
-x1=seq(0,1,length.out =200)
-posterior1=dbeta(x1,2+cont_exitos[1],2+cont_tiradas[1]-cont_exitos[1])
-posterior2=dbeta(x1,2+cont_exitos[2],2+cont_tiradas[2]-cont_exitos[2])
-posterior3=dbeta(x1,2+cont_exitos[3],2+cont_tiradas[3]-cont_exitos[3])
-
-df <- data.frame(
-  theta = x1,
-  posterior = rep(c(posterior1,posterior2, posterior3), time = 1),
-  maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
-)
-
-ggplot(df)+
-  aes(x = theta, y = posterior, color = maquina)+
-  theme(legend.position = "right")+
-  geom_line() +
-  geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
-  labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
+graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
 
 ######################## 3 1000 de 365 dias
@@ -356,48 +368,11 @@ for(i in 1:366){
     wins[i]=wins[i-1]+juego
   }
 }
+alphas <- lista3_entrada[[2]]
+betas<- lista3_entrada[[3]]
+# Graficos
+graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
-
-# Crear el gráfico de barras
-
-df <- data.frame(maq = c("Maquina 1", "Maquina 2", "Maquina 3"),
-                 freq = cont_tiradas)
-ggplot(df, aes(x = maq, y = freq, fill = maq)) +
-  geom_bar(stat = "identity", color = "black") +
-  labs(title = "Comparación de frecuencias",
-       x = "Máquina",
-       y = "Frecuencia") +
-  theme_minimal() +
-  guides(fill = guide_legend(title = "Máquinas"))
-
-
-df <- data.frame(dias = 1:366, wins=wins)
-# Crear el gráfico evolucion ganancia
-ggplot(df, aes(x = dias, y = wins)) +
-  geom_line(color = "blue")+
-  labs(title = "Valores acumulados en 366 días",
-       x = "Día",
-       y = "Valor acumulado")
-
-
-
-# Crear el gráfico de postiriors
-x1=seq(0,1,length.out =200)
-posterior1=dbeta(x1,alphas[1],betas[1])
-posterior2=dbeta(x1,alphas[2],betas[2])
-posterior3=dbeta(x1,alphas[3],betas[3])
-df <- data.frame(
-  theta = x1,
-  posterior = c(posterior1, posterior2, posterior3),
-  maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
-)
-
-ggplot(df)+
-  aes(x = theta, y = posterior, color = maquina)+
-  theme(legend.position = "right")+
-  geom_line() +
-  geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
-  labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
 
 ######################## 3 1000 de 365 dias
 wins3_anio=numeric(n_simulaciones)
@@ -436,10 +411,6 @@ ggplot(ganancia_df) +
   aes(x = wins) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
-
-mean(wins3_anio)
-mean(wins2_anio)
-mean(wins_anio)
 
 ##4 me parece un metodo bayesiano porque usa las 
 
@@ -496,46 +467,14 @@ for(i in 1:366){
     wins[i]=wins[i-1]+juego
   }
 }
+alphas <- c(2+cont_exitos[1], 2+cont_exitos[2], 2+cont_exitos[3])
+betas <- c(2+cont_tiradas[1]-cont_exitos[1],
+           2+cont_tiradas[2]-cont_exitos[2],
+           2+cont_tiradas[3]-cont_exitos[3])
 
 # Graficos
-df <- data.frame(cont = c("Maquina 1", "Maquina 2", "Maquina 3"),
-                 freq = cont_tiradas)
+graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
-ggplot(df, aes(x = cont, y = freq, fill = cont)) +
-  geom_bar(stat = "identity", color = "black") +
-  labs(title = "Gráfico de Barras de la frecuencia de cada máquina",
-       x = "Máquina",
-       y = "Frecuencia") +
-  theme_minimal() + 
-  guides(fill = guide_legend(title = "Máquinas"))
-
-
-df <- data.frame(dias = 1:366, wins=wins)
-# Crear el gráfico de barras
-ggplot(df, aes(x = dias, y = wins)) +
-  geom_line(color = "blue")+
-  labs(title = "Valores acumulados en 366 días",
-       x = "Día",
-       y = "Valor acumulado")
-
-# Crear el gráfico de postiriors
-x1=seq(0,1,length.out =200)
-posterior1=dbeta(x1,2+cont_exitos[1],2+cont_tiradas[1]-cont_exitos[1])
-posterior2=dbeta(x1,2+cont_exitos[2],2+cont_tiradas[2]-cont_exitos[2])
-posterior3=dbeta(x1,2+cont_exitos[3],2+cont_tiradas[3]-cont_exitos[3])
-
-df <- data.frame(
-  theta = x1,
-  posterior = rep(c(posterior1,posterior2, posterior3), time = 1),
-  maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
-)
-
-ggplot(df)+
-  aes(x = theta, y = posterior, color = maquina)+
-  theme(legend.position = "right")+
-  geom_line() +
-  geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
-  labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
 
 ######################## 3 1000 de 365 dias
 wins4_anio=numeric(n_simulaciones)
@@ -654,7 +593,7 @@ thompson_sampling <- function(lista7){
   muestra<- c(rbeta(1,alphas[1],betas[1]), 
                rbeta(1,alphas[2],betas[2]), 
                rbeta(1,alphas[3],betas[3]))
-  print(muestra)
+  #print(muestra)
   sample <- order(muestra, decreasing = TRUE)[1]
   juego <- rbinom(1, 1, tethas[sample])
   alphas[sample] <- alphas[sample] + juego
@@ -665,7 +604,7 @@ thompson_sampling <- function(lista7){
 }
 
 #### 2 
-set.seed(491)
+set.seed(490)
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
 tethas=c(0.3,0.55,0.45)
@@ -691,42 +630,45 @@ for(i in 1:366){
     wins[i]=wins[i-1]+juego
   }
 }
-# Graficos
-df <- data.frame(cont = c("Maquina 1", "Maquina 2", "Maquina 3"),
-                 freq = cont_tiradas)
+alphas <- lista7_entrada[[1]]
+betas <- lista7_entrada[[2]]
+# Graficar
+graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
-ggplot(df, aes(x = cont, y = freq, fill = cont)) +
-  geom_bar(stat = "identity", color = "black") +
-  labs(title = "Gráfico de Barras de la frecuencia de cada máquina",
-       x = "Máquina",
-       y = "Frecuencia") +
-  theme_minimal() + 
-  guides(fill = guide_legend(title = "Máquinas"))
+######################## 3 1000 de 365 dias
+wins7_anio=numeric(n_simulaciones)
+for (anio in 1:n_simulaciones) {
+  alphas<-c(2,2,2)
+  betas<-c(2,2,2)
+  tethas=c(0.3,0.55,0.45)
+  wins=numeric(366)
+  cont_exitos= c(0,0,0)
+  cont_tiradas = c(0, 0, 0)
+  juego=0
+  sample=0
+  muestra=c()
+  
+  lista7_entrada<-list(alphas, betas, tethas,  muestra, juego,  sample)
+  
+  for(i in 1:366){
+    lista7_entrada <- thompson_sampling( lista7_entrada )
+    juego <- lista7_entrada[[5]]
+    sample <- lista7_entrada[[6]]
+    cont_exitos[sample] <- cont_exitos[sample] + juego
+    cont_tiradas[sample] <- cont_tiradas[sample] + 1
+    
+    if(i==1){
+      wins[i]=juego
+    }else{
+      wins[i]=wins[i-1]+juego
+    }
+  }
+  wins7_anio[anio]<-wins[366]
+}
 
+ganancia_df <- data.frame(wins = wins7_anio)
+ggplot(ganancia_df) +
+  aes(x = wins) +
+  geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
+  geom_density(color = "blue", size = 1)
 
-df <- data.frame(dias = 1:366, wins=wins)
-# Crear el gráfico de barras
-ggplot(df, aes(x = dias, y = wins)) +
-  geom_line(color = "blue")+
-  labs(title = "Valores acumulados en 366 días",
-       x = "Día",
-       y = "Valor acumulado")
-
-# Crear el gráfico de postiriors
-x1=seq(0,1,length.out =200)
-posterior1=dbeta(x1,2+cont_exitos[1],2+cont_tiradas[1]-cont_exitos[1])
-posterior2=dbeta(x1,2+cont_exitos[2],2+cont_tiradas[2]-cont_exitos[2])
-posterior3=dbeta(x1,2+cont_exitos[3],2+cont_tiradas[3]-cont_exitos[3])
-
-df <- data.frame(
-  theta = x1,
-  posterior = rep(c(posterior1,posterior2, posterior3), time = 1),
-  maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
-)
-
-ggplot(df)+
-  aes(x = theta, y = posterior, color = maquina)+
-  theme(legend.position = "right")+
-  geom_line() +
-  geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
-  labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
