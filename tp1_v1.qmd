@@ -53,41 +53,140 @@ library(gridExtra)
 ```{r}
 #| echo: true
 #| label: functions
-al_azar <- function(lista) {
-  alphas <- lista[[1]]
-  betas <- lista[[2]]
-  tethas <- lista[[3]]
-  prior_df <- lista[[4]]
-  x1 <- lista[[5]]
-  cont <- lista[[6]]
-
+graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
+  df <- data.frame(maq = c("Maquina 1", "Maquina 2", "Maquina 3"),
+                   freq = cont_tiradas,
+                   exitos = cont_exitos,
+                   fracasos = cont_tiradas - cont_exitos)
+  g1<-ggplot(df, aes(x = maq, fill = maq)) +
+    geom_bar(aes(y = freq ), stat = "identity", color = "black") +
+    geom_bar(aes(y = exitos ), stat = "identity", color = "black") +
+    geom_text(aes(y = exitos, label = "exitos"), position = position_stack(vjust = 0.5)) +
+    geom_text(aes(y = freq, label = "fracasos"), position = position_stack(vjust = 0.8)) +
+    labs(title = "Comparación de frecuencias",
+         x = "Máquina",
+         y = "Frecuencia") +
+    theme_minimal() +
+    guides(fill = guide_legend(title = "Máquinas"))
   
-  sample <- sample(1:length(alphas), 1)
-  rst_juego <- rbinom(1, 1, tethas[sample])
-  postirior <- dbeta(x1, alphas[sample] + rst_juego, betas[sample] + 1 - rst_juego)
-  prior_df[, sample] <- postirior
-  alphas[sample] <- alphas[sample] + rst_juego
-  betas[sample] <- betas[sample] + 1 - rst_juego
-  cont[sample] = cont[sample] + 1
   
-  salida_list <- list(alphas, betas, tethas, prior_df, x1, cont, rst_juego)
-  return(salida_list)
+  # Crear el gráfico de ganancias
+  df <- data.frame(dias = 1:366, wins=wins)
+  g2<-ggplot(df, aes(x = dias, y = wins)) +
+    geom_line(color = "blue")+
+    labs(title = "Valores acumulados en 366 días",
+         x = "Día",
+         y = "Valor acumulado")
+  
+  # Crear el gráfico de postiriors
+  x1=seq(0,1,length.out =200)
+  posterior1=dbeta(x1,alphas[1],betas[1])
+  posterior2=dbeta(x1,alphas[2],betas[2])
+  posterior3=dbeta(x1,alphas[3],betas[3])
+  
+  df <- data.frame(
+    theta = x1,
+    posterior = rep(c(posterior1,posterior2, posterior3), time = 1),
+    maquina = rep(c("Maquina 1", "Maquina 2", "Maquina 3"), each = length(x1))
+  )
+  
+  g3<-ggplot(df)+
+    aes(x = theta, y = posterior, color = maquina)+
+    theme(legend.position = "right")+
+    geom_line() +
+    geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
+    labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
+  print(g1)
+  print(g2)
+  print(g3)
 }
+##############################################################################
+al_azar <- function(lista1) {
+  alphas <- lista1[[1]]
+  betas <- lista1[[2]]
+  tethas <- lista1[[3]]
+  prior_df <- lista1[[4]]
+  x1=seq(0,1,length.out =200)
 
+  sample <- sample(1:length(alphas), 1)
+  juego <- rbinom(1, 1, tethas[sample])
+  alphas[sample] <- alphas[sample] + juego
+  betas[sample] <- betas[sample] + 1 - juego
+  
+  postirior <- dbeta(x1, alphas[sample],  betas[sample])
+  prior_df[, sample] <- postirior
+  salida1_list <- list(alphas, betas, tethas, prior_df, sample, juego)
+  return(salida1_list)
+}
 greedy_tasa_obs<-function(lista2){
+  fl_calentamiento <- lista2[[5]]
   t <- lista2[[2]]
   tethas <- lista2[[1]]
-  sample<-  case_when(
-    t[1] > t[2] & t[1] > t[3] ~  1,
-    t[2] > t[1] & t[2] > t[3] ~  2,
-    t[3] > t[1] & t[3] > t[2] ~  3,
-    t[1] == t[2] & t[1] == t[3] ~ sample(1:3, 1),
-    t[1] == t[2] & t[1] > t[3] ~ sample(1:2, 1),
-    t[1] == t[3] & t[1] > t[2] ~ sample(c(1, 3), 1),
-    t[2] == t[3] & t[2] > t[1] ~ sample(2:3, 1)
-  )
+  if (fl_calentamiento){
+    sample <- sample(1:3, 1)
+  }
+  else{
+    sample <- order(t + runif(3,0.001, 0.009), decreasing = TRUE)[1]
+  }
   juego <- rbinom(1, 1, tethas[sample])
-  lista2_salida<-list(tethas, t, juego, sample)
+  lista2_salida<-list(tethas, t, juego, sample, fl_calentamineto)
   return(lista2_salida)
+}
+##############################################################################
+greedy_prob_posterior<-function(lista3){
+  tethas <- lista3[[1]]
+  alphas <- lista3[[2]]
+  betas <- lista3[[3]]
+  
+  esperanzas = c(alphas[1]/(alphas[1]+betas[1]),
+                alphas[2]/(alphas[2]+betas[2]),
+                alphas[3]/(alphas[3]+betas[3]))
+  #print(esperanzas)
+  sample <- order(esperanzas + runif(3,0.001, 0.009)  , decreasing = TRUE)[1]
+  juego <- rbinom(1, 1, tethas[sample])
+  alphas[sample] <- alphas[sample] + juego
+  betas[sample] <- betas[sample] + 1 - juego
+  
+  lista3_salida<-list(tethas, alphas, betas, juego, sample)
+  return(lista3_salida)
+}
+##############################################################################
+e_greedy_tasa_obs<-function(lista4){
+  e<-lista4[[3]]
+  explote<-runif(1)
+  lista4[[6]] = 0
+  lista4[[7]] = 0
+  if(explote<=1-e){#Elige el mejor
+    lista4[[7]] = 1 # exploto
+    sample <-  order(t + runif(3,0.001, 0.009), decreasing = TRUE)[1]
+  }else{#Elige aleatoriamente 
+    lista4[[6]] = 1 # exploro
+    sample <-  as.numeric(sample(1:3, 1))
+  }
+
+  juego <- rbinom(1, 1, tethas[sample])
+  lista4_salida<-list(tethas, t, e, juego, sample, lista4[[6]], lista4[[7]])
+  return(lista4_salida)
+}
+##############################################################################
+
+##############################################################################
+
+##############################################################################
+thompson_sampling <- function(lista7){
+  alphas <- lista7[[1]]
+  betas <- lista7[[2]]
+  tethas <- lista7[[3]]
+  muestra<- c(rbeta(1,alphas[1],betas[1]), 
+               rbeta(1,alphas[2],betas[2]), 
+               rbeta(1,alphas[3],betas[3]))
+  #print(muestra)
+  sample <- order(muestra, decreasing = TRUE)[1]
+  juego <- rbinom(1, 1, tethas[sample])
+  alphas[sample] <- alphas[sample] + juego
+  betas[sample] <- betas[sample] + 1 - juego
+  
+  lista7_salida<-list(alphas, betas, tethas,  muestra, juego,  sample)
+  return(lista7_salida)
 }
 ```
