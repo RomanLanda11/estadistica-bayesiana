@@ -2,21 +2,19 @@ library(ggplot2)
 library(dplyr)
 library(cowplot)
 library(gridExtra)
-n_simulaciones=100
+n_simulaciones=1000
 set.seed(491)
 resultados=rbinom(n_simulaciones, 366, 0.55)
 datos=data.frame(resultados)
 summary(datos) # mejorar
 
 
-ggplot(data.frame(x = resultados), aes(x)) +
-  geom_histogram(binwidth = 5, fill = "lightblue", color = "black") +
-  #geom_density(color = "red", size = 1.5) +  # Agrega la línea suavizada
-  labs(title = "Histograma de datos",
-       x = "Valores",
-       y = "Frecuencia")
+ganacias_df <- data.frame(anios=1:n_simulaciones, ganacias=resultados)
+ggplot(ganacias_df) +
+  aes(x = ganacias) +
+  geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
+  geom_density(color = "blue", size = 1)
 
-#en promedio esperamos que gane 200.6 veces o 201
 
 
 ################################################################################
@@ -639,8 +637,6 @@ for(i in 1:366){
 #Gráficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
-
-
 #1000 dias
 n_simulaciones=1000
 
@@ -694,10 +690,6 @@ upper_bound <- function(lista6){
   alphas <- lista6[[2]]
   betas <- lista6[[3]]
   
-  #esperanzas = c(alphas[1]/(alphas[1]+betas[1]),
-  #               alphas[2]/(alphas[2]+betas[2]),
-  #               alphas[3]/(alphas[3]+betas[3]))
-  #print(esperanzas)
   UCB <- c(qbeta(0.95, alphas[1], betas[1]), 
            qbeta(0.95, alphas[2], betas[2]), 
            qbeta(0.95, alphas[3], betas[3]))
