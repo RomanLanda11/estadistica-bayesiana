@@ -1,26 +1,92 @@
+---
+title: " Trabajo Práctico 1: The Multiarmed Bandit "
+author: "Landa - Irisarri - Gazze"
+format:
+  html:
+    self-contained: true
+    toc: true
+    toc-title: "Tabla de Contenidos"
+    number-sections: true
+    code-fold: true
+    highlight-style: pygments
+    html-math-method: katex
+    code-copy: true
+    code-tools: true
+    grid: # TODO: ir modificando.. (con otro documento más corto)
+      body-width: 2000px # cuerpo documento
+      sidebar-width: 100px # margen lateral en blanco
+      margin-width: 350px # tabla de contenido
+execute:
+  warning: false
+---
+
+## Introducción:
+
+Se presenta el problema del tipo "*multi-armed bandit", en el cual se desea elegir entre tres máquinas tragamonedas, con el propósito de maximizar las ganancias.* El juego de las maquinitas consiste en hacer girar sus rodillos (analógicos o digitales) con el objetivo de obtener una combinación de símbolos ganadora y así acceder a un premio monetario.
+
+Cada máquina tiene una probabilidad de éxito desconocida y potencialmente diferente, es decir, una probabilidad distinta de entregar un premio. Este es un desafío que enfrenta a los jugadores con la decisión de explotar lo conocido o explorar lo desconocido para maximizar sus ganancias, donde la información es clave pero limitada: cada tirada de una máquina revela un poco más sobre su rendimiento, pero también podría cambiar tu percepción sobre cuál es la mejor opción.
+
+En la fase inicial, cuando se sabe poco sobre las máquinas, podría ser más prudente *"explorar"*, probando cada máquina varias veces para obtener una estimación aproximada de sus probabilidades de éxito. A medida que se acumulan datos sobre el rendimiento de cada máquina, la estrategia podría cambiar a *"explotar"* la máquina que ha demostrado ser la más rentable. Sin embargo, siempre existe la incertidumbre y la posibilidad de que una de las máquinas menos utilizadas tenga en realidad una tasa de éxito mayor. Este problema se complica aún más por el hecho de que cada elección de máquina proporciona información que podría alterar nuestra comprensión de cuál es la mejor opción. La solución óptima a este problema involucra un equilibrio cuidadoso entre explorar para ganar información y explotar esa información para maximizar las ganancias.
+
+En nuestro escenario, no hay costo para jugar, lo que significa que no pierdes nada al jugar con una máquina. Es decir, si obtenemos una combinación ganadora, sumamos una unidad monetaria, pero si no, no perdemos nada. En este estudio se realizará un año de experimentación continua (366 días), dedicando cada día a una sola máquina.
+
+## Objetivos:
+
+El objetivo del trabajo consiste en evaluar y comparar diferentes estrategias de juego. Se analizarán mediante simulaciones diferentes planes de exploración y explotación de las máquinas para identificar cuál de estos proporciona la mayor ganancia esperada.
+
+Para el estudio mediante simulaciones, consideraremos que las probabilidades de éxito de las tres máquinas son $\theta_a = 0.30$, $\theta_b = 0.55$ y $\theta_c = 0.45$. Recordemos que estas probabilidades son desconocidas (no podemos basar nuestras estrategias en esos valores, sino en las estimaciones que vamos haciendo de ellos).
+
+## Desarrollo
+
+A continuación se presenta el análisis de las siete estrategias estudiadas. Para todas ellas, se parte de una ditribución a priori de la probabilidad de éxito de cada máquina Beta(2, 2).
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE}
+# Carga de paquetes necesarios
 library(ggplot2)
 library(dplyr)
 library(cowplot)
 library(gridExtra)
-n_simulaciones=100
-set.seed(491)
-resultados=rbinom(n_simulaciones, 366, 0.55)
-datos=data.frame(resultados)
-summary(datos) # mejorar
+
+# Gráfico de prior 
+library(ggplot2)
+library(cowplot)
+library(gridExtra)
+x <- seq(0, 1, length.out = 200)
+prior1 <- dbeta(x, 2, 2)
+prior2 <- dbeta(x, 2, 2)
+prior3 <- dbeta(x, 2, 2)
+
+g1<-ggplot(x = x, y = prior1)+
+  aes(x = x, y = prior1)+
+  geom_line( color = "#FF6699") +
+  geom_area(fill = "lightpink", alpha = 0.4, position = "identity") +
+  labs(x = bquote(theta[1]), y = expression("p(" ~ theta[1] ~ "| y)")) + 
+  theme(legend.position = "none")
+
+g2<-ggplot(x = x, y = prior2)+
+  aes(x = x, y = prior2)+
+  geom_line( color = "darkgreen") +
+  geom_area(fill = "lightgreen", alpha = 0.4, position = "identity") +
+  labs(x = bquote(theta[2]), y = expression("p(" ~ theta[2] ~ "| y)")) +
+  theme(legend.position = "none")
 
 
-ggplot(data.frame(x = resultados), aes(x)) +
-  geom_histogram(binwidth = 5, fill = "lightblue", color = "black") +
-  #geom_density(color = "red", size = 1.5) +  # Agrega la línea suavizada
-  labs(title = "Histograma de datos",
-       x = "Valores",
-       y = "Frecuencia")
+g3<-ggplot(x = x, y = prior3)+
+  aes(x = x, y = prior3)+
+  geom_line( color = "darkblue") +
+  geom_area(fill = "lightblue", alpha = 0.4, position = "identity") +
+  labs(x = bquote(theta[3]), y = expression("p(" ~ theta[3] ~ "| y)")) +
+  theme(legend.position = "none")
 
-#en promedio esperamos que gane 200.6 veces o 201
+grid.arrange(g1, g2, g3, ncol = 3)
+```
 
+#### *Estrategia 1: Completamente al azar*
 
-################################################################################
-######################### funcion para graficar ################################
+En esta estrategia cada día se juega con una máquina seleccionada al azar con igual probabilidad.
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE}
+# Funciones necesarias
 graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
   df <- data.frame(maq = c("Maquina 1", "Maquina 2", "Maquina 3"),
                    freq = cont_tiradas,
@@ -31,8 +97,7 @@ graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
     geom_bar(aes(y = exitos ), stat = "identity", color = "black") +
     geom_text(aes(y = exitos, label = "exitos"), position = position_stack(vjust = 0.5)) +
     geom_text(aes(y = freq, label = "fracasos"), position = position_stack(vjust = 0.8)) +
-    labs(title = "Comparación de frecuencias",
-         x = "Máquina",
+    labs(x = "Máquinas",
          y = "Frecuencia") +
     theme_minimal() +
     guides(fill = guide_legend(title = "Máquinas"))
@@ -42,8 +107,7 @@ graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
   df <- data.frame(dias = 1:366, wins=wins)
   g2<-ggplot(df, aes(x = dias, y = wins)) +
     geom_line(color = "blue")+
-    labs(title = "Valores acumulados en 366 días",
-         x = "Día",
+    labs(x = "Día",
          y = "Valor acumulado")
   
   # Crear el gráfico de postiriors
@@ -64,15 +128,15 @@ graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
     geom_line() +
     geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
     labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
-  print(g1)
-  print(g2)
-  print(g3)
+print(g3)
+print(g1)
+print(g2)
 }
-################################################################################
-################################################################################
+```
 
-## Estrategia 1: Completamente al azar
-####################### 1
+Se presenta la función creada para simular la elección de una máquina y su respectiva tirada.
+
+```{r, error=FALSE, warning=FALSE, echo=TRUE}
 al_azar <- function(lista1) {
   alphas <- lista1[[1]]
   betas <- lista1[[2]]
@@ -90,8 +154,11 @@ al_azar <- function(lista1) {
   salida1_list <- list(alphas, betas, tethas, prior_df, sample, juego)
   return(salida1_list)
 }
+```
 
-####################### 2
+Luego, se utiliza esta función para simular las jugadas diarias durante un año. A partir de esta información se registró la evolución diaria del dinero acumuldo cada día, la cantidad de veces que se jugó con cada máquina y la distribución a posteriori de la probabilidad de éxito para cada máquina.
+
+```{r, error=FALSE, warning=FALSE, echo=FALSE}
 set.seed(491)
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
@@ -169,8 +236,16 @@ ggplot(df, aes(x = dias, y = wins)) +
        x = "Día",
        y = "Valor acumulado")
 
+```
 
-######################## 3 1000 de 365 dias
+Se observa que las distribuciones a posteriori de la probabilidad de éxito de cada máquina se van centrando en el verdadero valor del parámetro a medida que aumenta la cantidad de días jugados.  
+En el gráfico de barras se observa que se jugó de manera parecida con las tres máquinas esto se debe a que la elección de las mismas se realiza de manera aleatoria, sin tener en cuenta lo ocurrido anteriormente. Puede observarse que la máquina 2 es la que proporciona un mayor cantidad de éxitos, mientras que la 1 parece ser la peor.
+Luego de un año de simulaciones, se obtuvo una ganancia de 159 unidades monetarias.
+
+El mismo procedimiento realizado para un año se repite por un período de 1000 años. A continuación se presentan los resultados.
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE}
+n_simulaciones = 1000
 wins1_anio = numeric(n_simulaciones)
 
 for (anio in 1:n_simulaciones) {
@@ -212,16 +287,21 @@ ggplot(ganacias_df) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
 
-#4 no es bayesiano, es al azar perreque
+print(paste("La ganancia media por año es ",mean(ganacias_df$ganacias),"unidades monetarias"))
 
-################################################################################
-################################################################################
-################################################################################
+```
 
-## Estrategia 2: Greedy con tasa obs
+A traves de la simulación de los 1000 años, se observa la distribución de las ganancias, la cual presenta un comportamiente simétrico centrado en aproximadamente 160 unidades monetarias por año.
 
-###### 1 Fijamos la semilla
-set.seed(412)
+Por último se concluye que esta estrategia no podria considerarse bayesiana, ya que siempre elige la máquina a utilizar de manera aleatoria, sin tener en cuenta la información recolectada.
+
+#### *Estrategia 2: Greedy con tasa observada*
+
+En esta estrategia se elige la máquina que tenga la mayor tasa de éxito observada hasta el momento. Esta tasa para cada máquina la calculamos como cantidad de días ganados sobre días jugados.
+
+Se presenta la función que replica esta estrategia para un día.
+
+```{r, echo=TRUE, error=FALSE, warning=FALSE}
 greedy_tasa_obs<-function(lista2){
   fl_calentamiento <- lista2[[5]]
   t <- lista2[[2]]
@@ -237,6 +317,11 @@ greedy_tasa_obs<-function(lista2){
   return(lista2_salida)
 }
 
+```
+
+Aplicando este procedimiento para simular cada día jugado del año obtenemos:
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE}
 # Defino variables necesarias
 tethas=c(0.3,0.55,0.45)
 t = c(0.5,0.5,0.5)
@@ -270,10 +355,15 @@ betas <- c(2+cont_tiradas[1]-cont_exitos[1],
            2+cont_tiradas[3]-cont_exitos[3])
 # Graficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
+```
+
+Se observa que .....
 
 
-######################## 3 1000 de 365 dias
 
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE}
 wins2_anio = numeric(n_simulaciones)
 
 for (anio in 1:n_simulaciones) {
@@ -311,19 +401,18 @@ ggplot(ganacias_df) +
   aes(x = ganacias) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
-#Se ve bine la suma de 3 normales de 3 maquinas, esta bueno
+```
 
-#4 creo que es un metodo frecuentista porque juega nu par de veces y decide
+Concluir el grafico ...
+Es bayesiano??
 
+#### *Estrategia 3: Greedy con probabilidad a posteriori*
 
-################################################################################
-################################################################################
-################################################################################
+En esta estrategia se elige la máquina que tenga, hasta el momento, mayor probabilidad de éxito promedio a posteriori.
 
-# Estrategia 3: Greedy con probabilidad a posteriorir
-# entiendo que elige la que tenga mejor esperanza hasta el momento
+Se presenta la función que simula esta estrategia para un día.
 
-set.seed(412)
+```{r, echo=TRUE, error=FALSE, warning=FALSE}
 greedy_prob_posterior<-function(lista3){
   tethas <- lista3[[1]]
   alphas <- lista3[[2]]
@@ -341,7 +430,11 @@ greedy_prob_posterior<-function(lista3){
   lista3_salida<-list(tethas, alphas, betas, juego, sample)
   return(lista3_salida)
 }
+```
 
+Reiterando este método para simular las jugadas de un año se obtiene:
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE}
 # Defino variables necesarias
 tethas=c(0.3,0.55,0.45)
 alphas<-c(2,2,2)
@@ -373,8 +466,13 @@ betas<- lista3_entrada[[3]]
 # Graficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
+```
 
-######################## 3 1000 de 365 dias
+Concluír los graficos...
+
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE}
 wins3_anio=numeric(n_simulaciones)
 for (anio in 1:n_simulaciones) {
   # Defino variables necesarias
@@ -411,175 +509,42 @@ ggplot(ganancia_df) +
   aes(x = wins) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
+```
 
-##4 me parece un metodo bayesiano porque usa las 
+Concluir el grafico ...
+Es bayesiano??
 
-################################################################################
-################################################################################
-################################################################################
-# Estrategia 4: e-greedy con tasa obs
+#### *Estrategia 4: $\epsilon$ -greedy (con tasa observada)*
 
-set.seed(412)
-e_greedy_tasa_obs<-function(lista4){
-  e<-lista4[[3]]
-  explote<-runif(1)
-  lista4[[6]] = 0
-  lista4[[7]] = 0
-  if(explote<=1-e){#Elige el mejor
-    lista4[[7]] = 1 # exploto
-    sample <-  order(t + runif(3,0.001, 0.009), decreasing = TRUE)[1]
-  }else{#Elige aleatoriamente 
-    lista4[[6]] = 1 # exploro
-    sample <-  as.numeric(sample(1:3, 1))
-  }
+Se selecciona la mejor máquina (la de mayor tasa de éxito observada según los datos actuales) con una probabilidad de $\epsilon$ y se elige una máquina al azar con una probabilidad $1-\epsilon$
 
-  juego <- rbinom(1, 1, tethas[sample])
-  lista4_salida<-list(tethas, t, e, juego, sample, lista4[[6]], lista4[[7]])
-  return(lista4_salida)
-}
-
-############# e = 0.2 ######################
-e=0.2
-# Defino variables necesarias
-tethas=c(0.3,0.55,0.45)
-t = c(0.5,0.5,0.5)
-cont_exitos= c(0,0,0) 
-cont_tiradas = c(0, 0, 0)
-juego=0
-sample=0
-exploro=0
-exploto=0
-wins=numeric(366)
-lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
-
-for(i in 1:366){
-  lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
-  juego <- lista4_entrada[[4]]
-  sample <- lista4_entrada[[5]]
-  exploro <- exploro + lista4_entrada[[6]]
-  exploto <- exploto + lista4_entrada[[7]]
-  cont_exitos[sample] <- cont_exitos[sample] + juego
-  cont_tiradas[sample] <- cont_tiradas[sample] + 1
-  lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
-  if(i==1){
-    wins[i]=juego
-  }else{
-    wins[i]=wins[i-1]+juego
-  }
-}
-alphas <- c(2+cont_exitos[1], 2+cont_exitos[2], 2+cont_exitos[3])
-betas <- c(2+cont_tiradas[1]-cont_exitos[1],
-           2+cont_tiradas[2]-cont_exitos[2],
-           2+cont_tiradas[3]-cont_exitos[3])
-
-# Graficos
-graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
+Se presenta la función que simula esta estrategia para un día.
 
 
-######################## 3 1000 de 365 dias
-wins4_anio=numeric(n_simulaciones)
-for (anio in 1:n_simulaciones) {
-  # Defino variables necesarias
-  tethas=c(0.3,0.55,0.45)
-  t = c(0.5,0.5,0.5)
-  cont_exitos= c(0,0,0) 
-  cont_tiradas = c(0, 0, 0)
-  juego=0
-  sample=0
-  exploro=0
-  exploto=0
-  
-  wins=numeric(366)
-  lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
-  
-  for(i in 1:366){
-    lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
-    juego <- lista4_entrada[[4]]
-    sample <- lista4_entrada[[5]]
-    exploro <- exploro + lista4_entrada[[6]]
-    exploto <- exploto + lista4_entrada[[7]]
-    cont_exitos[sample] <- cont_exitos[sample] + juego
-    cont_tiradas[sample] <- cont_tiradas[sample] + 1
-    lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
-    if(i==1){
-      wins[i]=juego
-    }else{
-      wins[i]=wins[i-1]+juego
-    }
-  }
-  wins4_anio[anio]<-wins[366]
-}
 
-ganancia_df <- data.frame(wins = wins4_anio)
-ggplot(ganancia_df) +
-  aes(x = wins) +
-  geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-  geom_density(color = "blue", size = 1)
+Reiterando este método para simular las jugadas de un año se obtiene:
 
 
-###### 3 e distintos
-graf_list <- list()
-j=1
-for (e in c(0.1, 0.2, 0.3)){
-  wins4_anio=numeric(n_simulaciones)
-  for (anio in 1:n_simulaciones) {
-    # Defino variables necesarias
-    tethas=c(0.3,0.55,0.45)
-    t = c(0.5,0.5,0.5)
-    cont_exitos= c(0,0,0) 
-    cont_tiradas = c(0, 0, 0)
-    juego=0
-    sample=0
-    exploro=0
-    exploto=0
-    
-    wins=numeric(366)
-    lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
-    
-    for(i in 1:366){
-      lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
-      juego <- lista4_entrada[[4]]
-      sample <- lista4_entrada[[5]]
-      exploro <- exploro + lista4_entrada[[6]]
-      exploto <- exploto + lista4_entrada[[7]]
-      cont_exitos[sample] <- cont_exitos[sample] + juego
-      cont_tiradas[sample] <- cont_tiradas[sample] + 1
-      lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
-      if(i==1){
-        wins[i]=juego
-      }else{
-        wins[i]=wins[i-1]+juego
-      }
-    }
-    wins4_anio[anio]<-wins[366]
-  }
-  
-  ganancia_df <- data.frame(wins = wins4_anio)
-  graf_list[[j]] <-ggplot(ganancia_df) + #Reemplazar por boxplots
-        aes(x = wins) +
-        geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-        geom_density(color = "blue", size = 1)
-  j=j+1
-}
 
-grid.arrange(graf_list[[1]],
-             graf_list[[2]],
-             graf_list[[3]],
-             ncol=1)
+Concluír los graficos...
 
-#4 es bayesiano?
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
 
-################################################################################
-################################################################################
-################################################################################
-# Estrategia 5: soft max
 
-#Seleccion de t, similar al e de e-greedy. Determina las tiradas dedicadas a la exploracion
-#A mayores valores de t, la cant de veces que se elige una  maquina al azar aumenta
-#Menor valor de t menos explora
-#Función Softmax, dandole la tasa y la "temperatura" nos devuelve la
-#probabilidad de elegir cada maquina
 
+Concluir el grafico ...
+Es bayesiano??
+
+#### *Estrategia 5: Softmax*
+
+Dada la tasa observada para cada máquina i, pi_i se calcula una probabilidad de elegir cada máquina utilizando la función softmax:
+$$Pr(i)=\frac{exp(\pi_i/\tau)}{\sum_{j=1}^{3}exp(\pi_i/\tau)}$$
+donde $\tau$ es un parámetro de “temperatura” que controla el grado de exploración. Luego, se elige la máquina i con probabilidad $Pr(i)$ 
+.
+Se presenta la función que simula esta estrategia para un día.
+
+```{r, echo=TRUE, error=FALSE, warning=FALSE}
+# Función softmax
 softmax= function(tau,pi){
   pr_soft1 = exp(pi[1]/tau)/sum(exp(pi/tau))
   pr_soft2 = exp(pi[2]/tau)/sum(exp(pi/tau))
@@ -587,9 +552,8 @@ softmax= function(tau,pi){
   pr_soft = c(pr_soft1,pr_soft2,pr_soft3)
   return(pr_soft)
 }
-softmax(t=0.1, pi=c(0.5,0.5,0.5) )
 
-#Creamos la función para una tirada
+#Función para una tirada
 tirada_softmax <- function(lista5){
   alphas <- lista5[[1]]
   betas <- lista5[[2]]
@@ -606,10 +570,12 @@ tirada_softmax <- function(lista5){
   lista5_salida<-list(alphas, betas, tethas,pi, juego,  sample)
   return(lista5_salida)
 }
+```
 
+Reiterando este método para simular las jugadas de un año se obtiene:
 
-#Utilizamos la función para realizar 366 tiradas
-set.seed(492)
+```{r, echo=FALSE, error=FALSE, warning=FALSE}
+# Defino variables necesarias
 tethas=c(0.3,0.55,0.45)
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
@@ -640,8 +606,13 @@ for(i in 1:366){
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
 
+```
 
-#1000 dias
+Concluír los graficos...
+
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE}
 n_simulaciones=1000
 
 wins5_anio=numeric(n_simulaciones)
@@ -680,24 +651,23 @@ ggplot(ganancia_df) +
   aes(x = wins) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
+```
 
-#Es bayesiano? Si, porque modifica la probabilidad de eleccion de la maquina
-#a traves de la informacion de las nuevas tiradas.  
+Concluir el grafico ...
+Es bayesiano??
 
-################################################################################
-################################################################################
-################################################################################
-# Estrategia 6: upper bound
-set.seed(412)
+#### *Estrategia 6: Upper-bound*
+
+Se selecciona la máquina que tenga el mayor extremo derecho de un intervalo de credibilidad (construido a partir de la distribución a posteriori de la probabilidad de éxito).
+
+Se presenta la función que simula esta estrategia para un día.
+
+```{r, echo=TRUE, error=FALSE, warning=FALSE}
 upper_bound <- function(lista6){
   tethas <- lista6[[1]]
   alphas <- lista6[[2]]
   betas <- lista6[[3]]
   
-  #esperanzas = c(alphas[1]/(alphas[1]+betas[1]),
-  #               alphas[2]/(alphas[2]+betas[2]),
-  #               alphas[3]/(alphas[3]+betas[3]))
-  #print(esperanzas)
   UCB <- c(qbeta(0.95, alphas[1], betas[1]), 
            qbeta(0.95, alphas[2], betas[2]), 
            qbeta(0.95, alphas[3], betas[3]))
@@ -709,7 +679,12 @@ upper_bound <- function(lista6){
   lista6_salida<-list(tethas, alphas, betas, UCB, juego, sample, cont_exitos, cont_tiradas)
   return(lista6_salida)
 }
+```
 
+Reiterando este método para simular las jugadas de un año se obtiene:
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE}
+# Defino variables necesarias
 tethas=c(0.3,0.55,0.45)
 cont_exitos= c(0,0,0) 
 cont_tiradas = c(0, 0, 0)
@@ -740,7 +715,13 @@ for(i in 1:366){
 #Graficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
-######################## 3 1000 de 365 dias
+```
+
+Concluír los graficos...
+
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE}
 wins6_anio=numeric(n_simulaciones)
 for (anio in 1:n_simulaciones) {
   # Defino variables necesarias
@@ -779,13 +760,18 @@ ggplot(ganancia_df) +
   aes(x = wins) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
+```
 
+Concluir el grafico ...
+Es bayesiano??
 
-################################################################################
-################################################################################
-################################################################################
-# Estrategia 7: thompson sampling
-# Se usa la media para comparar muestras
+#### *Estrategia 7: Thompson sampling*
+
+Para seleccionar una máquina, se toma una muestra de la distribución a posteriori de las probabilidades de éxito de cada máquina y se elige la máquina correspondiente a la muestra más grande.
+
+Se presenta la función que simula esta estrategia para un día.
+
+```{r, echo=TRUE, error=FALSE, warning=FALSE}
 thompson_sampling <- function(lista7){
   alphas <- lista7[[1]]
   betas <- lista7[[2]]
@@ -802,9 +788,12 @@ thompson_sampling <- function(lista7){
   lista7_salida<-list(alphas, betas, tethas,  muestra, juego,  sample)
   return(lista7_salida)
 }
+```
 
-#### 2 
-set.seed(490)
+Reiterando este método para simular las jugadas de un año se obtiene:
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE}
+# Defino variables necesarias
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
 tethas=c(0.3,0.55,0.45)
@@ -835,7 +824,13 @@ betas <- lista7_entrada[[2]]
 # Graficar
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 
-######################## 3 1000 de 365 dias
+```
+
+Concluír los graficos...
+
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE}
 wins7_anio=numeric(n_simulaciones)
 for (anio in 1:n_simulaciones) {
   alphas<-c(2,2,2)
@@ -871,4 +866,9 @@ ggplot(ganancia_df) +
   aes(x = wins) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
+
+```
+
+Concluir el grafico ...
+Es bayesiano??
 
