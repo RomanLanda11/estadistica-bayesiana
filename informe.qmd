@@ -411,7 +411,7 @@ ggplot(ganacias_df) +
 mean(ganancia_df$wins)
 ```
 
-Se grafica la distribución aproximada de la ganancia anual. En este se diferencian tres modas, estas corresponden a la cantidad de años en los cuales se usaron mayormente las máquinas 1, 3 y 2 respectivamente.
+Se grafica la distribución aproximada de la ganancia anual. En este se diferencian tres modas, estas corresponden a la cantidad de años en los cuales se usaron mayormente las máquinas uno, tres y 2dos respectivamente.
 La media de las ganancias anuales es 185.1 unidades monetarias.
 Además se puede notar que mayormente se obtuvieron ganancias altas, por lo que suponemos que se utilizó en mayor medida la máquina dos.
 
@@ -421,7 +421,7 @@ El método, sin tener en cuenta las primeras 10 tiradas, es bayesiano ya que uti
 
 En esta estrategia se elige la máquina que tenga, hasta el momento, mayor probabilidad de éxito promedio a posteriori. 
 
-Se presenta la función que simula esta estrategia para un día.Para esto se calculan las esperanzas de las tres distribuciones a priori y se utiliza la máquina que presenta el mayor valor.Luego se simula el juego con la máquina elegida y se actualizan las distribuciones.
+Se presenta la función que simula esta estrategia para un día.Para esto se calculan las esperanzas de las tres distribuciones a priori y se utiliza la máquina que presenta el mayor valor. Luego se simula el juego con la máquina elegida y se actualizan las distribuciones.
 
 ```{r, echo=TRUE, error=FALSE, warning=FALSE}
 greedy_prob_posterior<-function(lista3){
@@ -480,7 +480,7 @@ print(paste("La ganancia de este año es ",wins[366],"unidades monetarias"))
 ```
 
 Se observa que la máquina más utilizada es la número dos presentando la mayor tasa de éxitos.
-Viendo las distribuciones a posteriori se puede notar que las máquinas 1 y 3 están centradas alrededor del mismo valor, mientras que la máquina 2 está más concentrada alrededor de 0.55.
+Viendo las distribuciones a posteriori se puede notar que las máquinas uno y tres están centradas alrededor del mismo valor, mientras que la máquina 2 está más concentrada alrededor de 0.55.
 Con el último gráfico se observa la evolución de las ganancias a traves del paso de los días, obteniendo una ganancia total de 186 unidades monetarias.
 
 Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
@@ -523,9 +523,17 @@ ggplot(ganancia_df) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
 ```
+```{r}
+mean(mean(ganancia_df$wins))
+```
 
-Concluir el grafico ...
-Es bayesiano??
+
+Se grafica la distribución aproximada de la ganancia anual. En este se diferencian dos modas, las cuales corresponden a la cantidad de años en los cuales se usaron mayormente las máquinas tres y dos respectivamente.Con esta estrategia. A diferencia de la anterior, no se obtiene la moda que representa a la máquina 1, se supone que esto sucede porque la estrategia identifica en casi todas las simulaciones que no es la mejor.
+La media de las ganancias anuales es 187.3 unidades monetarias.
+Además se puede notar que mayormente se obtuvieron ganancias altas, por lo que suponemos que se utilizó en mayor medida la máquina dos.
+
+El método es bayesiano ya que utiliza la máquina con mayor esperanza de éxito y estas se actualizan en base a los resultados obtenidos tirada tras tirada.
+
 
 #### *Estrategia 4: $\epsilon$ -greedy (con tasa observada)*
 
@@ -533,16 +541,123 @@ Se selecciona la mejor máquina (la de mayor tasa de éxito observada según los
 
 Se presenta la función que simula esta estrategia para un día.
 
+```{r}
+set.seed(412)
+e_greedy_tasa_obs<-function(lista4){
+  e<-lista4[[3]]
+  explote<-runif(1)
+  lista4[[6]] = 0
+  lista4[[7]] = 0
+  if(explote<=1-e){#Elige el mejor
+    lista4[[7]] = 1 # exploto
+    sample <-  order(t + runif(3,0.001, 0.009), decreasing = TRUE)[1]
+  }else{#Elige aleatoriamente 
+    lista4[[6]] = 1 # exploro
+    sample <-  as.numeric(sample(1:3, 1))
+  }
 
+  juego <- rbinom(1, 1, tethas[sample])
+  lista4_salida<-list(tethas, t, e, juego, sample, lista4[[6]], lista4[[7]])
+  return(lista4_salida)
+}
+```
 
 Reiterando este método para simular las jugadas de un año se obtiene:
 
+```{r}
+############# e = 0.2 ######################
+e=0.2
+# Defino variables necesarias
+tethas=c(0.3,0.55,0.45)
+t = c(0.5,0.5,0.5)
+cont_exitos= c(0,0,0) 
+cont_tiradas = c(0, 0, 0)
+juego=0
+sample=0
+exploro=0
+exploto=0
+wins=numeric(366)
+lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
+
+for(i in 1:366){
+  lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
+  juego <- lista4_entrada[[4]]
+  sample <- lista4_entrada[[5]]
+  exploro <- exploro + lista4_entrada[[6]]
+  exploto <- exploto + lista4_entrada[[7]]
+  cont_exitos[sample] <- cont_exitos[sample] + juego
+  cont_tiradas[sample] <- cont_tiradas[sample] + 1
+  lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
+  if(i==1){
+    wins[i]=juego
+  }else{
+    wins[i]=wins[i-1]+juego
+  }
+}
+alphas <- c(2+cont_exitos[1], 2+cont_exitos[2], 2+cont_exitos[3])
+betas <- c(2+cont_tiradas[1]-cont_exitos[1],
+           2+cont_tiradas[2]-cont_exitos[2],
+           2+cont_tiradas[3]-cont_exitos[3])
+
+# Graficos
+graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
+```
 
 
 Concluír los graficos...
 
-Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia, a su vez, se varia el timepo de exploración elegido ($\epsilon$) y se analizan los resultados.
 
+```{r}
+graf_list <- list()
+j=1
+for (e in c(0.1, 0.2, 0.3)){
+  wins4_anio=numeric(n_simulaciones)
+  for (anio in 1:n_simulaciones) {
+    # Defino variables necesarias
+    tethas=c(0.3,0.55,0.45)
+    t = c(0.5,0.5,0.5)
+    cont_exitos= c(0,0,0) 
+    cont_tiradas = c(0, 0, 0)
+    juego=0
+    sample=0
+    exploro=0
+    exploto=0
+    
+    wins=numeric(366)
+    lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
+    
+    for(i in 1:366){
+      lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
+      juego <- lista4_entrada[[4]]
+      sample <- lista4_entrada[[5]]
+      exploro <- exploro + lista4_entrada[[6]]
+      exploto <- exploto + lista4_entrada[[7]]
+      cont_exitos[sample] <- cont_exitos[sample] + juego
+      cont_tiradas[sample] <- cont_tiradas[sample] + 1
+      lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
+      if(i==1){
+        wins[i]=juego
+      }else{
+        wins[i]=wins[i-1]+juego
+      }
+    }
+    wins4_anio[anio]<-wins[366]
+  }
+  
+  ganancia_df <- data.frame(wins = wins4_anio)
+  graf_list[[j]] <-ggplot(ganancia_df) + #Reemplazar por boxplots
+        aes(x = wins) +
+        geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
+        geom_density(color = "blue", size = 1)
+  j=j+1
+}
+
+grid.arrange(graf_list[[1]],
+             graf_list[[2]],
+             graf_list[[3]],
+             ncol=1)
+```
 
 
 Concluir el grafico ...
