@@ -97,8 +97,8 @@ graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
   g1<-ggplot(df, aes(x = maq, fill = maq)) +
     geom_bar(aes(y = freq ), stat = "identity", color = "black") +
     geom_bar(aes(y = exitos ), stat = "identity", color = "black") +
-    geom_text(aes(y = exitos, label = "exitos"), position = position_stack(vjust = 0.5)) +
-    geom_text(aes(y = freq, label = "fracasos"), position = position_stack(vjust = 0.8)) +
+    geom_text(aes(y = exitos, label = "Éxitos"), position = position_stack(vjust = 0.5)) +
+    geom_text(aes(y = freq, label = "Fracasos"), position = position_stack(vjust = 0.8)) +
     labs(x = "Máquinas",
          y = "Frecuencia") +
     theme_minimal() +
@@ -130,13 +130,13 @@ graficar<-function(cont_tiradas, cont_exitos, wins, alphas, betas){
     geom_line() +
     geom_area(aes(fill = maquina), alpha = 0.4, position = "identity") +
     labs(x = expression(theta), y = expression("p(" ~ theta ~ "| y)"))
-print(g3)
 print(g1)
+print(g3)
 print(g2)
 }
 ```
 
-Se presenta la función creada para simular la elección de una máquina y su respectiva tirada.
+Se presenta la función creada para simular la elección de una máquina y su respectiva tirada. A esta se le envia una lista con los parámetros necesarios como $\theta$ o probabilidad de éxito real de cada máquina, $\alpha$ y $\beta$ parámetros de las distribuciones a priori, etc. La función decide, como bien indica su nombre, una de las tres máquinas de manera al azar y simula la jugada con esa máquina. Luego nos devuelve los valores actualizados de los parámetros.
 
 ```{r, error=FALSE, warning=FALSE, echo=TRUE}
 al_azar <- function(lista1) {
@@ -158,7 +158,7 @@ al_azar <- function(lista1) {
 }
 ```
 
-Luego, se utiliza esta función para simular las jugadas diarias durante un año. A partir de esta información se registró la evolución diaria del dinero acumuldo cada día, la cantidad de veces que se jugó con cada máquina y la distribución a posteriori de la probabilidad de éxito para cada máquina.
+Luego, se utiliza esta función para simular las jugadas diarias durante un año. A partir de esta información se registró la evolución diaria del dinero acumulado cada día, la cantidad de veces que se jugó con cada máquina y la distribución a posteriori de la probabilidad de éxito para cada máquina.
 
 ```{r, error=FALSE, warning=FALSE, echo=FALSE}
 set.seed(491)
@@ -240,7 +240,7 @@ ggplot(df, aes(x = dias, y = wins)) +
 
 ```
 
-Se observa que las distribuciones a posteriori de la probabilidad de éxito de cada máquina se van centrando en el verdadero valor del parámetro a medida que aumenta la cantidad de días jugados.  
+Se observa que las distribuciones a posteriori de las probabilidades de éxito de cada máquina se van centrando en el verdadero valor del parámetro a medida que aumenta la cantidad de días jugados.  
 En el gráfico de barras se observa que se jugó de manera parecida con las tres máquinas esto se debe a que la elección de las mismas se realiza de manera aleatoria, sin tener en cuenta lo ocurrido anteriormente. Puede observarse que la máquina 2 es la que proporciona un mayor cantidad de éxitos, mientras que la 1 parece ser la peor.
 Luego de un año de simulaciones, se obtuvo una ganancia de 159 unidades monetarias.
 
@@ -299,9 +299,10 @@ Por último se concluye que esta estrategia no podria considerarse bayesiana, ya
 
 #### *Estrategia 2: Greedy con tasa observada*
 
-En esta estrategia se elige la máquina que tenga la mayor tasa de éxito observada hasta el momento. Esta tasa para cada máquina la calculamos como cantidad de días ganados sobre días jugados.
+En esta estrategia se elige la máquina que tenga la mayor tasa de éxito observada hasta el momento. Esta tasa para cada máquina la calculamos como cantidad de días ganados sobre días jugados. Partiendo de una creencia inicial de que las tasas de éxito para las tres máquinas son iguales a 0.5. 
+Con esta técnia se corre el riesgo de perder la primera vez que se juega con una máquina, su tasa se actualice a cero y no volver a utilizarla. Para omitir estos casos realizamos 10 tiradas de calentamiento previamente.
 
-Se presenta la función que replica esta estrategia para un día.
+Se presenta la función que replica esta estrategia para un día. A esta se le envia una lista con los parámetros necesarios. La función elige de manera aleatoria la máquina a utilizar si el día simulado se encuentra entre los primeros 10, en los restantes elige la que presenta mayor tasa de éxito, simula la jugada y luego nos devuelve los valores actualizados de los parámetros.
 
 ```{r, echo=TRUE, error=FALSE, warning=FALSE}
 greedy_tasa_obs<-function(lista2){
@@ -357,11 +358,12 @@ betas <- c(2+cont_tiradas[1]-cont_exitos[1],
            2+cont_tiradas[3]-cont_exitos[3])
 # Graficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
+print(paste("La ganancia de este año es ",wins[366],"unidades monetarias"))
 ```
 
-Se observa que .....
-
-
+Se observa que este método en el año simulado elige mayormente la máquina 2, esto se debe a que presentó una mayor tasa de éxitos y se mantuvo constante durante este tiempo.
+En el gráfico de las distribuciones a posteriori se ve que la más modificada es la correspondiente a la máquina dos, debido a que ésta fue la más utilizada. Además se nota que se concentra alrededor del verdadero valor poblacional ($\theta_2 = 0.55$).
+Se presenta un tercer gráfico con la evolución de las ganancias acumuladas durante el año.
 
 Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
 
@@ -404,9 +406,14 @@ ggplot(ganacias_df) +
   geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
   geom_density(color = "blue", size = 1)
 ```
+```{r, echo=FALSE, error=FALSE, warning=FALSE}
+mean(ganancia_df$wins)
+```
 
-Concluir el grafico ...
-Es bayesiano??
+Se grafica la distribución aproximada de la ganancia anual. En este se diferencian tres modas, estas corresponden a la cantidad de años en los cuales se usaron mayormente las máquinas 1, 3 y 2 respectivamente.
+La media de las ganancias anuales es 185.1 unidades monetarias.
+
+El método, sin tener en cuenta las primeras 10 tiradas, es bayesiano ya que utiliza la máquina con mayor tasa de éxito y estas se actualizan en base a los resultados obtenidos tirada tras tirada.
 
 #### *Estrategia 3: Greedy con probabilidad a posteriori*
 
