@@ -41,9 +41,8 @@ library(ggplot2)
 library(dplyr)
 library(cowplot)
 library(gridExtra)
-library(ggplot2)
-library(cowplot)
-library(gridExtra)
+install.packages("Kable")
+library()
 set.seed(491)
 n_simulaciones=1000
 
@@ -82,10 +81,10 @@ grid.arrange(g1, g2, g3, ncol = 3)
 Antes de comenzar con la exposición de las estrategias, se simula los resultados de un jugador con  información privilegiada y juega 366 días con la mejor máquina
 
 ```{r}
-set.seed(491)
+
 resultados=rbinom(n_simulaciones, 366, 0.55)
 datos=data.frame(resultados)
-summary(datos) # mejorar
+kable(summary(datos)) # mejorar
 
 
 ganacias_df <- data.frame(anios=1:n_simulaciones, ganacias=resultados)
@@ -428,7 +427,7 @@ Se grafica la distribución aproximada de la ganancia anual. En este se diferenc
 La media de las ganancias anuales es 185.1 unidades monetarias.
 Además se puede notar que mayormente se obtuvieron ganancias altas, por lo que suponemos que se utilizó en mayor medida la máquina dos.
 
-El método, sin tener en cuenta las primeras 10 tiradas, es bayesiano ya que utiliza la máquina con mayor tasa de éxito y estas se actualizan en base a los resultados obtenidos tirada tras tirada.
+El método utilizado para la elección de la máquina no es bayesiano, ya que, no se utiliza información de la distribución a posteriori, solo se tiene en cuenta el valor de las tasas de éxito observadas hasta el momento.
 
 ## *Estrategia 3: Greedy con probabilidad a posteriori*
 
@@ -752,7 +751,7 @@ r4
 ```
 
 Luego de simular 1000 años, se grafican las ganancias anuales para los distintos valores de $\epsilon$, a traves de los mismos vemos distribuciones parecidas, todas centradas en aproximadamente 155 unidades monetarias.La ganancia media para los 1000 años de simulación tomando $\epsilon$ igual a 0.05,0.2 y 0.4 resultan 158.596,158.438 y 158.458 unidades monetarias respectivamente.
-El método es bayesiano ya que utiliza la máquina con tasa de éxito mayor con probabilidad $1-\epsilon$, y elige una máquina de manera aleatoria con probabilidad $\epsilon$, y esta tasa de éxito se va modificando a traves de las tiradas.
+El método no es bayesiano ya que utiliza la máquina con tasa de éxito mayor con probabilidad $1-\epsilon$, y elige una máquina de manera aleatoria con probabilidad $\epsilon$, sin tener en cuenta las distribuciones a posteriori de cada máquina.
 
 ## *Estrategia 5: Softmax*
 
@@ -882,7 +881,7 @@ quantile(ganancia_df$wins,0.05)
 mean(ganancia_df$wins)
 ```
 
-El método utilizado es bayesiano, ya que, la elección de la máquina a utilizar se basa en una probabilidad que es función de las tasas observadas de éxito, las cuales van modificandose tirada a tirada.
+El método utilizado no es bayesiano, ya que, la elección de la máquina a utilizar se basa en una probabilidad que es función de las tasas observadas de éxito, las cuales no tienen en cuenta la distribuciones a posteriori correspondientes a cada máquina.
 
 ## *Estrategia 6: Upper-bound*
 
@@ -1118,8 +1117,11 @@ El método utilizado es bayesiano, ya que, actualiza las distribuciones a poster
 
 # Conclusiones
 
+Una vez simuladas todas las técnicas se procede a comparar los resultados obtenidos, y así poder recomendar a los futuros jugadores cuál de estas utilizar para maximizar las ganancias.Vale aclarar que se busca la estrategia que más se asemeje al caso ideal presentado al inicio del informe.
+Se presenta una tabla con 
+
 ```{r}
-r0
+table()
 ```
 ```{r}
 r1
