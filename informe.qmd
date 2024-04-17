@@ -41,8 +41,7 @@ library(ggplot2)
 library(dplyr)
 library(cowplot)
 library(gridExtra)
-install.packages("Kable")
-library()
+library(kableExtra)
 set.seed(491)
 n_simulaciones=1000
 
@@ -82,19 +81,22 @@ Antes de comenzar con la exposición de las estrategias, se simula los resultado
 
 ```{r}
 
-resultados=rbinom(n_simulaciones, 366, 0.55)
-datos=data.frame(resultados)
+Resultados=rbinom(n_simulaciones, 366, 0.55)
+datos=data.frame(Resultados)
 kable(summary(datos)) # mejorar
 
 
-ganacias_df <- data.frame(anios=1:n_simulaciones, ganacias=resultados)
-r0<-ggplot(ganacias_df) +
-      aes(x = ganacias) +
+ganancias0_df <- data.frame(anios=1:n_simulaciones, ganancias=resultados)
+r0<-ggplot(ganancias0_df) +
+      aes(x = ganancias) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-      geom_density(color = "blue", size = 1)
+      geom_density(color = "blue", size = 1)+
+      labs(x = "Ganancias anuales",
+         y = "") +
+      theme_minimal() 
 r0
 ```
-Sin dudas esta es la mejor situación posible, se visualiza una ganacia anual con una distribución que luce normal, centrada 200 unidades monetarias, pero recordemos, realmente no se conoces cual es la mejor máquina, asique, a explorar y/o explotar...
+Sin dudas esta es la mejor situación posible, se visualiza una ganacia anual con una distribución que luce normal, centrada en 200 unidades monetarias, pero recordemos, realmente no se conoce cuál es la mejor máquina, asi que, a explorar y/o explotar...
 
 
 ## *Estrategia 1: Completamente al azar*
@@ -175,7 +177,7 @@ al_azar <- function(lista1) {
 Luego, se utiliza esta función para simular las jugadas diarias durante un año. A partir de esta información se registró la evolución diaria del dinero acumulado cada día, la cantidad de veces que se jugó con cada máquina y la distribución a posteriori de la probabilidad de éxito para cada máquina.
 
 ```{r, error=FALSE, warning=FALSE, echo=FALSE}
-set.seed(491)
+
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
 tethas=c(0.3,0.55,0.45)
@@ -248,20 +250,19 @@ df <- data.frame(dias = 1:366, wins=wins)
 # Crear el gráfico evolucion ganancia
 ggplot(df, aes(x = dias, y = wins)) +
   geom_line(color = "blue")+
-  labs(title = "Valores acumulados en 366 días",
-       x = "Día",
-       y = "Valor acumulado")
+  labs(x = "Día",
+       y = "Ganancia acumulada")
 
 ```
 
-Se observa que las distribuciones a posteriori de las probabilidades de éxito de cada máquina se van centrando en el verdadero valor del parámetro a medida que aumenta la cantidad de días jugados.  
+Se observa que las distribuciones a posteriori de las probabilidades de éxito de cada máquina se van centrando en el verdadero valor del parámetro a medida que aumenta la cantidad de días jugados.Esto es una situación que se repetirá en todas las estrategias, por lo cual solo se presentará el gráfico de las distribuciones a posteriori finales de aquí en adelante.  
 En el gráfico de barras se observa que se jugó de manera parecida con las tres máquinas esto se debe a que la elección de las mismas se realiza de manera aleatoria, sin tener en cuenta lo ocurrido anteriormente. Puede observarse que la máquina 2 es la que proporciona un mayor cantidad de éxitos, mientras que la 1 parece ser la peor.
 Luego de un año de simulaciones, se obtuvo una ganancia de 159 unidades monetarias.
 
 El mismo procedimiento realizado para un año se repite por un período de 1000 años. A continuación se presentan los resultados.
 
 ```{r, echo=FALSE, error=FALSE, warning=FALSE}
-n_simulaciones = 1000
+
 wins1_anio = numeric(n_simulaciones)
 
 for (anio in 1:n_simulaciones) {
@@ -297,19 +298,20 @@ for (anio in 1:n_simulaciones) {
   wins1_anio[anio] <- wins[366]
 }
 
-ganacias_df <- data.frame(anios=1:n_simulaciones, ganacias=wins1_anio)
-r1<-ggplot(ganacias_df) +
-      aes(x = ganacias) +
+ganancias1_df <- data.frame(anios=1:n_simulaciones, ganancias=wins1_anio)
+r1<-ggplot(ganancias1_df) +
+      aes(x = ganancias) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-      geom_density(color = "blue", size = 1)
+      geom_density(color = "blue", size = 1)+
+     labs(x="Ganancias anuales", y="")
 r1
-print(paste("La ganancia media por año es ",mean(ganacias_df$ganacias),"unidades monetarias"))
+print(paste("La ganancia media por año es ",mean(ganancias1_df$ganacias),"unidades monetarias"))
 
 ```
 
 A traves de la simulación de los 1000 años, se observa la distribución de las ganancias, la cual presenta un comportamiente simétrico centrado en aproximadamente 160 unidades monetarias por año.
 
-Por último se concluye que esta estrategia no podria considerarse bayesiana, ya que siempre elige la máquina a utilizar de manera aleatoria, sin tener en cuenta la información recolectada.
+Por último se concluye que esta estrategia no podría considerarse bayesiana, ya que siempre elige la máquina a utilizar de manera aleatoria, sin tener en cuenta la información recolectada.
 
 ## *Estrategia 2: Greedy con tasa observada*
 
@@ -414,13 +416,13 @@ for (anio in 1:n_simulaciones) {
   wins2_anio[anio] <- wins[366]
 }
 
-ganacias_df <- data.frame(anios=1:n_simulaciones, ganacias=wins2_anio)
-r2<-ggplot(ganacias_df) +
-      aes(x = ganacias) +
+ganancias2_df <- data.frame(anios=1:n_simulaciones, ganancias=wins2_anio)
+r2<-ggplot(ganancias2_df) +
+      aes(x = ganancias) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
       geom_density(color = "blue", size = 1)
 r2
-mean(ganacias_df$wins)
+mean(ganancias2_df$wins)
 ```
 
 Se grafica la distribución aproximada de la ganancia anual. En este se diferencian tres modas, estas corresponden a la cantidad de años en los cuales se usaron mayormente las máquinas uno, tres y 2dos respectivamente.
@@ -531,13 +533,14 @@ for (anio in 1:n_simulaciones) {
   wins3_anio[anio]<-wins[366]
 }
 
-ganancia_df <- data.frame(wins = wins3_anio)
-r3<-ggplot(ganancia_df) +
+ganancia3_df <- data.frame(wins = wins3_anio)
+r3<-ggplot(ganancia3_df) +
       aes(x = wins) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-      geom_density(color = "blue", size = 1)
+      geom_density(color = "blue", size = 1)+
+  labs(x="Ganancias anuales",y="")
 r3
-mean(mean(ganancia_df$wins))
+mean(mean(ganancia3_df$wins))
 ```
 
 
@@ -563,7 +566,6 @@ Se selecciona la mejor máquina (la de mayor tasa de éxito observada según los
 Se presenta la función que simula esta estrategia para un día.
 
 ```{r}
-set.seed(412)
 e_greedy_tasa_obs<-function(lista4){
   e<-lista4[[3]]
   explote<-runif(1)
@@ -582,67 +584,6 @@ e_greedy_tasa_obs<-function(lista4){
   return(lista4_salida)
 }
 ```
-
-```{r}
-e_greedy_tasa_obs<-function(lista4){
-  e<-lista4[[3]]
-  explote<-runif(1)
-  lista4[[6]] = 0
-  lista4[[7]] = 0
-  if(explote<=1-e){#Elige el mejor
-    lista4[[7]] = 1 # exploto
-    sample <-  order(t + runif(3,0.001, 0.009), decreasing = TRUE)[1]
-  }else{#Elige aleatoriamente 
-    lista4[[6]] = 1 # exploro
-    sample <-  as.numeric(sample(1:3, 1))
-  }
-
-
-  juego <- rbinom(1, 1, tethas[sample])
-  lista4_salida<-list(tethas, t, e, juego, sample, lista4[[6]], lista4[[7]])
-  return(lista4_salida)
-}
-```
-
-```{r}
-############# e = 0.2 ######################
-e=0.2
-# Defino variables necesarias
-tethas=c(0.3,0.55,0.45)
-t = c(0.5,0.5,0.5)
-cont_exitos= c(0,0,0) 
-cont_tiradas = c(0, 0, 0)
-juego=0
-sample=0
-exploro=0
-exploto=0
-wins=numeric(366)
-lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
-
-for(i in 1:366){
-  lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
-  juego <- lista4_entrada[[4]]
-  sample <- lista4_entrada[[5]]
-  exploro <- exploro + lista4_entrada[[6]]
-  exploto <- exploto + lista4_entrada[[7]]
-  cont_exitos[sample] <- cont_exitos[sample] + juego
-  cont_tiradas[sample] <- cont_tiradas[sample] + 1
-  lista4_entrada[[2]][sample] <- cont_exitos[sample] / cont_tiradas[sample]
-  if(i==1){
-    wins[i]=juego
-  }else{
-    wins[i]=wins[i-1]+juego
-  }
-}
-alphas <- c(2+cont_exitos[1], 2+cont_exitos[2], 2+cont_exitos[3])
-betas <- c(2+cont_tiradas[1]-cont_exitos[1],
-           2+cont_tiradas[2]-cont_exitos[2],
-           2+cont_tiradas[3]-cont_exitos[3])
-
-# Graficos
-graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
-```
-
 
 Se elige un $\epsilon=0.05$, esto significa que el jugador gastará el 5% de su tiempo explorando nuevas máquinas y el 95% restante explotando la máquina que ha demostrado ser más rentable hasta ese momento. Reiterando este método para simular las jugadas de un año se obtiene:
 
@@ -660,11 +601,6 @@ exploro=0
 exploto=0
 wins=numeric(366)
 lista4_entrada=list(tethas, t, e, juego, sample, exploro, exploto)
-```
-
-Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia, a su vez, se varia el timepo de exploración elegido ($\epsilon$) y se analizan los resultados.
-
-```{r}
 for(i in 1:366){
   lista4_entrada <- e_greedy_tasa_obs(lista4 = lista4_entrada)
   juego <- lista4_entrada[[4]]
@@ -688,18 +624,19 @@ betas <- c(2+cont_tiradas[1]-cont_exitos[1],
 # Graficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
 print(paste("La ganancia de este año es ",wins[366],"unidades monetarias"))
-
 ```
-
 
 Se observa que se utilizan las 3 máquinas de manera similar,tambien se puede notar que las tiradas en la máquina 2 presentan una proporción de éxitos mayor en comparación a las 2 restantes.
 Viendo las distribuciones a posteriori se puede notar que al haberse realizado una cantidad de tiradas similiar en las 3 máquinas estas sus valores se encuentran concentrados alrededor del verdadero valor del parámetro ($\theta_1$,$\theta_2$,$\theta_3$).
 Con el último gráfico se observa la evolución de las ganancias a traves del paso de los días, obteniendo una ganancia total de 170 unidades monetarias.
 
-Luego se simulan 1000 años jugados con esta estrategia, esto se repite para tres valores distintos de $\epsilon = (0.05, 0.1, 0.2)$ y se comparan los resultados.
+Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia, a su vez, se varía el tiempo de exploración elegido ($\epsilon = (0.05, 0.1, 0.2)$ ) y se analizan los resultados.
+
 
 ```{r}
 ###### 3 e distintos
+
+ganancias4_list = list()
 graf_list <- list()
 j=1
 for (e in c(0.05, 0.2, 0.4)){
@@ -736,12 +673,14 @@ for (e in c(0.05, 0.2, 0.4)){
     wins4_anio[anio]<-wins[366]
   }
   
-  ganancia_df <- data.frame(wins = wins4_anio)
-  graf_list[[j]] <-ggplot(ganancia_df) + #Reemplazar por boxplots
+  ganancia4_df <- data.frame(wins = wins4_anio)
+  graf_list[[j]] <-ggplot(ganancia4_df) + #Reemplazar por boxplots
         aes(x = wins) +
         geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-        geom_density(color = "blue", size = 1)
-  print(paste(mean(ganancia_df$wins)))
+        geom_density(color = "blue", size = 1)+
+        labs(x="Ganancias anuales",y="")
+  print(paste(mean(ganancia4_df$wins)))
+  ganancias4_list[[j]] = ganancia4_df 
   j=j+1
 }
 
@@ -750,7 +689,7 @@ r4
 
 ```
 
-Luego de simular 1000 años, se grafican las ganancias anuales para los distintos valores de $\epsilon$, a traves de los mismos vemos distribuciones parecidas, todas centradas en aproximadamente 155 unidades monetarias.La ganancia media para los 1000 años de simulación tomando $\epsilon$ igual a 0.05,0.2 y 0.4 resultan 158.596,158.438 y 158.458 unidades monetarias respectivamente.
+Luego de simular 1000 años, se grafican las ganancias anuales para los distintos valores de $\epsilon$, a traves de los mismos vemos distribuciones parecidas, todas centradas en aproximadamente 160 unidades monetarias.La ganancia media para los 1000 años de simulación tomando $\epsilon$ igual a 0.05,0.2 y 0.4 resultan 159.018,158.89 y 157.959 unidades monetarias respectivamente.
 El método no es bayesiano ya que utiliza la máquina con tasa de éxito mayor con probabilidad $1-\epsilon$, y elige una máquina de manera aleatoria con probabilidad $\epsilon$, sin tener en cuenta las distribuciones a posteriori de cada máquina.
 
 ## *Estrategia 5: Softmax*
@@ -762,7 +701,6 @@ donde $\tau$ es un parámetro de “temperatura” que controla el grado de expl
 Se presenta la función "softmax" que para ciertos valores de las tasas ($\pi_i$) y el parámetro de temperatura ($\tau$), nos devuelve la probabilidad de utilizar cada una de las máquinas; y la función que replica esta estrategia para un día. A esta se le envia una lista con los parámetros necesarios. La función elige una máquina con probabilidad $Pr(i)$ , simula la jugada y luego nos devuelve los valores actualizados de los parámetros.
 
 ```{r, echo=TRUE, error=FALSE, warning=FALSE}
-set.seed(491)
 # Función softmax
 softmax= function(tau,pi){
   pr_soft1 = exp(pi[1]/tau)/sum(exp(pi/tau))
@@ -795,6 +733,7 @@ Reiterando este método para simular las jugadas de un año se obtiene:
 
 ```{r, echo=FALSE, error=FALSE, warning=FALSE}
 # Defino variables necesarias
+set.seed(491)
 tethas=c(0.3,0.55,0.45)
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
@@ -823,11 +762,12 @@ for(i in 1:366){
 
 #Gráficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
+print(paste("Las ganancias totales en ese año resultan ",wins[366]))
 ```
 
 Se observa que en el año simulado se utilizaron mayormente las máquinas 3 y 2, es decir, las máquinas que presentan una mayor probabilidad de éxito.
-Por este motivo, vemos que los gráficos a posteriori que más se modificaron en comparación al prior son los de estas 2 máquinas, dichas distribuciones parecen concentrarse en su verdadero valor poblacional a medida que se juega más cantidad de veces con estas máquinas.
-Mientras que el último gráfico evidencia la evolución diaria de las ganancias a lo largo del año, obteniendo una ganancia total igual a 211 unidades monetarias
+Por este motivo, vemos que los gráficos a posteriori que más se modificaron en comparación al prior son los de estas 2 máquinas, dichas distribuciones parecen concentrarse en su verdadero valor poblacional a medida que se juega una mayor cantidad de veces.
+Mientras que el último gráfico evidencia la evolución diaria de las ganancias a lo largo del año, obteniendo una ganancia total igual a 194 unidades monetarias.
 
 Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
 
@@ -865,21 +805,23 @@ for (anio in 1:n_simulaciones) {
   wins5_anio[anio]<-wins[366]
 }
 
-ganancia_df <- data.frame(wins = wins5_anio)
-r5<-ggplot(ganancia_df) +
+ganancia5_df <- data.frame(wins = wins5_anio)
+r5<-ggplot(ganancia5_df) +
       aes(x = wins) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-      geom_density(color = "blue", size = 1)
+      geom_density(color = "blue", size = 1)+
+      labs(x="Ganancias anuales", y="")
+
 r5
 ```
 
-A traves de la simulación de los 1000 años, se observa la distribución de las ganancias, la cual presenta un comportamiente levemente asimétrico por izquierda donde el 95% de los valores son mayores a 157 unidades monetarias.
-La ganancia media anual resulta igual a 185.075 unidades monetarias.
-
 ```{r}
-quantile(ganancia_df$wins,0.05)
-mean(ganancia_df$wins)
+quantile(ganancia5_df$wins,0.05)
+mean(ganancia5_df$wins)
 ```
+
+A traves de la simulación de los 1000 años, se observa la distribución de las ganancias, la cual presenta un comportamiento levemente asimétrico por izquierda donde el 95% de los valores son mayores a 157 unidades monetarias.
+La ganancia media anual resulta igual a 185.069 unidades monetarias.
 
 El método utilizado no es bayesiano, ya que, la elección de la máquina a utilizar se basa en una probabilidad que es función de las tasas observadas de éxito, las cuales no tienen en cuenta la distribuciones a posteriori correspondientes a cada máquina.
 
@@ -912,6 +854,7 @@ Reiterando este método para simular las jugadas de un año se obtiene:
 
 ```{r, echo=FALSE, error=FALSE, warning=FALSE}
 # Defino variables necesarias
+set.seed(491)
 tethas=c(0.3,0.55,0.45)
 cont_exitos= c(0,0,0) 
 cont_tiradas = c(0, 0, 0)
@@ -941,12 +884,12 @@ for(i in 1:366){
 
 #Graficos
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
-
+print(paste("La ganancia anual es igual a",wins[366],"unidades monetarias"))
 ```
 
 Durante el año simulado se utilizó en mayor medida la máquina 2,la cual presenta una mayor probabilidad de éxito en una tirada.
 El gráfico a posteriori de las máquinas 1 y 3 se ven levemente modificadas, mientras que dicha distribución para la máquina 2 presenta valores mucho más concentrados alrededor del verdadero valor del parámetro.
-Por último se regristra la evolución diaria de las ganancias, obteniendo una ganancia total igual a 189 unidades monetarias.
+Por último se regristra la evolución diaria de las ganancias, obteniendo una ganancia total igual a 206 unidades monetarias.
 
 
 Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
@@ -985,20 +928,21 @@ for (anio in 1:n_simulaciones) {
   wins6_anio[anio]<-wins[366]
 }
 
-ganancia_df <- data.frame(wins = wins6_anio)
-r6<-ggplot(ganancia_df) +
+ganancia6_df <- data.frame(wins = wins6_anio)
+r6<-ggplot(ganancia6_df) +
       aes(x = wins) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-      geom_density(color = "blue", size = 1)
+      geom_density(color = "blue", size = 1)+
+      labs(x="Ganancias anuales", y="")
 r6
 ```
 
-Mediante el gráfico de las ganancias anuales se observa una distribución unimodal, con una leve asimetría a la derecha en los cuales la ganancia se encuentra entre 167 y 211 unidades monetarias un 90% de las veces.La ganancia anual mediana resulta igual a 193 unidades monetarias
+Mediante el gráfico de las ganancias anuales se observa una distribución unimodal, con una leve asimetría a la izquierda en los cuales la ganancia anual se encuentra entre 165.95 y 212 unidades monetarias un 90% de las veces.La ganancia anual mediana resulta igual a 193 unidades monetarias
 
 ```{r}
-quantile(ganancia_df$wins, c(0.02,0.95))
-mean(ganancia_df$wins)
-median(ganancia_df$wins)
+quantile(ganancia6_df$wins, c(0.05,0.95))
+mean(ganancia6_df$wins)
+median(ganancia6_df$wins)
 ```
 
 El método utilizado para la elección de la máquina es bayesiano,ya que, actualiza la probabilidad de elección para cada maquina a medida que realiza las jugadas. En este caso, la distribución a posteriori se vera modificada y del mismo modo se modificaran los extremos derechos del intervalo de credibilidad.
@@ -1032,6 +976,7 @@ Reiterando este método para simular las jugadas de un año se obtiene:
 
 ```{r, echo=FALSE, error=FALSE, warning=FALSE}
 # Defino variables necesarias
+set.seed(412)
 alphas<-c(2,2,2)
 betas<-c(2,2,2)
 tethas=c(0.3,0.55,0.45)
@@ -1061,12 +1006,12 @@ alphas <- lista7_entrada[[1]]
 betas <- lista7_entrada[[2]]
 # Graficar
 graficar(cont_tiradas, cont_exitos, wins, alphas, betas)
-
+print(paste("Las ganancias totales en ese año resultan ",wins[366]))
 ```
 
 Se observa que a lo largo del año se utilizó mayormente las máquinas 2 y 3.
 Las distribuciones a posteriori de las probabilidades de éxitos para estas máquinas se encuentran con más concentradas y centradas en los valores reales de los parámetros, mientras que la distribución de la máquina 1 no difiere tanto de la distribución a priori esto se debe a que fue la máquina menos utilizada.
-El tercer gráfico presenta la evolución de las ganancias con el pasar de los días, se puede observar que la ganancia total resulta igual a 188 unidades monetarias.
+El tercer gráfico presenta la evolución de las ganancias con el pasar de los días, se puede observar que la ganancia total resulta igual a 166 unidades monetarias.
 
 Luego se repite este procedimiento para simular 1000 años jugados con esta estrategia y se analizan los resultados.
 
@@ -1101,17 +1046,21 @@ for (anio in 1:n_simulaciones) {
   wins7_anio[anio]<-wins[366]
 }
 
-ganancia_df <- data.frame(wins = wins7_anio)
-r7<- ggplot(ganancia_df) +
+ganancia7_df <- data.frame(wins = wins7_anio)
+r7<- ggplot(ganancia7_df) +
         aes(x = wins) +
         geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-        geom_density(color = "blue", size = 1)
+        geom_density(color = "blue", size = 1)+
+        labs(X="Ganancia anual", y="")
 r7
 ```
 
 Se grafica la distribución aproximada de la ganancia anual. En este se diferencian un comportamiento simetrico centrado en aproximadamente 190 unidades monetarias.
-La media de las ganancias anuales es 189.012 unidades monetarias.
-Además se puede notar que mayormente se obtuvieron ganancias altas, por lo que suponemos que se utilizó en mayor medida la máquina dos.
+La media de las ganancias anuales es 188.108 unidades monetarias.
+
+```{r}
+mean(ganancia7_df$wins)
+```
 
 El método utilizado es bayesiano, ya que, actualiza las distribuciones a posteriori en cada tirada, por lo que la muestra elegida provendrá de una distribución distinta.De esta manera la elección de la máquina estará influida por los resultados de las tiradas anteriores
 
@@ -1121,7 +1070,20 @@ Una vez simuladas todas las técnicas se procede a comparar los resultados obten
 Se presenta una tabla con 
 
 ```{r}
-table()
+df_ganancias <- data.frame(Estrategia = rep(0:7,each=1000), Ganancia = c(ganacias0_df$ganacias, ganancias1_df$ganancias, ganancias2_df$ganancias, ganancia3_df$wins, ganancia4_df$wins, ganancia5_df$wins, ganancia6_df$wins, ganancia7_df$wins))
+
+media_estrategia <- aggregate(Ganancia ~ Estrategia, df_ganancias, FUN= function(x) round(mean(x), 2))
+desvio_estrategia <- aggregate(Ganancia ~ Estrategia, df_ganancias, FUN= function(x) round(sd(x), 2))
+mediana_estrategia <- aggregate(Ganancia ~ Estrategia, df_ganancias, FUN= median)
+
+tabla_combinada <- merge(media_estrategia, desvio_estrategia, by = "Estrategia", suffixes = c(" media", " desvio"))
+tabla_combinada <- merge(tabla_combinada, mediana_estrategia, by = "Estrategia")
+
+# Renombrar columnas
+colnames(tabla_combinada) <- c("Estrategia", "Media", "Desvio", "Mediana")
+
+kable(tabla_combinada)
+
 ```
 ```{r}
 r1
