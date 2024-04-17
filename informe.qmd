@@ -80,17 +80,18 @@ grid.arrange(g1, g2, g3, ncol = 3)
 Antes de comenzar con la exposición de las estrategias, se simula los resultados de un jugador con  información privilegiada y juega 366 días con la mejor máquina
 
 ```{r}
-
-Resultados=rbinom(n_simulaciones, 366, 0.55)
-datos=data.frame(Resultados)
-kable(summary(datos)) # mejorar
+resultados=rbinom(n_simulaciones, 366, 0.55)
+datos=data.frame(resultados)
+kable(summary(datos), col.names = c("Medidas resumen")) %>% 
+  kable_styling(position = "left") %>% 
+  row_spec(0, bold = T, background = "lightblue", color = "black") 
 
 
 ganancias0_df <- data.frame(anios=1:n_simulaciones, ganancias=resultados)
 r0<-ggplot(ganancias0_df) +
       aes(x = ganancias) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
-      geom_density(color = "blue", size = 1)+
+      geom_density(color = "blue")+
       labs(x = "Ganancias anuales",
          y = "") +
       theme_minimal() 
@@ -305,7 +306,7 @@ r1<-ggplot(ganancias1_df) +
       geom_density(color = "blue", size = 1)+
      labs(x="Ganancias anuales", y="")
 r1
-print(paste("La ganancia media por año es ",mean(ganancias1_df$ganacias),"unidades monetarias"))
+print(paste("La ganancia media por año es ",mean(ganancias1_df$ganancias),"unidades monetarias"))
 
 ```
 
@@ -422,7 +423,7 @@ r2<-ggplot(ganancias2_df) +
       geom_histogram(aes(y = ..density..), color = "black", fill = "lightblue", bins = 30) +
       geom_density(color = "blue", size = 1)
 r2
-mean(ganancias2_df$wins)
+mean(ganancias2_df$ganancias)
 ```
 
 Se grafica la distribución aproximada de la ganancia anual. En este se diferencian tres modas, estas corresponden a la cantidad de años en los cuales se usaron mayormente las máquinas uno, tres y 2dos respectivamente.
@@ -552,7 +553,7 @@ El método es bayesiano ya que utiliza la máquina con mayor esperanza de éxito
 
 
 ```{r}
-mean(ganancia_df$wins)
+mean(ganancia3_df$wins)
 ```
 
 Luego de simular 1000 años, se grafican las ganancias anuales y se observa una distribución bimodal con modas aproximadamente en 160 y 190 unidades monetarias, correspondientes a las maquinas 3 y 2 respectivamente.La ganancia media para los 1000 años de simulación resulta igual a 189.17 unidades monetarias.
@@ -1070,7 +1071,7 @@ Una vez simuladas todas las técnicas se procede a comparar los resultados obten
 Se presenta una tabla con 
 
 ```{r}
-df_ganancias <- data.frame(Estrategia = rep(0:7,each=1000), Ganancia = c(ganacias0_df$ganacias, ganancias1_df$ganancias, ganancias2_df$ganancias, ganancia3_df$wins, ganancia4_df$wins, ganancia5_df$wins, ganancia6_df$wins, ganancia7_df$wins))
+df_ganancias <- data.frame(Estrategia = rep(0:7,each=1000), Ganancia = c(ganancias0_df$ganancias, ganancias1_df$ganancias, ganancias2_df$ganancias, ganancia3_df$wins, ganancia4_df$wins, ganancia5_df$wins, ganancia6_df$wins, ganancia7_df$wins))
 
 media_estrategia <- aggregate(Ganancia ~ Estrategia, df_ganancias, FUN= function(x) round(mean(x), 2))
 desvio_estrategia <- aggregate(Ganancia ~ Estrategia, df_ganancias, FUN= function(x) round(sd(x), 2))
@@ -1082,31 +1083,33 @@ tabla_combinada <- merge(tabla_combinada, mediana_estrategia, by = "Estrategia")
 # Renombrar columnas
 colnames(tabla_combinada) <- c("Estrategia", "Media", "Desvio", "Mediana")
 
-kable(tabla_combinada)
+kable(tabla_combinada)%>% 
+  kable_styling(position = "left") %>% 
+  row_spec(0, bold = T, background = "lightblue", color = "black")
 
 ```
 ```{r}
-r1
-```
-
-
-```{r}
-r2
+#r1
 ```
 
 
 ```{r}
-r3
+#r2
 ```
 
 
 ```{r}
-r4
+#r3
 ```
 
 
 ```{r}
-r5
+#r4
+```
+
+
+```{r}
+#r5
 ```
 
 ```{r}
