@@ -13,6 +13,8 @@ execute:
   message: False
 ---
 
+\newpage
+
 # Introducción:
 
 Se presenta el problema del tipo "*multi-armed bandit", en el cual se desea elegir entre tres máquinas tragamonedas, con el propósito de maximizar las ganancias.* El juego de las maquinitas consiste en hacer girar sus rodillos (analógicos o digitales) con el objetivo de obtener una combinación de símbolos ganadora y así acceder a un premio monetario.
@@ -30,6 +32,8 @@ En nuestro escenario, no hay costo para jugar, lo que significa que no pierdes n
 El objetivo del trabajo consiste en evaluar y comparar diferentes estrategias de juego. Se analizarán mediante simulaciones diferentes planes de exploración y explotación de las máquinas para identificar cuál de estos proporciona la mayor ganancia esperada.
 
 Para el estudio mediante simulaciones, consideraremos que las probabilidades de éxito de las tres máquinas son $\theta_a = 0.30$, $\theta_b = 0.55$ y $\theta_c = 0.45$. Recordemos que estas probabilidades son desconocidas (no podemos basar nuestras estrategias en esos valores, sino en las estimaciones que vamos haciendo de ellos).
+
+\newpage
 
 # Desarrollo
 
@@ -75,6 +79,8 @@ g3<-ggplot(x = x, y = prior3)+
 grid.arrange(g1, g2, g3, ncol = 3)
 ```
 
+\newpage
+
 ## *Jugador privilegiado*
 
 Antes de comenzar con la exposición de las estrategias, se simula los resultados de un jugador con  información privilegiada y juega 366 días con la mejor máquina
@@ -84,7 +90,7 @@ resultados=rbinom(n_simulaciones, 366, 0.55)
 datos=data.frame(resultados)
 kable(summary(datos), col.names = c("Medidas resumen")) %>% 
   kable_styling(position = "center",full_width = FALSE) %>% 
-  row_spec(0, bold = T, background = "lightblue", color = "black") 
+  row_spec(0, bold = T, background = "gray", color = "black") 
 
 
 ganancias0_df <- data.frame(anios=1:n_simulaciones, ganancias=resultados)
@@ -99,6 +105,7 @@ r0
 ```
 Sin dudas esta es la mejor situación posible, se visualiza una ganacia anual con una distribución que luce normal, centrada en 200 unidades monetarias, pero recordemos, realmente no se conoce cuál es la mejor máquina, asi que, a explorar y/o explotar...
 
+\newpage
 
 ## *Estrategia 1: Completamente al azar*
 
@@ -314,6 +321,8 @@ A traves de la simulación de los 1000 años, se observa la distribución de las
 
 Por último se concluye que esta estrategia no podría considerarse bayesiana, ya que siempre elige la máquina a utilizar de manera aleatoria, sin tener en cuenta la información recolectada.
 
+\newpage
+
 ## *Estrategia 2: Greedy con tasa observada*
 
 En esta estrategia se elige la máquina que tenga la mayor tasa de éxito observada hasta el momento. Esta tasa para cada máquina la calculamos como cantidad de días ganados sobre días jugados. Partiendo de una creencia inicial de que las tasas de éxito para las tres máquinas son iguales a 0.5. 
@@ -434,11 +443,13 @@ Además se puede notar que mayormente se obtuvieron ganancias altas, por lo que 
 
 El método utilizado para la elección de la máquina no es bayesiano, ya que, no se utiliza información de la distribución a posteriori, solo se tiene en cuenta el valor de las tasas de éxito observadas hasta el momento.
 
+\newpage
+
 ## *Estrategia 3: Greedy con probabilidad a posteriori*
 
 En esta estrategia se elige la máquina que tenga, hasta el momento, mayor probabilidad de éxito promedio a posteriori. 
 
-Se presenta la función que simula esta estrategia para un día.Para esto se calculan las esperanzas de las tres distribuciones a priori y se utiliza la máquina que presenta el mayor valor. Luego se simula el juego con la máquina elegida y se actualizan las distribuciones.
+Se presenta la función que simula esta estrategia para un día. Para esto se calculan las esperanzas de las tres distribuciones a priori y se utiliza la máquina que presenta el mayor valor. Luego se simula el juego con la máquina elegida y se actualizan las distribuciones.
 
 ```{r, echo=TRUE, error=FALSE, warning=FALSE}
 greedy_prob_posterior<-function(lista3){
@@ -551,6 +562,7 @@ print(paste("La ganancia media por año es ",mean(ganancia3_df$wins),"unidades m
 Luego de simular 1000 años, se grafican las ganancias anuales y se observa una distribución bimodal con modas aproximadamente en 160 y 190 unidades monetarias, correspondientes a las maquinas dos y tres respectivamente. La ganancia media para los 1000 años de simulación resulta igual a 189.17 unidades monetarias.
 El método es bayesiano ya que utiliza la máquina con probabilidad de éxito promedio más alta, es decir, la que presenta mayor esperanza en su distribución a posteriori y estas se actualizan en base a los resultados obtenidos tirada tras tirada
 
+\newpage
 
 ## *Estrategia 4: $\epsilon$ -greedy (con tasa observada)*
 
@@ -685,6 +697,8 @@ grid.arrange(graf_list[[1]],graf_list[[2]],graf_list[[3]],ncol=1)
 Luego de simular 1000 años, se grafican las ganancias anuales para los distintos valores de $\epsilon$, a traves de los mismos vemos distribuciones parecidas, todas centradas en aproximadamente 160 unidades monetarias. La ganancia media para los 1000 años de simulación tomando $\epsilon$ igual a 0.05, 0.2 y 0.4 resultan 158.84, 158.76 y 158.34 unidades monetarias respectivamente.
 El método no es bayesiano ya que utiliza la máquina con tasa de éxito mayor con probabilidad $1-\epsilon$, y elige una máquina de manera aleatoria con probabilidad $\epsilon$, sin tener en cuenta las distribuciones a posteriori de cada máquina.
 
+\newpage
+
 ## *Estrategia 5: Softmax*
 
 Dada la tasa observada para cada máquina i, $\pi_i$ se calcula una probabilidad de elegir cada máquina utilizando la función softmax:
@@ -814,6 +828,8 @@ La ganancia media anual resulta igual a 185 unidades monetarias.
 
 El método utilizado no es bayesiano, ya que, la elección de la máquina a utilizar se basa en una probabilidad que es función de las tasas observadas de éxito, las cuales no tienen en cuenta la distribuciones a posteriori correspondientes a cada máquina.
 
+\newpage
+
 ## *Estrategia 6: Upper-bound*
 
 En esta estrategia se selecciona la máquina que tenga el mayor extremo derecho de un intervalo de credibilidad (construido a partir de la distribución a posteriori de la probabilidad de éxito).
@@ -931,6 +947,8 @@ Mediante el gráfico de las ganancias anuales se observa una distribución unimo
 
 El método utilizado para la elección de la máquina es bayesiano, ya que, actualiza la probabilidad de elección para cada máquina a medida que realiza las jugadas. En este caso, la distribución a posteriori se verá modificada y del mismo modo se modificarán los extremos derechos del intervalo de credibilidad.
 
+\newpage
+
 ## *Estrategia 7: Thompson sampling*
 
 Para realizar la selección, este metodo toma una muestra de la distribución a posteriori de las probabilidades de éxito de cada máquina y se elige la máquina correspondiente a la muestra más grande.
@@ -1046,6 +1064,8 @@ La media de las ganancias anuales es 188.52 unidades monetarias.
 
 El método utilizado es bayesiano, ya que, actualiza las distribuciones a posteriori en cada tirada, por lo que la muestra elegida provendrá de una distribución distinta. De esta manera la elección de la máquina estará influida por los resultados de las tiradas anteriores
 
+\newpage
+
 # Conclusiones
 
 Una vez simuladas todas las técnicas se procede a comparar los resultados obtenidos, y así poder recomendar a los futuros jugadores cuál de estas utilizar para maximizar las ganancias. Vale aclarar que se busca la estrategia que más se asemeje al caso ideal presentado al inicio del informe.
@@ -1069,14 +1089,14 @@ colnames(tabla_combinada) <- c("Estrategia", "Media", "Desvio", "Mediana", "Quan
 
 kable(tabla_combinada)%>% 
   kable_styling(position = "center",full_width = FALSE) %>% 
-  row_spec(0, bold = T, background = "lightblue", color = "black") 
+  row_spec(0, bold = T, background = "gray", color = "black") 
 
 ```
 Notoramiente las estrategias *completamente al azar* y $\epsilon-$*Greedy* presentan peores desempeños que el resto. Además, las medianas y cuantiles del resto de las estrategias se asemejan al caso ideal.
 Para tomar una decisión final, se acude a la comparación de distribuciones de ganancias anuales aproximadas que se presentaron a lo largo del informe.
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.height=6}
 r0<- r0 + labs(title = "Caso ideal", size = 8)
 r2<- r2 + labs(title = "Greedy con tasa obs.", size = 8)
 r3<- r3 + labs(title = "Greedy con prob. post.", size = 8)
@@ -1084,7 +1104,7 @@ r5<- r5 + labs(title = "Softmax", size = 8)
 r6<- r6 + labs(title = "Upper-bound", size = 8)
 r7<- r7 + labs(title = "Thompson Sampling", size = 8)
 grid.arrange(r0,r2,r3,
-             r5,r6,r7,  ncol = 3)
+             r5,r6,r7,  ncol = 2)
 ```
 Ahora si, visto y considerando que lo deseado es asemejarse al comportamiento distribucional de las ganancias anuales en el *caso ideal*, se podrían recomendar las estrategias *upper-bound* y *thompson sampling* como las más rentables.
 
