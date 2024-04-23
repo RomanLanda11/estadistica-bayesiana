@@ -1,0 +1,128 @@
+---
+title: "informe2"
+author: "Gazze - Landa - Irisarri"
+date: "2024-04-23"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+```
+
+# Metropolis Hastings en 1D
+
+```{r}
+sample_mh <- function (d_objetivo, r_propuesta, 
+                       d_propuesta = function(x, mean) dnorm(x, mean=mean, sd=1),
+                       p_inicial, n){
+  stopifnot(n>0)
+  muestras <- numeric(n)
+  muestras[1]<-p_inicial
+  for (i in 2:n) {
+    p_actual <- muestras[i-1]
+    p_nuevo <- r_propuesta(p_actual)
+    f_actual <- d_objetivo(p_actual)
+    f_nuevo <- d_objetivo(p_nuevo)
+    
+    q_actual <- d_propuesta(p_actual,mean=p_nuevo)
+    q_nuevo <- d_propuesta(p_nuevo,mean=p_actual)
+    
+    alpha <- min(1, (f_nuevo/f_actual)*(q_actual/q_nuevo))
+    
+    aceptar <- rbinom(1,1, alpha)
+    if (aceptar){
+      muestras[i] <- p_nuevo
+    } else {
+      muestras[i] <- p_actual
+    }
+    
+  }
+  return ( muestras ) 
+}
+
+
+```
+
+
+## Distribución de Kumaraswamy
+
+```{r}
+d_kumaraswamy <- function(x, a ,b){
+  if(x<0 || x>1){
+    f=0
+  }else{
+    f <- a*b*(x^(a-1))*(1-x^a)^(b-1)
+  }
+  return(f)
+}
+x<-seq(0,1, length.out= 200)
+d_kumaraswamy.5.5 <- numeric(length(x))
+d_kumaraswamy51<- numeric(length(x))
+d_kumaraswamy13 <-numeric(length(x))
+d_kumaraswamy22 <- numeric(length(x))
+d_kumaraswamy25 <- numeric(length(x))
+for (i in 1:length(x)) {
+  d_kumaraswamy.5.5[i] <- d_kumaraswamy(x[i], 0.5, 0.5)
+  d_kumaraswamy51[i] <- d_kumaraswamy(x[i], 5, 1)
+  d_kumaraswamy13[i] <- d_kumaraswamy(x[i], 1, 3)
+  d_kumaraswamy22[i] <- d_kumaraswamy(x[i], 2, 2)
+  d_kumaraswamy25[i] <- d_kumaraswamy(x[i], 2, 5)
+}
+
+
+df <- data.frame(x,
+                 d_kumaraswamy.5.5,
+                 d_kumaraswamy51,
+                 d_kumaraswamy13,
+                 d_kumaraswamy22,
+                 d_kumaraswamy25)
+ggplot(df, aes(x = x)) +
+  # Agregar las líneas para cada distribución
+  geom_line(aes(y = d_kumaraswamy.5.5, color = "d_kumaraswamy.5.5")) +
+  geom_line(aes(y = d_kumaraswamy51, color = "d_kumaraswamy51")) +
+  geom_line(aes(y = d_kumaraswamy13, color = "d_kumaraswamy13")) +
+  geom_line(aes(y = d_kumaraswamy22, color = "d_kumaraswamy22")) +
+  geom_line(aes(y = d_kumaraswamy25, color = "d_kumaraswamy25")) +
+  # Personalizar aspectos del gráfico
+  labs(title = "",
+       x = "",
+       y = "Densidad") +
+  scale_color_manual(values = c("d_kumaraswamy.5.5" = "blue",
+                                 "d_kumaraswamy51" = "green",
+                                 "d_kumaraswamy13" = "red",
+                                 "d_kumaraswamy22" = "cyan",
+                                 "d_kumaraswamy25" = "purple"),
+                     labels = c("d_kumaraswamy.5.5" = "a = 0.5, b = 0.5",
+                                "d_kumaraswamy51" = "a = 5, b = 1",
+                                "d_kumaraswamy13" = "a = 1, b = 3",
+                                "d_kumaraswamy22" = "a = 2, b = 2",
+                                "d_kumaraswamy25" = "a = 2, b = 5")) +
+  guides(color=guide_legend(title = "Parametros"))+
+
+  theme_minimal()
+```
+
+
+```{r}
+#d_objetivo <- d_kumaraswamy(x, 6, 2)
+r_propuesta <- function(x, mean, kappa=4){
+  beta = (kappa*(1-mean))/mean
+  alpha = (mean*beta)/(1 - mean)
+  return(rbeta(1, alpha, beta))
+} 
+d_propuesta <- function(x, mean, kappa=4){
+  beta = (kappa*(1-mean))/mean
+  alpha = (mean*beta)/(1 - mean) 
+  return (dbeta(x, alpha, beta))
+} 
+p_inicial <- runif(1)
+
+muestras <- sample_mh(d_kumaraswamy(x, 6, 2),
+                      r_propuesta(x,p_inicial), d_propuesta(x, p_inicial), p_inicial= p_inicial, n=50000 )
+
+
+#plot(muestras, type= "l")
+#hist(muestras)
+
+```
+
