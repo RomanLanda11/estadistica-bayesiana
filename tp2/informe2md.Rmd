@@ -291,37 +291,55 @@ sample_mh_2d <- function (d_objetivo, r_propuesta, d_propuesta, p_inicial, n, si
   return ( muestras ) 
 }
 
-mu_prop <- c(0, 0)
-sigma_prop <- diag(2)*0.2
-#preguntar si lo puede recibir aca
 
-d_objetivo <- function(x) dmvnorm(x, mean = mu_obj, sigma = sigma_obj)
-r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop)
-d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop)
 ```
 
 ## 7
 
-```{r}
+```{r, warning=FALSE}
 mu_obj <- c(0.4, 0.75)
 sigma_obj <- matrix(c(1.35, 0.4, 0.4, 2.4), ncol = 2)
 
 sigma_prop <- diag(2) #preguntar esto
+
+d_objetivo <- function(x) dmvnorm(x, mean = mu_obj, sigma = sigma_obj)
+r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop)
+d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop)
+
 muestras_2d <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(1, 1), n=1000)
 
-df_grilla <- expand.grid(x = seq(-3, 6, length.out = 200), seq(-3, 3, length.out = 200))
+df_grilla <- expand.grid(x = seq(-3, 3, length.out = 200), seq(-3, 3, length.out = 200))
 df_grilla$z <- d_objetivo(as.matrix(df_grilla))
 
-
-ggplot(df, aes(x = V1, y = V2)) +
+muestras_2d_df <- as.data.frame(muestras_2d)
+ggplot(muestras_2d_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.5) +
   geom_density2d_filled()+
-  geom_point(data = df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.1) +
+  geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.1) +
   labs(title = "Gráfico de Densidad en Dos Dimensiones",
        x = "Valor 1",
        y = "Valor 2") +
-  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")
+  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
   theme_minimal()
+
+```
+
+
+```{r}
+
+########################
+plot_trace <- function(x, y){
+  n <-length(x)
+  df <- data.frame(x = rep(1:n, 2), y = c(x, y), dimension = rep(1:2, each = n))
+  ggplot(df)+
+    geom_line(aes(x = x, y = y))+
+    facet_grid(rows = vars(dimension))
+}  
+
+plot_trace(muestras_2d_df$V1, muestras_2d_df$V2)
+
+
+
 
 ```
 
