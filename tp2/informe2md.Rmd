@@ -17,7 +17,11 @@ library(mvtnorm)
 ## 1
 
 ```{r}
-sample_mh <- function (d_objetivo, r_propuesta,  d_propuesta, p_inicial, n){
+d_propuesta_def <- function(x, mean){
+  dnorm(x, mean, sd= 1)
+}
+
+sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p_inicial, n){
   stopifnot(n>0)
   muestras <- numeric(n)
   muestras[1]<-p_inicial
@@ -103,6 +107,9 @@ ggplot(df, aes(x = x)) +
   guides(color=guide_legend(title = "Parametros"))+
   theme_minimal()
 ```
+La distribución de Kumaraswamy resulta muy útil a la hora de realizar estudios bayesianos, ya que presenta una es gran flexibilidad y puede modelar una amplia gama de formas de distribución de probabilidad.
+Ademas presenta una función de densidad de probabilidad simple y computacionalmente eficiente, lo que facilita su uso en cálculos bayesianos.
+(Por último, vale destacar que la restricción al intervalo (0,1) de la distribución de Kumaraswamy resulta útil porque se adapta naturalmente al modelado de proporciones y probabilidades datito*ver)
 
 ## 3
 ```{r}
@@ -227,7 +234,7 @@ N_eff(muestras[,2])
 N_eff(muestras[,3])
 # no parecen muy bajos para 5k muestras
 ```
-Consultar si tenemos que tantear distintos puntos de inicio por kappa
+
 
 ## 4
 
@@ -322,6 +329,7 @@ ggplot(muestras_2d_df, aes(x = V1, y = V2)) +
   stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
   theme_minimal()
 
+# p_inicial = rmvnorm(1,mean=c(1,1)) ?
 ```
 
 
@@ -339,7 +347,9 @@ plot_trace <- function(x, y){
 plot_trace(muestras_2d_df$V1, muestras_2d_df$V2)
 
 
-
+#Número efectivo de muestras
+N_eff(muestras_2d[,1]) #Variable 1
+N_eff(muestras_2d[,2]) #Variable 2
 
 ```
 
