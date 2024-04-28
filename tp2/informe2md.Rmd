@@ -4,8 +4,15 @@ author: "Gazze - Landa - Irisarri"
 date: "2024-04-23"
 output: html_document
 ---
+```{r}
+#| label = parametros
+set.seed(412)
+knitr::opts_chunk$set(fig.align = "center")
+```
+
 
 ```{r}
+#| label = librerias
 library(ggplot2)
 library(gridExtra)
 library(kableExtra)
@@ -222,17 +229,20 @@ R_hat(muestras)
 autocorr <- acf(muestras[,3], plot = TRUE, lag = Inf)$plot
 # mejorar graficos
 N_eff <- function(x){
-  S <- length(x)
-  autocorr <- acf(x, plot = FALSE, lag = Inf)$acf
-  limite <- which(autocorr<0.05)[1]
-  
-  denominador <- 1 + 2 * sum(autocorr[2:limite])
-  S / denominador  
+  n_eff <- numeric(ncol(x))
+  for (i in 1:ncol(x)) {
+    S <- nrow(x)
+    autocorr <- acf(x[,i], plot = FALSE, lag = Inf)$acf
+    limite <- which(autocorr<0.05)[1]
+    
+    denominador <- 1 + 2 * sum(autocorr[2:limite])
+    n_eff[i] <- S / denominador  
+  }
+  return(n_eff)
 }
-N_eff(muestras[,1])
-N_eff(muestras[,2])
-N_eff(muestras[,3])
+N_eff(muestras)
 # no parecen muy bajos para 5k muestras
+# YA GENERALICE LA N_eff 
 ```
 
 
@@ -346,10 +356,30 @@ plot_trace <- function(x, y){
 
 plot_trace(muestras_2d_df$V1, muestras_2d_df$V2)
 
-
 #Número efectivo de muestras
-N_eff(muestras_2d[,1]) #Variable 1
-N_eff(muestras_2d[,2]) #Variable 2
+N_eff(muestras_2d)
+```
+
+## 8
+
+```{r}
+#| label = probs
+probs <- numeric(3)
+# x1 > 1 ; x2 < 0
+mu_filtradas <- muestras_2d[muestras_2d[,1] > 1 & muestras_2d[,2] < 0,]
+probs[1] <- nrow(mu_filtradas) / nrow(muestras_2d)
+# x1 > 1 ; x2 > 2 
+mu_filtradas <- muestras_2d[muestras_2d[,1] > 1 & muestras_2d[,2] > 2,]
+probs[2] <- nrow(mu_filtradas) / nrow(muestras_2d)
+# x1 > .4 ; x2 > .75
+mu_filtradas <- muestras_2d[muestras_2d[,1] > .4 & muestras_2d[,2] > .75,]
+probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d)
+probs #no se si esto esta bien gente
+```
+```{r}
 
 ```
+
+
+
 
