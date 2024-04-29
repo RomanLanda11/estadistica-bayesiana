@@ -393,7 +393,7 @@ mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > .4 & muestras_2d_mc[,2] > .7
 probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
 probs #no se si esto esta bien gente
 ```
-
+# Función de Rosenbrock
 
 
 
