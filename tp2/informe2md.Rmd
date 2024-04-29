@@ -323,16 +323,16 @@ d_objetivo <- function(x) dmvnorm(x, mean = mu_obj, sigma = sigma_obj)
 r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop)
 d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop)
 
-muestras_2d <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(1, 1), n=1000)
+muestras_2d <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(1, 1), n=5000)
 
 df_grilla <- expand.grid(x = seq(-3, 3, length.out = 200), seq(-3, 3, length.out = 200))
 df_grilla$z <- d_objetivo(as.matrix(df_grilla))
 
 muestras_2d_df <- as.data.frame(muestras_2d)
 ggplot(muestras_2d_df, aes(x = V1, y = V2)) +
-  geom_density_2d(fill = "skyblue", alpha = 0.5) +
+  geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
-  geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.1) +
+  geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
   labs(title = "Gráfico de Densidad en Dos Dimensiones",
        x = "Valor 1",
        y = "Valor 2") +
@@ -377,7 +377,21 @@ probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d)
 probs #no se si esto esta bien gente
 ```
 ```{r}
+# Monte Carlo generamos aleatorios y hace sumatoria
+# Genera un gran número de muestras bivariadas
+n <- 1000
+muestras_2d_mc <- rmvnorm(n, mean = mu_obj, sigma = sigma_obj)
 
+# x1 > 1 ; x2 < 0
+mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > 1 & muestras_2d_mc[,2] < 0,]
+probs[1] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+# x1 > 1 ; x2 > 2 
+mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > 1 & muestras_2d_mc[,2] > 2,]
+probs[2] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+# x1 > .4 ; x2 > .75
+mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > .4 & muestras_2d_mc[,2] > .75,]
+probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+probs #no se si esto esta bien gente
 ```
 
 
