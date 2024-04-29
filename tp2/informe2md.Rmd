@@ -332,7 +332,7 @@ muestras_2d_df <- as.data.frame(muestras_2d)
 ggplot(muestras_2d_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
-  geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
+  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
   labs(title = "Gráfico de Densidad en Dos Dimensiones",
        x = "Valor 1",
        y = "Valor 2") +
@@ -376,23 +376,33 @@ mu_filtradas <- muestras_2d[muestras_2d[,1] > .4 & muestras_2d[,2] > .75,]
 probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d)
 probs #no se si esto esta bien gente
 ```
+
 ```{r}
 # Monte Carlo generamos aleatorios y hace sumatoria
 # Genera un gran número de muestras bivariadas
-n <- 1000
+n <- 5000
 muestras_2d_mc <- rmvnorm(n, mean = mu_obj, sigma = sigma_obj)
-
+p_exacta <- numeric(3)
+p_mc <- numeric(3)
 # x1 > 1 ; x2 < 0
 mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > 1 & muestras_2d_mc[,2] < 0,]
-probs[1] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+p_mc[1] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+p_exacta[1] <- pmvnorm(lower = c(1, -Inf), upper = c(Inf,0), mean = mu_obj, sigma=sigma_obj)
 # x1 > 1 ; x2 > 2 
 mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > 1 & muestras_2d_mc[,2] > 2,]
-probs[2] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+p_mc[2] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+p_exacta[2] <- pmvnorm(lower = c(1, 2), upper = c(Inf,Inf), mean = mu_obj, sigma=sigma_obj)
 # x1 > .4 ; x2 > .75
 mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > .4 & muestras_2d_mc[,2] > .75,]
-probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
-probs #no se si esto esta bien gente
+p_mc[3] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
+p_exacta[3] <- pmvnorm(lower = c(.4, .75), upper = c(Inf,Inf), mean = mu_obj, sigma=sigma_obj)
+
+probs
+p_mc
+round(p_exacta, 4)#no se si esto esta bien gente
 ```
+
+
 # Función de Rosenbrock
 
 
