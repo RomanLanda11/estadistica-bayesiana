@@ -405,5 +405,61 @@ round(p_exacta, 4)#no se si esto esta bien gente
 
 # Función de Rosenbrock
 
+```{r}
+a <- 0.5
+b <- 5
+sigma_prop1 <- matrix(c(4,1,1,1), ncol = 2)
+sigma_prop2 <- diag(2)
+sigma_prop3 <- matrix(c(5,1,1,5), ncol = 2)
+
+
+d_objetivo <- function(x) exp(-((a-x[1])^2+b*(x[2]-(x[1])^2)^2))
+r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop2)
+d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop2)
+
+muestras_2d2 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(0, 1), n=5000)
+
+muestras_2d2_df <- as.data.frame(muestras_2d2)
+ggplot(muestras_2d2_df, aes(x = V1, y = V2)) +
+  geom_density_2d(fill = "skyblue", alpha = 0.7) +
+  geom_density2d_filled()+
+  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
+  labs(title = "Gráfico de Densidad en Dos Dimensiones",
+       x = "Valor 1",
+       y = "Valor 2") +
+  theme_minimal()
+
+r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop1)
+d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop1)
+
+muestras_2d1 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(0, 1), n=5000)
+
+muestras_2d1_df <- as.data.frame(muestras_2d1)
+ggplot(muestras_2d1_df, aes(x = V1, y = V2)) +
+  geom_density_2d(fill = "skyblue", alpha = 0.7) +
+  geom_density2d_filled()+
+  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
+  labs(title = "Gráfico de Densidad en Dos Dimensiones",
+       x = "Valor 1",
+       y = "Valor 2") +
+  theme_minimal()
+
+r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop3)
+d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop3)
+
+muestras_2d3 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(0, 1), n=5000)
+
+muestras_2d3_df <- as.data.frame(muestras_2d3)
+ggplot(muestras_2d3_df, aes(x = V1, y = V2)) +
+  geom_density_2d(fill = "skyblue", alpha = 0.7) +
+  geom_density2d_filled()+
+  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
+  labs(title = "Gráfico de Densidad en Dos Dimensiones",
+       x = "Valor 1",
+       y = "Valor 2") +
+  theme_minimal()
+
+
+```
 
 
