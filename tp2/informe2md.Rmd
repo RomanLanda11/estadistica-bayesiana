@@ -504,11 +504,14 @@ muestra3 <- muestras_2d3_df
 df <- rbind(muestra1, muestra2, muestra3)
 
 # Graficar las trayectorias
-ggplot(df, aes(x = V1, y = V2, color = cadena)) +
+df$posicion <- rep(seq(0, 1, length.out= 5000), time = 3)
+ggplot(df, aes(x = V1, y = V2, color = cadena, alpha = posicion)) +
   geom_point() +
+  geom_line() +
   labs(x = "X1", y = "X2", title = "Trayectorias de las cadenas de Metropolis-Hastings")+
   scale_color_manual(values= c("#536C8D","#62A07B","#613860"))
 ```
+
 ```{r}
 #Trace plot y gráfico de autocorrelación
 # TODO: yo mantendria los colores de muestra 1 2 y 3 como arriba
