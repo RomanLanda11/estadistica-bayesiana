@@ -4,32 +4,45 @@ author: "Gazze - Landa - Irisarri"
 date: "2024-04-23"
 output: html_document
 ---
-```{r}
+```{r, echo=FALSE}
 #| label = parametros
 set.seed(412)
 knitr::opts_chunk$set(fig.align = "center")
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 #| label = librerias
 library(ggplot2)
 library(gridExtra)
 library(kableExtra)
 library(mvtnorm)
 ```
+# Introducción
+
+Metropolis-Hastings es un proceso para generar muestras pseudoaleatorias de distribuciones objetivo. Se trata de un proceso iterativo que comienza en un punto inicial en el espacio de muestras, luego, propone un "salto" a un nuevo punto utilizando una distribución de probabilidad propuesta. Este salto es evaluado mediante un criterio de aceptación basado en la relación entre la densidad en el nuevo punto y en el punto actual. Si el salto es aceptado, el algoritmo se mueve al nuevo punto, sino, permanece en el punto actual. 
+Este proceso se repite muchas veces para explorar y muestrear de manera eficiente. En este trabajo práctico, se explorará la aplicabilidad y el rendimiento del algoritmo para distintas distribuciones objetivo y propuestas.
+
+# Objetivo
+
+Se propone explorar y comprender el funcionamiento y la utilidad del algoritmo de Metropolis-Hastings en diferentes situaciones. Se abordarán ejercicios que van desde la generación de muestras unidimensionales, hasta la aplicación del algoritmo en problemas más complejos como la generación de muestras de una distribución normal bivariada y la estimación de la distribución a posteriori de una funciones de densidad complejas. 
+A través de estos ejercicios, se buscará evaluar el desempeño del algoritmo y comprender sus ventajas y limitaciones en la generación de muestras de distribuciones de probabilidad.
+
 
 # Metropolis Hastings en 1D
 
-## 1
+Para entrar en calor, se comineza declarando una función que implemente el algoritmo de Metropolis-Hastings para tomar muestras de una distribución de probabilidad unidimensional. El algoritmo perimete elegir entre un punto de inicio arbitrario o al azar y utiliza la distribucion de propuesta de transición arbitraria (por defecto, se utiliza una distribución normal estándar).
+
+## 1. Algoritmo MH en 1 D
 
 ```{r}
 d_propuesta_def <- function(x, mean){
   dnorm(x, mean, sd= 1)
 }
-
+# TODO: agregar tasa de aceptación a la funcion
 sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p_inicial, n){
   stopifnot(n>0)
+  salto = 0
   muestras <- numeric(n)
   muestras[1]<-p_inicial
   for (i in 2:n) {
@@ -46,19 +59,25 @@ sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p
     aceptar <- rbinom(1,1, alpha)
     if (aceptar){
       muestras[i] <- p_nuevo
+      salto = salto + 1  # TODO: agregar tasa de aceptación a la funcion
     } else {
       muestras[i] <- p_actual
     }
     
   }
+  tasa_acepta = salto/n # TODO: agregar tasa de aceptación a la funcion
   return ( muestras ) 
 }
 ```
 
 
-## Distribución de Kumaraswamy
+# Distribución de Kumaraswamy
 
-## 2
+La distribución de Kumaraswamy es una distribución de probabilidad continua que se utiliza para modelar variables aleatorias con soporte en el intervalo $(0;1)$.
+
+## 2. Conociendo a Jagdish Kumaraswamy
+
+Se grafica la función de densidad de la distribución de Kumaraswamy para 5 combinaciones de los parámetros $a$ y $b$ con el objetivo de familiarizarse con su comportamiento.
 
 ```{r}
 d_kumaraswamy <- function(x, a ,b){
@@ -69,6 +88,10 @@ d_kumaraswamy <- function(x, a ,b){
   }
   return(f)
 }
+```
+
+
+```{r, echo=FALSE}
 x<-seq(0,1, length.out= 200)
 d_kumaraswamy.5.5 <- numeric(length(x))
 d_kumaraswamy51<- numeric(length(x))
@@ -116,9 +139,12 @@ ggplot(df, aes(x = x)) +
 ```
 La distribución de Kumaraswamy resulta muy útil a la hora de realizar estudios bayesianos, ya que presenta una es gran flexibilidad y puede modelar una amplia gama de formas de distribución de probabilidad.
 Ademas presenta una función de densidad de probabilidad simple y computacionalmente eficiente, lo que facilita su uso en cálculos bayesianos.
-(Por último, vale destacar que la restricción al intervalo (0,1) de la distribución de Kumaraswamy resulta útil porque se adapta naturalmente al modelado de proporciones y probabilidades datito*ver)
+Por último, vale destacar que la restricción al intervalo $(0;1)$ resulta útil porque se adapta naturalmente al modelado de proporciones y probabilidades.
 
-## 3
+## 3. MH para Jagdish
+
+Se utiliza la función construida en el punto 1, obtenga 5000 muestras de una distribución de Kumaraswamy con parámetros $a=6 , b=2$ y una distribución de propuesta beta.
+
 ```{r}
 get_beta_pars <- function(mu, kappa){
   alpha <- mu *kappa
@@ -134,6 +160,10 @@ d_objetivo <- function(x, a=6 ,b=2){
   }
   return(f)
 }
+```
+
+Se observan las cadenas obtenidas utilizando tres grados de concentración distintos $kappas = 1,25, 50$
+```{r, echo=FALSE}
 kappas <- c(1,25,50)
 n=5000
 muestras <- matrix(nrow = n,ncol = length(kappas))
@@ -163,8 +193,10 @@ ggplot(df, aes(x = x)) +
   labs(x = "", y = "", title = "")
 
 ```
+Se observa aleatoridad o un patron de *ruido blanco*.
+Tambien, se presentan histogramas de frecuencias observadas para las distintas muestras.
 
-```{r}
+```{r, echo=FALSE}
 g1 <- ggplot(df, aes(x = V1)) +
   geom_histogram(color = "black", fill = "#536C8D", bins = 30) +
   labs(x = "", y = "Frecuencia", title = "")+
@@ -187,8 +219,8 @@ grid.arrange(g1, g2, g3, ncol = 1)
 ```
 
 ```{r}
-# averiguar si hay grafico para el correlograma
-
+# TODO: averiguar si hay grafico para el correlograma
+# TODO: agregar tasa de aceptación a la conclucion
 calcular_w <- function(x){
   mean(apply(x, 2, var))
 }
