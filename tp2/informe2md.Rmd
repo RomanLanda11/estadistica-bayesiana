@@ -375,6 +375,7 @@ ggplot(df_grilla)+
   labs(title = "",
        x = "X1",
        y = "X2")
+
 ```
 Luego se utiliza la función **sample_mh_2d** para obtener cinco mil muestras de esta distribución y se grafican.
 
@@ -392,8 +393,6 @@ ggplot(muestras_2d_df, aes(x = V1, y = V2)) +
        y = "X2") +
   stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
   theme_minimal()
-
-# p_inicial = rmvnorm(1,mean=c(1,1)) ?
 ```
 
 ```{r}
@@ -409,10 +408,11 @@ plot_trace(muestras_2d_df$V1, muestras_2d_df$V2)
 #Número efectivo de muestras
 N_eff(muestras_2d)
 ```
+Se observa nuevamente un patrón de *ruido blanco* en los Trace Plot, lo cual indica una mustra poco correlacionada a través de las observaciones. Mientras que el número efectivo de muestras para $X_1$ es igual a $481.98$ y para $X_2$ resulta $363.31$, lo cual indica que nuestras cinco mil muestras correlacionadas equivalen a cuatrocientas ochenta y dos y trecientas secenta y tres muestras independientes, respectivamente. 
 
-## 8
+A fines de comparar la calidad de las muestras obtenidas, se calculan y comparan algunas probabilidades mediante distitntos metodos.
 
-```{r}
+```{r, echo=FALSE}
 #| label = probs
 probs <- numeric(3)
 # x1 > 1 ; x2 < 0
@@ -424,10 +424,9 @@ probs[2] <- nrow(mu_filtradas) / nrow(muestras_2d)
 # x1 > .4 ; x2 > .75
 mu_filtradas <- muestras_2d[muestras_2d[,1] > .4 & muestras_2d[,2] > .75,]
 probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d)
-probs #no se si esto esta bien gente
 ```
 
-```{r}
+```{r, echo=FALSE}
 # Monte Carlo generamos aleatorios y hace sumatoria
 # Genera un gran número de muestras bivariadas
 n <- 5000
@@ -446,10 +445,6 @@ p_exacta[2] <- pmvnorm(lower = c(1, 2), upper = c(Inf,Inf), mean = mu_obj, sigma
 mu_filtradas <- muestras_2d_mc[muestras_2d_mc[,1] > .4 & muestras_2d_mc[,2] > .75,]
 p_mc[3] <- nrow(mu_filtradas) / nrow(muestras_2d_mc)
 p_exacta[3] <- pmvnorm(lower = c(.4, .75), upper = c(Inf,Inf), mean = mu_obj, sigma=sigma_obj)
-
-probs
-p_mc
-round(p_exacta, 4)#no se si esto esta bien gente
 ```
 
 
@@ -469,22 +464,28 @@ kable(round(data_probs,4))%>%
   row_spec(0, bold = T, background = "#613860", color = "black") 
 
 ```
-
+Como se observa en la tabla, si bien las probabilidades obtenidas mediante el metodo de Monte Carlo son las que más se aproximan a las reales, con el método de Metropolis Hasting se obtienen muy buenas aproximaciones. Vale aclarar que en situaciones más complejas, donde se dificulta el calculo de las probabilidades exactas, la aplicación de MH toma mayor importancia.
 
 
 # Función de Rosenbrock
 
-```{r}
+La función de Rosenbrock, comunmente conocida como la “banana de Rosenbrock”, es una función matemática utilizada frecuentemente como un problema de optimización y prueba para algoritmos de optimización numérica. También es muy conocida en el campo de la estadística bayesiana, ya que en ciertos escenarios, la densidad del posterior toma una forma que definitivamente se asemeja a la banana de Howard Rosenbrock.
+
+Un ejemplo de esto se presenta a continuación:
+$$p^*(x_1, x_2 \mid a, b) = \exp \left\{-\left[(a - x_1) ^ 2 + b(x_2 - x_1^2) ^ 2\right] \right\}$$
+El objetivo en este tramo del trabajo es obtener muestras de dicha función utilizando el algoritmo de Metropolis Hasting, para esto, se comienza graficandola para conocer su recorrido y asi poder seleccionar un punto inicial.
+
+```{r, echo=FALSE}
 set.seed(412)
 a <- 0.5
 b <- 5
-sigma_prop1 <- matrix(c(4,1,1,4), ncol = 2)
-sigma_prop2 <- diag(2)
-sigma_prop3 <- matrix(c(2,-2,-2,5), ncol = 2)
+sigma_prop1 <- matrix(c(.4,.1,.1,.4), ncol = 2)
+sigma_prop2 <- diag(2)*.1
+sigma_prop3 <- matrix(c(.2,-.2,-.2,.5), ncol = 2)
 
 d_objetivo <- function(x) exp(-((a-x[1])^2+b*(x[2]-(x[1])^2)^2))
-r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop2)
-d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop2)
+r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop1)
+d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop1)
 
 df_grilla <- expand.grid(x = seq(-2, 2, length.out = 200), seq(-1, 5, length.out = 200))
 for(i in 1:40000){ 
@@ -497,49 +498,77 @@ ggplot(df_grilla)+
  labs(title = "",
       x = "X1",
       y = "X2")
+```
+
+```{r, echo=FALSE}
+muestras_2d1 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(runif(1,0,1), runif(1,-0.5, 1)), n=5000)
+muestras_2d1_df <- as.data.frame(muestras_2d1)
+b1 <- ggplot(muestras_2d1_df, aes(x = V1, y = V2)) +
+  geom_density_2d(fill = "skyblue", alpha = 0.7) +
+  geom_density2d_filled()+
+  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "white", alpha = 0.03) +
+  labs(title = "",
+       x = "X1",
+       y = "X2") +
+  theme_minimal()
+################################################
+r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop2)
+d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop2)
 
 muestras_2d2 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(runif(1,0,1), runif(1,-0.5, 1)), n=5000)
 
 muestras_2d2_df <- as.data.frame(muestras_2d2)
-ggplot(muestras_2d2_df, aes(x = V1, y = V2)) +
+b2 <- ggplot(muestras_2d2_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
-  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
+  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "white", alpha = 0.03) +
   labs(title = "",
        x = "X1",
        y = "X2") +
   theme_minimal()
-
-r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop1)
-d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop1)
-
-muestras_2d1 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(runif(1,0,1), runif(1,-0.5, 1)), n=5000)
-
-muestras_2d1_df <- as.data.frame(muestras_2d1)
-ggplot(muestras_2d1_df, aes(x = V1, y = V2)) +
-  geom_density_2d(fill = "skyblue", alpha = 0.7) +
-  geom_density2d_filled()+
-  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
-  labs(title = "",
-       x = "X1",
-       y = "X2") +
-  theme_minimal()
-
+#################################################
 r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop3)
 d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop3)
 
 muestras_2d3 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(runif(1,0,1), runif(1,-0.5, 1)), n=5000)
 
 muestras_2d3_df <- as.data.frame(muestras_2d3)
-ggplot(muestras_2d3_df, aes(x = V1, y = V2)) +
+b3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
-  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
+  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "white", alpha = 0.03) +
   labs(title = "",
        x = "X1",
        y = "X2") +
   theme_minimal()
-# TODO: preguntarle a los chicos que cambia en estas tres para poner todo en un bucle
+```
+
+Se obtienen muestras utilizando tres matrices de covariancias distintas para la distribución que propone los saltos. Estas son:
+$$\Sigma_1=\begin{pmatrix}
+   4 & 1 \\
+   1 & 4
+\end{pmatrix} $$
+Las muestrar del primer postirior obtenidas resultan de la forma
+```{r}
+b1
+```
+
+$$\Sigma_2=\begin{pmatrix}
+   1 & 0 \\
+   0 & 1
+\end{pmatrix} $$
+Las muestrar del segundo postirior obtenidas resultan de la forma
+```{r}
+b2
+```
+
+$$\Sigma_3=\begin{pmatrix}
+   2 & -2 \\
+   -2 & 5
+\end{pmatrix} $$
+Las muestrar del tercer postirior obtenidas resultan de la forma
+```{r, echo=FALSE}
+b3
 ```
 
 ```{r}
