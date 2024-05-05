@@ -1,9 +1,18 @@
 ---
-title: "informe2"
+title: " Trabajo Práctico 2: Metropolis-Hastings "
 author: "Gazze - Landa - Irisarri"
-date: "2024-04-23"
-output: html_document
+format:
+  # pdf:
+  #   toc: True
+  #   toc-title: 'Contenido'
+  html:
+    toc: True
+    toc-title: 'Contenido'
+execute:
+  warning: False
+  message: False
 ---
+
 ```{r, echo=FALSE}
 #| label = parametros
 set.seed(412)
@@ -11,13 +20,14 @@ knitr::opts_chunk$set(fig.align = "center")
 ```
 
 
-```{r, echo=FALSE}
+```{r message=FALSE, include=FALSE}
 #| label = librerias
 library(ggplot2)
 library(dplyr)
 library(gridExtra)
 library(kableExtra)
 library(mvtnorm)
+library(pracma)
 ```
 
 # Introducción
@@ -35,7 +45,7 @@ A través de estos ejercicios, se buscará evaluar el desempeño del algoritmo y
 
 Para entrar en calor, se comienza declarando una función que implemente el algoritmo de Metropolis-Hastings para tomar muestras de una distribución de probabilidad unidimensional. El algoritmo permiete elegir entre un punto de inicio arbitrario o al azar y utiliza la distribución propuesta de transición arbitraria (por defecto, se utiliza una distribución normal estándar).
 
-## 1. Algoritmo MH en 1 D
+##  Algoritmo MH en 1 D
 
 ```{r}
 d_propuesta_def <- function(x, mean){
@@ -68,7 +78,7 @@ sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p
     
   }
   tasa_acepta = (salto/n)*100# TODO: agregar tasa de aceptación a la funcion
-  print( tasa_acepta)
+  #print( tasa_acepta)
   return ( muestras ) 
 }
 ```
@@ -78,7 +88,7 @@ sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p
 
 La distribución de Kumaraswamy es una distribución de probabilidad continua que se utiliza para modelar variables aleatorias con soporte en el intervalo $(0;1)$.
 
-## 2. Conociendo a Jagdish Kumaraswamy
+##  Conociendo a Jagdish Kumaraswamy
 
 Se grafica la función de densidad de la distribución de Kumaraswamy para 5 combinaciones de los parámetros $a$ y $b$ con el objetivo de familiarizarse con su comportamiento.
 
@@ -144,7 +154,7 @@ La distribución de Kumaraswamy resulta muy útil a la hora de realizar estudios
 Ademas presenta una función de densidad de probabilidad simple y computacionalmente eficiente, lo que facilita su uso en cálculos bayesianos.
 Por último, vale destacar que la restricción al intervalo $(0;1)$ resulta útil porque se adapta naturalmente al modelado de proporciones y probabilidades.
 
-## 3. MH para Jagdish
+##  MH para Jagdish
 
 Se utiliza la función construida en el punto 1, obtenga 5000 muestras de una distribución de Kumaraswamy con parámetros $a=6 , b=2$ y una distribución de propuesta beta.
 
@@ -220,7 +230,7 @@ g3 <- ggplot(df, aes(x = V3)) +
 grid.arrange(g1, g2, g3, ncol = 1)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 calcular_w <- function(x){
   mean(apply(x, 2, var))
 }
@@ -236,6 +246,10 @@ R_hat <- function(x){
   numerador <- (S-1)/S * W + (1 / S) * B
   sqrt(numerador / W)
 }
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
 R_hat(muestras) #indica convergencia entre cadenas
 ```
 
@@ -254,6 +268,10 @@ N_eff <- function(x){
   }
   return(n_eff)
 }
+```
+
+
+```{r include=FALSE}
 N_eff(muestras)
 ```
 
@@ -268,10 +286,10 @@ ggplot(data_corr)+
 # no parecen muy bajos para 5k muestras
 ```
 
-Lo primero que se puede mencionar es la diferencia en las tasas de aceptación, las cuales fueron $ 21.72$ %, $77.9$% y $81.66$% y los números efectivos de muestras $522.36$, $345.08$ y $133.14$ respectivamente. En cuanto a los recorridos de las muestras, se observa aleatoridad o un patrón de *ruido blanco*. Finalmente observamos el $\hat{R}$ el cual resultó ser $1.003404$ lo que nos indica converngencia entren cadenas.
+Lo primero que se puede mencionar es la diferencia en las tasas de aceptación, las cuales fueron $21.72$ %, $77.9$% y $81.66$% y los números efectivos de muestras $522.36$, $345.08$ y $133.14$ respectivamente. En cuanto a los recorridos de las muestras, se observa aleatoridad o un patrón de *ruido blanco*. Finalmente observamos el $\hat{R}$ el cual resultó ser $1.003404$ lo que nos indica converngencia entren cadenas.
 Tambien, se presentan histogramas de frecuencias observadas para las distintas muestras y se obaservan comportamientos similares para las tres concentraciones elegidas.
 
-## 4. Explorando cadenas
+##  Explorando cadenas
 
 Se presenta una tabla con la media de la distribución y los percentiles 5 y 95 de cada una de las cadenas obtenidas
 
@@ -338,12 +356,12 @@ sample_mh_2d <- function (d_objetivo, r_propuesta, d_propuesta, p_inicial, n, si
     
   }
   tasa_acepta <- (salto/n)*100
-  print(tasa_acepta)
+  #print(tasa_acepta)
   return ( muestras ) 
 }
 ```
 
-## 7. Conociendo a MH en 2D
+## Conociendo a MH en 2D
 
 Para comenzar a explorar el comportamiento del algoritmo en dos dimensiones se obtendran muestras de una distribución normal bivariada con media $$ \mu = \begin{pmatrix}
    0.4 \\
@@ -405,6 +423,10 @@ plot_trace <- function(x, y){
     labs(x = "Número de Muestra", y = "Valor")
 }  
 plot_trace(muestras_2d_df$V1, muestras_2d_df$V2)
+```
+
+
+```{r include=FALSE}
 #Número efectivo de muestras
 N_eff(muestras_2d)
 ```
@@ -448,7 +470,7 @@ p_exacta[3] <- pmvnorm(lower = c(.4, .75), upper = c(Inf,Inf), mean = mu_obj, si
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 #Método de la grilla
 grilla= numeric(3)
 grilla[1]=sum(df_grilla$z[df_grilla$x>1 & df_grilla$Var2<0])/ sum(df_grilla$z)
@@ -473,9 +495,12 @@ La función de Rosenbrock, comunmente conocida como la “banana de Rosenbrock�
 
 Un ejemplo de esto se presenta a continuación:
 $$p^*(x_1, x_2 \mid a, b) = \exp \left\{-\left[(a - x_1) ^ 2 + b(x_2 - x_1^2) ^ 2\right] \right\}$$
+
+## Conociendo a Howard Rosenbrock
+
 El objetivo en este tramo del trabajo es obtener muestras de dicha función utilizando el algoritmo de Metropolis Hasting, para esto, se comienza graficandola para conocer su recorrido y asi poder seleccionar un punto inicial.
 
-```{r, echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 set.seed(412)
 a <- 0.5
 b <- 5
@@ -549,7 +574,7 @@ $$\Sigma_1=\begin{pmatrix}
    1 & 4
 \end{pmatrix} $$
 Las muestras del primer postirior resultan de la forma
-```{r}
+```{r, echo=FALSE}
 #b1
 ```
 
@@ -560,7 +585,7 @@ $$\Sigma_2=\begin{pmatrix}
    0 & 1
 \end{pmatrix} $$
 Las muestrar del segundo postirior obtenida resultan de la forma
-```{r}
+```{r, echo=FALSE}
 #b2
 ```
 
@@ -574,7 +599,7 @@ Las muestrar del tercer postirior obtenida resultan de la forma
 ```
 
 Se comparan las trayectorias para las distintas muestras obtenidas, y posteriormente se analizan las funciones de autocorrelación:
-```{r}
+```{r, echo=FALSE, ,  out.width = "100%"}
 # Añadir una columna para indicar la cadena
 muestras_2d1_df$cadena <- "Muestra 1"
 muestras_2d2_df$cadena <- "Muestra 2"
@@ -610,9 +635,10 @@ m3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2,alpha = posicion)) +
 
 grid.arrange(m1, m2, m3, ncol = 3)
 ```
+
 Se observa que la trayectoria de la primera y tercera muestra parecen presentar valores en todo el recorrido de la función de Rosenbrock, mientras que la muestra obtenida con la segunda cadena se restringe a los valores centrales de dicha función.
 
-```{r}
+```{r, echo=FALSE}
 #Trace plot y gráfico de autocorrelación
 n=5000
 df1 <- as.data.frame(cbind(muestras_2d1_df$V1,muestras_2d2_df$V1,muestras_2d3_df$V1, x=1:n))
@@ -671,11 +697,13 @@ kable(tabla_Neff, "html", escape = FALSE)%>%
   kable_styling(position = "center",full_width = FALSE) %>% 
   row_spec(0, bold = T, background = "#613860", color = "black")
 ```
+  
 A diferencia de las muestras 1 y 2, la tercera muestra presenta una mayor autocorrelación en sus observaciones, y debido a esto se puede observar que también el número efectivo de muestras disminuye en prácticamente la mitad de las observaciones.
 Esto podría deberse a que la matriz de covarianza utilizada en esta cadena no acompaña la forma de la distribución a posteriori.
 
+Nuevamente, con el motivo de analizar la calidad de las muestras obtenidas, se calculan y comparan algunas probabilidades mediante dichas muestras y el método de la grilla.
 
-```{r}
+```{r, echo=FALSE}
 # Ej 10
 # Calculamos las probabilidades con la segunda muestra, la cual presenta el mayor número efectivo de muestras
 probs <- numeric(3)
@@ -688,27 +716,56 @@ probs[2] <- nrow(mu_filtradas) / nrow(muestras_2d2)
 # 1 < x1 < 2 ;2 < x2 < 3
 mu_filtradas <- muestras_2d2[muestras_2d2[,1] > 1 & muestras_2d2[,1] < 2 & muestras_2d2[,2] > 2 & muestras_2d2[,2] < 3,]
 probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d2)
-probs
 ```
 
-```{r}
+```{r, echo=FALSE}
 #Ej 11
+d_objetivo2 <- function(x, y) exp(-((0.5-x)^2+5*(y-(x)^2)^2))
+
 #Método de la grilla
 grilla= numeric(3)
 grilla[1]=sum(df_grilla$z[df_grilla$x>0 & df_grilla$x<1 & df_grilla$Var2>0 & df_grilla$Var2<1])/ sum(df_grilla$z)
 grilla[2]=sum(df_grilla$z[df_grilla$x>-1 & df_grilla$x<0 & df_grilla$Var2>0 & df_grilla$Var2<1])/ sum(df_grilla$z)
 grilla[3]=sum(df_grilla$z[df_grilla$x>1 & df_grilla$x<2 & df_grilla$Var2>2 & df_grilla$Var2<3])/ sum(df_grilla$z)
+# Monte Carlo
+monte_carlo <- function(n = 5000, d_objetivo=d_objetivo2, x_min, x_max, y_min, y_max) {
+  x <- runif(n, x_min, x_max)
+  y <- runif(n, y_min, y_max)
+  int_f <- d_objetivo2(x, y)
+  result_f <- mean(int_f)
+  return(result_f)
+}
+prob_mc <- numeric(3)
+prob_mc[1] <- monte_carlo(x_min=0, x_max=1, y_min=0, y_max=1)
+prob_mc[2] <- monte_carlo(x_min=-1, x_max=0, y_min=0, y_max=1)
+prob_mc[3] <- monte_carlo(x_min=1, x_max=2, y_min=2, y_max=3)
 
-data_probs= cbind(muestras=probs,grilla= grilla)
+# Met. Exacto
+prob_ext <- numeric(3)
+prob_ext[1] <- integral2(d_objetivo2, 0,1,0,1)$Q
+prob_ext[2] <- integral2(d_objetivo2, -1,0,0,1)$Q
+prob_ext[3] <- integral2(d_objetivo2, 1,2,2,3)$Q
+```
 
-colnames(data_probs) <- c("Muestras","Grilla")
-rownames(data_probs) <- c("P(0< X1 < 1,0 < X2< 1)","P(-1 < X1 < 0,0 < X2 < 1)", "P(1 < X1 < 2,2 < X2 < 3)")
+
+```{r, echo=FALSE}
+data_probs= cbind(muestras=probs,
+                  monte_carlo=prob_mc,
+                  grilla= grilla,
+                  exacto=prob_ext)
+
+colnames(data_probs) <- c("Muestras", "Montecarlo", "Grilla", "Prob. Exacta")
+rownames(data_probs) <- c("P(0< X1 <1 ; 0< X2 <1)","P(-1< X1 <0 ; 0< X2 <1)", "P(1< X1 <2 ; 2< X2 <3)")
 kable(round(data_probs,4))%>% 
   kable_styling(position = "center",full_width = FALSE) %>% 
   row_spec(0, bold = T, background = "#613860", color = "black") 
 ```
+Estos resultados exponen una debilidad en el algoritmo de Metropolis Hasting. Se observan importantes diferencias entre las probabilidades calculadas con MH o grilla en comparación a las probabilidades calculadas con Monte Carlo o integración exacta (estos últimos dos metodos, más precisos).
 
-Básicamente, a lo largo del trabajo se ve que Metropolis Hastings es una variante que permite sacar muestras de distribuciones de probabilidad, incluso cuando no se tiene idea de cómo es exactamente esa distribución, solo necesitamos su ley. Se probó en distribuciones unidimensionales y bidimensionales como lo son las distribuciones de Kumaraswamy y Rosenbrock. Se interactuó con diferentes formas de distribución propuesta y se observó cómo esta afecta a la eficiencia del algoritmo. 
-Es interesante ver a Metropolis Hastings como una herramienta en estadística bayesiana ya que ayuda a muestrear y/o graficar distribuciones a posteriori.
+# Conclusiones
+
+A lo largo del trabajo, se observa que Metropolis Hastings es una variante que permite sacar muestras de distribuciones de probabilidad, incluso cuando no se tiene idea de cómo es exactamente esa distribución, solo se necesita su ley. Se ha probado en distribuciones unidimensionales y bidimensionales, como las distribuciones de Kumaraswamy y Rosenbrock. Se ha interactuado con diferentes formas de distribución propuesta y se ha observado cómo esta afecta a la eficiencia del algoritmo. Sin embargo, se han identificado algunas debilidades, por ejemplo, su rendimiento puede ser sensible a la elección de la distribución propuesta, lo que puede afectar la eficiencia y la convergencia del algoritmo. Además, puede ser computacionalmente costoso para dimensiones muy altas o distribuciones multimodales.
+
+Es interesante ver a Metropolis Hastings como una herramienta en estadística bayesiana, ya que ayuda a muestrear y/o graficar distribuciones a posteriori. No obstante, se conocen métodos más precisos para obtener muestras de distribuciones complejas, como por ejemplo, Hamiltonian - Monte Carlo.
 
 
