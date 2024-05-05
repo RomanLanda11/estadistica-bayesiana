@@ -258,7 +258,7 @@ N_eff(muestras)
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 data_corr = data.frame(x=corr$lag, y=corr$acf)
 ggplot(data_corr)+
   aes(x=x,y=y)+
@@ -308,7 +308,8 @@ kable(round(tabla_logit,3))%>%
 
 # Metropolis-Hastings en 2D
 
-## 6
+Para extender el algoritmo de Metropolis-Hastings se generaliza la función permitiendole implementar el proceso para más de una dimensión. 
+Se plantea una probabilidad de salto normal bivariada de matriz de covarianza variable y se otorga flexibilidad al algoritmo haciendo que reciba como argumento la matriz de covarianza de la probabilidad de transición.
 
 ```{r}
 sample_mh_2d <- function (d_objetivo, r_propuesta, d_propuesta, p_inicial, n, sigma_prop){
@@ -340,13 +341,22 @@ sample_mh_2d <- function (d_objetivo, r_propuesta, d_propuesta, p_inicial, n, si
   print(tasa_acepta)
   return ( muestras ) 
 }
-
-
 ```
 
-## 7
+## 7. Conociendo a MH en 2D
 
-```{r warning=FALSE}
+Para comenzar a explorar el comportamiento del algoritmo en dos dimensiones se obtendran muestras de una distribución normal bivariada con media $$ \mu = \begin{pmatrix}
+   0.4 \\
+   0.75
+\end{pmatrix} $$
+ y matriz de covarianza $$\Sigma=\begin{pmatrix}
+   0.35 & 0.4 \\
+   0.4 & 2.4
+\end{pmatrix} $$
+
+Se comienza graficando la distribución objetivo para seleccionar un punto inicial contenido en el recorrido de la misma.
+
+```{r warning=FALSE, echo=FALSE}
 mu_obj <- c(0.4, 0.75)
 sigma_obj <- matrix(c(1.35, 0.4, 0.4, 2.4), ncol = 2)
 
@@ -356,7 +366,7 @@ d_objetivo <- function(x) dmvnorm(x, mean = mu_obj, sigma = sigma_obj)
 r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop)
 d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop)
 
-df_grilla <- expand.grid(x = seq(-3, 3, length.out = 200), seq(-3, 3, length.out = 200))
+df_grilla <- expand.grid(x = seq(-3, 3, length.out = 200), seq(-3, 4, length.out = 200))
 df_grilla$z <- d_objetivo(as.matrix(df_grilla))
 
 ggplot(df_grilla)+
@@ -365,14 +375,18 @@ ggplot(df_grilla)+
   labs(title = "",
        x = "X1",
        y = "X2")
+```
+Luego se utiliza la función **sample_mh_2d** para obtener cinco mil muestras de esta distribución y se grafican.
 
+```{r warning=FALSE, echo=FALSE}
+set.seed(412)
 muestras_2d <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial=c(runif(1,-2,3),runif(1,-2,3)), n=5000)
 
 muestras_2d_df <- as.data.frame(muestras_2d)
 ggplot(muestras_2d_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
-  #geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "cyan2", alpha = 0.05) +
+  geom_point(data = muestras_2d_df, aes(x = V1, y = V2), color = "white", alpha = 0.03) +
   labs(title = "",
        x = "X1",
        y = "X2") +
@@ -382,10 +396,7 @@ ggplot(muestras_2d_df, aes(x = V1, y = V2)) +
 # p_inicial = rmvnorm(1,mean=c(1,1)) ?
 ```
 
-
 ```{r}
-
-########################
 plot_trace <- function(x, y){
   n <-length(x)
   df <- data.frame(x = rep(1:n, 2), y = c(x, y), dimension = rep(1:2, each = n))
@@ -394,9 +405,7 @@ plot_trace <- function(x, y){
     facet_grid(rows = vars(dimension))+
     labs(x = "Número de Muestra", y = "Valor")
 }  
-
 plot_trace(muestras_2d_df$V1, muestras_2d_df$V2)
-
 #Número efectivo de muestras
 N_eff(muestras_2d)
 ```
@@ -466,6 +475,7 @@ kable(round(data_probs,4))%>%
 # Función de Rosenbrock
 
 ```{r}
+set.seed(412)
 a <- 0.5
 b <- 5
 sigma_prop1 <- matrix(c(4,1,1,4), ncol = 2)
@@ -537,41 +547,54 @@ ggplot(muestras_2d3_df, aes(x = V1, y = V2)) +
 muestras_2d1_df$cadena <- "Muestra 1"
 muestras_2d2_df$cadena <- "Muestra 2"
 muestras_2d3_df$cadena <- "Muestra 3"
-
-muestra1 <- muestras_2d1_df
-muestra2 <- muestras_2d2_df
-muestra3 <- muestras_2d3_df
-#TODO: esto esta de más, preguntar si se puede sacar
-
-# Unir las muestras en un solo dataframe
-df <- rbind(muestra1, muestra2, muestra3)
+# Armar los dataframe
+muestras_2d1_df$posicion <- seq(0, 1, length.out= 5000)
+muestras_2d2_df$posicion <- seq(0, 1, length.out= 5000)
+muestras_2d3_df$posicion <- seq(0, 1, length.out= 5000)
 
 # Graficar las trayectorias
-df$posicion <- rep(seq(0, 1, length.out= 5000), time = 3)
-ggplot(df, aes(x = V1, y = V2, color = cadena, alpha = posicion)) +
-  geom_point() +
-  geom_line() +
-  labs(x = "X1", y = "X2", title = "Trayectorias de las cadenas de Metropolis-Hastings")+
-  scale_color_manual(values= c("#536C8D","#62A07B","#613860"))
+ejes_limites_x <- c(-2.5, 2.5)
+ejes_limites_y <- c(-1.5, 6)
+m1 <- ggplot(muestras_2d1_df, aes(x = V1, y = V2,alpha = posicion)) +
+  geom_point(color = "#536C8D") +
+  geom_line(color = "#536C8D") +
+  labs(x = "X1", y = "X2", title = "Muestra 1")+
+  theme(legend.position = "none")+
+  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)
+
+m2 <- ggplot(muestras_2d2_df, aes(x = V1, y = V2,alpha = posicion)) +
+  geom_point(color = "#62A07B") +
+  geom_line(color = "#62A07B") +
+  labs(x = "X1", y = "X2", title = "Muestra 2")+
+  theme(legend.position = "none")+
+  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)
+
+m3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2,alpha = posicion)) +
+  geom_point(color = "#613860") +
+  geom_line(color = "#613860") +
+  labs(x = "X1", y = "X2", title = "Muestra 3")+
+  theme(legend.position = "none")+
+  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)
+
+grid.arrange(m1, m2, m3, ncol = 3)
 ```
 
 ```{r}
 #Trace plot y gráfico de autocorrelación
-# TODO: yo mantendria los colores de muestra 1 2 y 3 como arriba
 n=5000
 df1 <- as.data.frame(cbind(muestras_2d1_df$V1,muestras_2d2_df$V1,muestras_2d3_df$V1, x=1:n))
 tp1=ggplot(df1, aes(x=x)) +
   geom_line(aes(y = V1), color = "#536C8D") +
   geom_line(aes(y = V2), color = "#62A07B") +
   geom_line(aes(y = V3), color = "#613860") +
-  labs(x = "", y = "Valor", title = "")
+  labs(x = "Numero de muestra X1", y = "Valor", title = "")
 
 df2 <- as.data.frame(cbind(muestras_2d1_df$V2,muestras_2d2_df$V2,muestras_2d3_df$V2, x=1:n))
 tp2=ggplot(df2, aes(x=x)) +
   geom_line(aes(y = V1), color = "#536C8D") +
   geom_line(aes(y = V2), color = "#62A07B") +
   geom_line(aes(y = V3), color = "#613860") +
-  labs(x = "Numero de muestra", y = "Valor", title = "")
+  labs(x = "Numero de muestra X2", y = "Valor", title = "")
 
 grid.arrange(tp1, tp2, ncol=1)
 
@@ -593,21 +616,27 @@ corr_x2=data.frame(lag= c(corr12$lag, corr22$lag, corr32$lag),
 grafico_corr_x1= ggplot(corr_x1)+
   aes(x=lag,y=acf, color=cadena)+
   geom_line()+
-  labs(x = "", y = "Autocorrelación", title = "")+
-  scale_color_manual(values= c("#536C8D","#62A07B","#613860"))
+  labs(x = "Lag", y = "Autocorrelación", title = "")+
+  scale_color_manual(values= c("#536C8D","#62A07B","#613860"))+
+  guides(color = guide_legend(title = "Cadenas"))
 
 grafico_corr_x2= ggplot(corr_x2)+
   aes(x=lag,y=acf, color=cadena)+
   geom_line()+
   labs(x = "Lag", y = "Autocorrelación", title = "")+
-  scale_color_manual(values= c("#536C8D","#62A07B","#613860"))
+  scale_color_manual(values= c("#536C8D","#62A07B","#613860"))+
+  guides(color = guide_legend(title = "Cadenas"))
 
 grid.arrange(grafico_corr_x1,grafico_corr_x2, ncol=1)
 
 #Calculamos el n eff de muestras para ver que muestra resulto mejor
-round(N_eff(muestras_2d1),2)
-round(N_eff(muestras_2d2),2)
-round(N_eff(muestras_2d3),2)
+tabla_Neff <- rbind(round(N_eff(muestras_2d1),2), round(N_eff(muestras_2d2),2), round(N_eff(muestras_2d3),2))
+
+colnames(tabla_Neff) <- c("$N_{eff}\\ para\\ X_1$", "$N_{eff}\\ para\\ X_2$")
+rownames(tabla_Neff) <- c("Muestra 1","Muestra 2", "Muestra 3")
+kable(tabla_Neff, "html", escape = FALSE)%>% 
+  kable_styling(position = "center",full_width = FALSE) %>% 
+  row_spec(0, bold = T, background = "#613860", color = "black")
 ```
 
 
