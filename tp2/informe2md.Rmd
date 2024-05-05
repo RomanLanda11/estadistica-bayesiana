@@ -479,9 +479,9 @@ El objetivo en este tramo del trabajo es obtener muestras de dicha función util
 set.seed(412)
 a <- 0.5
 b <- 5
-sigma_prop1 <- matrix(c(.4,.1,.1,.4), ncol = 2)
-sigma_prop2 <- diag(2)*.1
-sigma_prop3 <- matrix(c(.2,-.2,-.2,.5), ncol = 2)
+sigma_prop1 <- matrix(c(4,1,1,4), ncol = 2)
+sigma_prop2 <- diag(2)*1
+sigma_prop3 <- matrix(c(2,-2,-2,5), ncol = 2)
 
 d_objetivo <- function(x) exp(-((a-x[1])^2+b*(x[2]-(x[1])^2)^2))
 r_propuesta <- function(x) rmvnorm(1, mean = x, sigma = sigma_prop1)
@@ -548,29 +548,32 @@ $$\Sigma_1=\begin{pmatrix}
    4 & 1 \\
    1 & 4
 \end{pmatrix} $$
-Las muestrar del primer postirior obtenidas resultan de la forma
+Las muestras del primer postirior resultan de la forma
 ```{r}
-b1
+#b1
 ```
+
+
 
 $$\Sigma_2=\begin{pmatrix}
    1 & 0 \\
    0 & 1
 \end{pmatrix} $$
-Las muestrar del segundo postirior obtenidas resultan de la forma
+Las muestrar del segundo postirior obtenida resultan de la forma
 ```{r}
-b2
+#b2
 ```
 
 $$\Sigma_3=\begin{pmatrix}
    2 & -2 \\
    -2 & 5
 \end{pmatrix} $$
-Las muestrar del tercer postirior obtenidas resultan de la forma
+Las muestrar del tercer postirior obtenida resultan de la forma
 ```{r, echo=FALSE}
-b3
+#b3
 ```
 
+Se comparan las trayectorias para las distintas muestras obtenidas, y posteriormente se analizan las funciones de autocorrelación:
 ```{r}
 # Añadir una columna para indicar la cadena
 muestras_2d1_df$cadena <- "Muestra 1"
@@ -607,6 +610,7 @@ m3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2,alpha = posicion)) +
 
 grid.arrange(m1, m2, m3, ncol = 3)
 ```
+Se observa que la trayectoria de la primera y tercera muestra parecen presentar valores en todo el recorrido de la función de Rosenbrock, mientras que la muestra obtenida con la segunda cadena se restringe a los valores centrales de dicha función.
 
 ```{r}
 #Trace plot y gráfico de autocorrelación
@@ -667,7 +671,8 @@ kable(tabla_Neff, "html", escape = FALSE)%>%
   kable_styling(position = "center",full_width = FALSE) %>% 
   row_spec(0, bold = T, background = "#613860", color = "black")
 ```
-
+A diferencia de las muestras 1 y 2, la tercera muestra presenta una mayor autocorrelación en sus observaciones, y debido a esto se puede observar que también el número efectivo de muestras disminuye en prácticamente la mitad de las observaciones.
+Esto podría deberse a que la matriz de covarianza utilizada en esta cadena no acompaña la forma de la distribución a posteriori.
 
 
 ```{r}
