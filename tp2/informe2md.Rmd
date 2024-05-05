@@ -14,10 +14,12 @@ knitr::opts_chunk$set(fig.align = "center")
 ```{r, echo=FALSE}
 #| label = librerias
 library(ggplot2)
+library(dplyr)
 library(gridExtra)
 library(kableExtra)
 library(mvtnorm)
 ```
+
 # Introducción
 
 Metropolis-Hastings es un proceso para generar muestras pseudoaleatorias de distribuciones objetivo. Se trata de un proceso iterativo que comienza en un punto inicial en el espacio de muestras, luego, propone un "salto" a un nuevo punto utilizando una distribución de probabilidad propuesta. Este salto es evaluado mediante un criterio de aceptación basado en la relación entre la densidad en el nuevo punto y en el punto actual. Si el salto es aceptado, el algoritmo se mueve al nuevo punto, sino, permanece en el punto actual. 
@@ -65,7 +67,8 @@ sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p
     }
     
   }
-  tasa_acepta = salto/n # TODO: agregar tasa de aceptación a la funcion
+  tasa_acepta = (salto/n)*100# TODO: agregar tasa de aceptación a la funcion
+  print( tasa_acepta)
   return ( muestras ) 
 }
 ```
@@ -162,7 +165,8 @@ d_objetivo <- function(x, a=6 ,b=2){
 }
 ```
 
-Se observan las cadenas obtenidas utilizando tres grados de concentración distintos $kappas = 1,25, 50$
+Se observan las cadenas obtenidas utilizando tres grados de concentración distintos $kappas = 1$, $25$ y $50$
+
 ```{r, echo=FALSE}
 kappas <- c(1,25,50)
 n=5000
@@ -193,8 +197,6 @@ ggplot(df, aes(x = x)) +
   labs(x = "", y = "", title = "")
 
 ```
-Se observa aleatoridad o un patron de *ruido blanco*.
-Tambien, se presentan histogramas de frecuencias observadas para las distintas muestras.
 
 ```{r, echo=FALSE}
 g1 <- ggplot(df, aes(x = V1)) +
@@ -219,17 +221,13 @@ grid.arrange(g1, g2, g3, ncol = 1)
 ```
 
 ```{r}
-# TODO: averiguar si hay grafico para el correlograma
-# TODO: agregar tasa de aceptación a la conclucion
 calcular_w <- function(x){
   mean(apply(x, 2, var))
 }
-
 calcular_b <- function(x){
   media_chain <- apply(x, 2, mean)
   var(media_chain) * nrow(x)
 }
-
 R_hat <- function(x){
   S <- nrow(x)
   M <- ncol(x)
@@ -238,9 +236,9 @@ R_hat <- function(x){
   numerador <- (S-1)/S * W + (1 / S) * B
   sqrt(numerador / W)
 }
-
-R_hat(muestras)
+R_hat(muestras) #indica convergencia entre cadenas
 ```
+
 
 ```{r}
 corr <- acf(muestras[,3], plot = FALSE, lag = Inf)
@@ -257,6 +255,10 @@ N_eff <- function(x){
   return(n_eff)
 }
 N_eff(muestras)
+```
+
+
+```{r}
 data_corr = data.frame(x=corr$lag, y=corr$acf)
 ggplot(data_corr)+
   aes(x=x,y=y)+
@@ -264,13 +266,16 @@ ggplot(data_corr)+
   geom_hline(yintercept = 0, linetype = "dashed", color = "#613860")+
   labs(x = "Lag", y = "Autocorrelación", title = "")
 # no parecen muy bajos para 5k muestras
-# YA GENERALICE LA N_eff 
 ```
 
+Lo primero que se puede mencionar es la diferencia en las tasas de aceptación, las cuales fueron $ 21.72$ %, $77.9$% y $81.66$% y los números efectivos de muestras $522.36$, $345.08$ y $133.14$ respectivamente. En cuanto a los recorridos de las muestras, se observa aleatoridad o un patrón de *ruido blanco*. Finalmente observamos el $\hat{R}$ el cual resultó ser $1.003404$ lo que nos indica converngencia entren cadenas.
+Tambien, se presentan histogramas de frecuencias observadas para las distintas muestras y se obaservan comportamientos similares para las tres concentraciones elegidas.
 
-## 4
+## 4. Explorando cadenas
 
-```{r}
+Se presenta una tabla con la media de la distribución y los percentiles 5 y 95 de cada una de las cadenas obtenidas
+
+```{r, echo=FALSE}
 medias <- c(mean(muestras[,1]),mean(muestras[,2]),mean(muestras[,3]))
 percentiles<- rbind(quantile(muestras[,1], c(0.05, 0.95)),
                     quantile(muestras[,2], c(0.05, 0.95)),
@@ -284,7 +289,9 @@ kable(round(tabla,3))%>%
   row_spec(0, bold = T, background = "#613860", color = "black") 
 ```
 
-```{r}
+Se replica la misma tabla para el $logit(x)$ de las muestras. 
+
+```{r, echo=FALSE}
 muestras_logit <- log(muestras/(1-muestras))
 medias_logit <- c(mean(muestras_logit[,1]),mean(muestras_logit[,2]),mean(muestras_logit[,3]))
 percentiles_logit <- rbind(quantile(muestras_logit[,1], c(0.05, 0.95)),
@@ -306,6 +313,7 @@ kable(round(tabla_logit,3))%>%
 ```{r}
 sample_mh_2d <- function (d_objetivo, r_propuesta, d_propuesta, p_inicial, n, sigma_prop){
   stopifnot(n>0)
+  salto = 0
   muestras <- matrix(nrow = n, ncol = length(p_inicial))
   muestras[1,]<-p_inicial
   for (i in 2:n) {
@@ -322,11 +330,14 @@ sample_mh_2d <- function (d_objetivo, r_propuesta, d_propuesta, p_inicial, n, si
     aceptar <- rbinom(1,1, alpha)
     if (aceptar){
       muestras[i,] <- p_nuevo
+      salto = salto + 1
     } else {
       muestras[i,] <- p_actual
     }
     
   }
+  tasa_acepta <- (salto/n)*100
+  print(tasa_acepta)
   return ( muestras ) 
 }
 
@@ -635,7 +646,7 @@ kable(round(data_probs,4))%>%
   row_spec(0, bold = T, background = "#613860", color = "black") 
 ```
 
-Básicamente, a lo largo del trabajo se ve que Metropolis Hastings es una variante que permite sacar muestras de distribuciones de probabilidad, incluso cuando no se tiene idea de cómo es exactamente esa distribución. Se probó en distribuciones unidimensionales y bidimensionales como lo son las distribuciones de Kumaraswamy y Rosenbrock. Se interactuó con diferentes formas de distribución propuesta y se observó cómo esta afecta a la eficiencia del algoritmo. 
-Es interesante ver a Metropolis Hastings como una herramienta en estadística bayesiana ya que ayuda a muestrear y/o graficar distribuciones a posteriori desconocidas.
+Básicamente, a lo largo del trabajo se ve que Metropolis Hastings es una variante que permite sacar muestras de distribuciones de probabilidad, incluso cuando no se tiene idea de cómo es exactamente esa distribución, solo necesitamos su ley. Se probó en distribuciones unidimensionales y bidimensionales como lo son las distribuciones de Kumaraswamy y Rosenbrock. Se interactuó con diferentes formas de distribución propuesta y se observó cómo esta afecta a la eficiencia del algoritmo. 
+Es interesante ver a Metropolis Hastings como una herramienta en estadística bayesiana ya que ayuda a muestrear y/o graficar distribuciones a posteriori.
 
 
