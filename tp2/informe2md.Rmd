@@ -31,7 +31,7 @@ A través de estos ejercicios, se buscará evaluar el desempeño del algoritmo y
 
 # Metropolis Hastings en 1D
 
-Para entrar en calor, se comineza declarando una función que implemente el algoritmo de Metropolis-Hastings para tomar muestras de una distribución de probabilidad unidimensional. El algoritmo perimete elegir entre un punto de inicio arbitrario o al azar y utiliza la distribucion de propuesta de transición arbitraria (por defecto, se utiliza una distribución normal estándar).
+Para entrar en calor, se comienza declarando una función que implemente el algoritmo de Metropolis-Hastings para tomar muestras de una distribución de probabilidad unidimensional. El algoritmo permiete elegir entre un punto de inicio arbitrario o al azar y utiliza la distribución propuesta de transición arbitraria (por defecto, se utiliza una distribución normal estándar).
 
 ## 1. Algoritmo MH en 1 D
 
@@ -455,6 +455,7 @@ kable(round(data_probs,4))%>%
 # Función de Rosenbrock
 
 ```{r}
+set.seed(412)
 a <- 0.5
 b <- 5
 sigma_prop1 <- matrix(c(4,1,1,4), ncol = 2)
@@ -636,5 +637,5 @@ kable(round(data_probs,4))%>%
 
 Básicamente, a lo largo del trabajo se ve que Metropolis Hastings es una variante que permite sacar muestras de distribuciones de probabilidad, incluso cuando no se tiene idea de cómo es exactamente esa distribución. Se probó en distribuciones unidimensionales y bidimensionales como lo son las distribuciones de Kumaraswamy y Rosenbrock. Se interactuó con diferentes formas de distribución propuesta y se observó cómo esta afecta a la eficiencia del algoritmo. 
 Es interesante ver a Metropolis Hastings como una herramienta en estadística bayesiana ya que ayuda a muestrear y/o graficar distribuciones a posteriori desconocidas.
-aa
+
 
