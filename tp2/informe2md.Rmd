@@ -28,6 +28,8 @@ library(gridExtra)
 library(kableExtra)
 library(mvtnorm)
 library(pracma)
+library(MASS)
+library(rgl)
 ```
 
 # Introducción
@@ -393,8 +395,31 @@ ggplot(df_grilla)+
   labs(title = "",
        x = "X1",
        y = "X2")
-
 ```
+
+
+```{r warning=FALSE, echo=FALSE}
+# Generar datos para graficar
+n <- 50
+x <- seq(-3, 3, length.out = n)
+y <- seq(-3, 3, length.out = n)
+z <- matrix(0, nrow = n, ncol = n)
+
+# Calcular la densidad de probabilidad para cada combinación de x e y
+for (i in 1:n) {
+  for (j in 1:n) {
+    z[i, j] <- dmvnorm(c(x[i], y[j]), mean = mu_obj, sigma = sigma_obj)
+  }
+}
+
+# Graficar
+persp(x, y, z, theta = 30, phi = 20, expand = 0.5, col = "lightblue",
+      xlab = "X", ylab = "Y", zlab = "Z", ticktype = "detailed")
+title(sub = "Función de densidad de probabilidad")
+title(main = "Distribución Normal Multivariada")
+```
+
+
 Luego se utiliza la función **sample_mh_2d** para obtener cinco mil muestras de esta distribución y se grafican.
 
 ```{r warning=FALSE, echo=FALSE}
@@ -418,7 +443,7 @@ plot_trace <- function(x, y){
   n <-length(x)
   df <- data.frame(x = rep(1:n, 2), y = c(x, y), dimension = rep(1:2, each = n))
   ggplot(df)+
-    geom_line(aes(x = x, y = y))+
+    geom_line(aes(x = x, y = y), color = "#536C8D")+
     facet_grid(rows = vars(dimension))+
     labs(x = "Número de Muestra", y = "Valor")
 }  
@@ -523,6 +548,22 @@ ggplot(df_grilla)+
  labs(title = "",
       x = "X1",
       y = "X2")
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_objetivo2 <- function(x, y) exp(-((0.5-x)^2+5*(y-(x)^2)^2))
+# Generar datos para graficar
+n <- 100
+x <- seq(-2, 2, length.out = n)
+y <- seq(-1, 3, length.out = n)
+z <- outer(x, y, d_objetivo2)
+
+# Graficar
+persp(x, y, z, theta = 60, phi = 30, expand = 0.5, col = "lightblue",
+      xlab = "X", ylab = "Y", zlab = "Z", ticktype = "detailed")
+title(sub = "Función de Rosenbrock")
+title(main = "Valle de Rosenbrock")
 ```
 
 ```{r, echo=FALSE}
@@ -720,8 +761,6 @@ probs[3] <- nrow(mu_filtradas) / nrow(muestras_2d2)
 
 ```{r, echo=FALSE}
 #Ej 11
-d_objetivo2 <- function(x, y) exp(-((0.5-x)^2+5*(y-(x)^2)^2))
-
 #Método de la grilla
 grilla= numeric(3)
 grilla[1]=sum(df_grilla$z[df_grilla$x>0 & df_grilla$x<1 & df_grilla$Var2>0 & df_grilla$Var2<1])/ sum(df_grilla$z)
