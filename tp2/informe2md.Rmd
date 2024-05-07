@@ -1,17 +1,44 @@
 ---
 title: " Trabajo Práctico 2: Metropolis-Hastings "
 author: "Gazze - Landa - Irisarri"
-format:
-  # pdf:
-  #   toc: True
-  #   toc-title: 'Contenido'
-  html:
-    toc: True
-    toc-title: 'Contenido'
+toc: False
+toc-title: 'Contenido'
+output:
+  pdf_document: default
+  html_document: default
 execute:
   warning: False
   message: False
 ---
+\thispagestyle{empty}
+
+\begin{center}
+  \vspace*{1cm}
+
+  \Huge
+  \textbf{Estadística Bayesiana}
+
+  \vspace{0.5cm}
+  \LARGE
+  Trabajo Práctico 2: Metropolis-Hastings
+
+  \vspace{1.5cm}
+
+  \textbf{Alumnos:} Román Landa, Malena Irisarri, Simon Gazze\\
+
+  \vfill
+
+  \includegraphics[width=0.4\textwidth]{logo_universidad}
+
+  \vspace{0.8cm}
+
+
+  Rosario, Argentina
+
+  7 de mayo de 2024
+\end{center}
+
+\newpage
 
 ```{r, echo=FALSE}
 #| label = parametros
@@ -30,7 +57,9 @@ library(mvtnorm)
 library(pracma)
 library(MASS)
 library(rgl)
+library(knitr)
 ```
+
 
 # Introducción
 
@@ -42,6 +71,7 @@ Este proceso se repite muchas veces para explorar y muestrear de manera eficient
 Se propone explorar y comprender el funcionamiento y la utilidad del algoritmo de Metropolis-Hastings en diferentes situaciones. Se abordarán ejercicios que van desde la generación de muestras unidimensionales, hasta la aplicación del algoritmo en problemas más complejos como la generación de muestras de una distribución normal bivariada y la estimación de la distribución a posteriori de una funciones de densidad complejas. 
 A través de estos ejercicios, se buscará evaluar el desempeño del algoritmo y comprender sus ventajas y limitaciones en la generación de muestras de distribuciones de probabilidad.
 
+\newpage
 
 # Metropolis Hastings en 1D
 
@@ -85,6 +115,7 @@ sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p
 }
 ```
 
+\newpage
 
 # Distribución de Kumaraswamy
 
@@ -304,10 +335,13 @@ percentiles<- rbind(quantile(muestras[,1], c(0.05, 0.95)),
 tabla <-cbind(medias, percentiles)
 colnames(tabla) <- c("Medias","Percentil 5", "Percentil 95")
 rownames(tabla) <- c("Kappa = 1","Kappa = 25", "Kappa = 50")
-kable(round(tabla,3))%>% 
-  kable_styling(position = "center",full_width = FALSE) %>% 
-  row_spec(0, bold = T, background = "#613860", color = "black") 
+
+tabla_redondeada <- round(tabla, 3)
+kable(tabla_redondeada) %>%
+  kable_styling(position = "center", full_width = FALSE) %>%
+  row_spec(0, bold = T, background = "#613860", color = "black")
 ```
+\newpage
 
 Se replica la misma tabla para el $logit(x)$ de las muestras. 
 
@@ -321,9 +355,10 @@ percentiles_logit <- rbind(quantile(muestras_logit[,1], c(0.05, 0.95)),
 tabla_logit <-cbind(medias_logit, percentiles_logit)
 colnames(tabla_logit) <- c("Medias","Percentil 5", "Percentil 95")
 rownames(tabla_logit) <- c("Kappa = 1","Kappa = 25", "Kappa = 50")
-kable(round(tabla_logit,3))%>% 
-  kable_styling(position = "center",full_width = FALSE) %>% 
-  row_spec(0, bold = T, background = "#613860", color = "black") 
+tabla_redondeada <- round(tabla_logit,3)
+kable(tabla_redondeada)%>%
+  kable_styling(position = "center",full_width = FALSE) %>%
+  row_spec(0, bold = T, background = "#613860", color = "black")
 ```
 
 # Metropolis-Hastings en 2D
@@ -506,13 +541,15 @@ data_probs= cbind(muestras=probs, mc= p_mc, grilla= grilla, exacto= p_exacta)
 
 colnames(data_probs) <- c("Muestras","Montecarlo", "Grilla","Prob. Exacta")
 rownames(data_probs) <- c("P(X1> 1, X2< 0)","P(X1> 1, X2> 2)", "P(X1> 0.4, X2> 0.75)")
-kable(round(data_probs,4))%>% 
-  kable_styling(position = "center",full_width = FALSE) %>% 
-  row_spec(0, bold = T, background = "#613860", color = "black") 
+tabla_redondeada <- round(data_probs,4)
+kable(tabla_redondeada)%>%
+  kable_styling(position = "center",full_width = FALSE) %>%
+  row_spec(0, bold = T, background = "#613860", color = "black")
 
 ```
 Como se observa en la tabla, si bien las probabilidades obtenidas mediante el metodo de Monte Carlo son las que más se aproximan a las reales, con el método de Metropolis Hasting se obtienen muy buenas aproximaciones. Vale aclarar que en situaciones más complejas, donde se dificulta el calculo de las probabilidades exactas, la aplicación de MH toma mayor importancia.
 
+\newpage
 
 # Función de Rosenbrock
 
@@ -734,8 +771,8 @@ tabla_Neff <- rbind(round(N_eff(muestras_2d1),2), round(N_eff(muestras_2d2),2), 
 
 colnames(tabla_Neff) <- c("$N_{eff}\\ para\\ X_1$", "$N_{eff}\\ para\\ X_2$")
 rownames(tabla_Neff) <- c("Muestra 1","Muestra 2", "Muestra 3")
-kable(tabla_Neff, "html", escape = FALSE)%>% 
-  kable_styling(position = "center",full_width = FALSE) %>% 
+kable(tabla_Neff)%>%
+  kable_styling(position = "center",full_width = FALSE) %>%
   row_spec(0, bold = T, background = "#613860", color = "black")
 ```
   
@@ -795,9 +832,9 @@ data_probs= cbind(muestras=probs,
 
 colnames(data_probs) <- c("Muestras", "Montecarlo", "Grilla", "Prob. Exacta")
 rownames(data_probs) <- c("P(0< X1 <1 ; 0< X2 <1)","P(-1< X1 <0 ; 0< X2 <1)", "P(1< X1 <2 ; 2< X2 <3)")
-kable(round(data_probs,4))%>% 
-  kable_styling(position = "center",full_width = FALSE) %>% 
-  row_spec(0, bold = T, background = "#613860", color = "black") 
+kable(round(data_probs,4))%>%
+  kable_styling(position = "center",full_width = FALSE) %>%
+  row_spec(0, bold = T, background = "#613860", color = "black")
 ```
 Estos resultados exponen una debilidad en el algoritmo de Metropolis Hasting. Se observan importantes diferencias entre las probabilidades calculadas con MH o grilla en comparación a las probabilidades calculadas con Monte Carlo o integración exacta (estos últimos dos metodos, más precisos).
 
