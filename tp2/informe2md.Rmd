@@ -545,7 +545,7 @@ grilla[3]=sum(df_grilla$z[df_grilla$x>0.4 & df_grilla$Var2>0.75])/ sum(df_grilla
 data_probs= cbind(muestras=probs, mc= p_mc, grilla= grilla, exacto= p_exacta)
 
 colnames(data_probs) <- c("Muestras","Montecarlo", "Grilla","Prob. Exacta")
-rownames(data_probs) <- c("P(X1> 1, X2< 0)","P(X1> 1, X2> 2)", "P(X1> 0.4, X2> 0.75)")
+rownames(data_probs) <- c("P(X 1> 1, X2 < 0)","P(X1 > 1, X2 > 2)", "P(X1 > 0.4, X2 > 0.75)")
 tabla_redondeada <- round(data_probs,4)
 kable(tabla_redondeada)%>%
   kable_styling(position = "center",full_width = FALSE) %>%
@@ -653,7 +653,7 @@ $$\Sigma_1=\begin{pmatrix}
    4 & 1 \\
    1 & 4
 \end{pmatrix} $$
-Las muestras del primer **posterior** resultan de la forma
+Las muestras del primer *posterior* resultan de la forma
 ```{r, echo=FALSE}
 b1
 ```
@@ -664,7 +664,7 @@ $$\Sigma_2=\begin{pmatrix}
    1 & 0 \\
    0 & 1
 \end{pmatrix} $$
-Las muestrar del segundo postirior obtenida resultan de la forma
+Las muestrar del segundo *posterior* obtenida resultan de la forma
 ```{r, echo=FALSE}
 b2
 ```
@@ -673,7 +673,7 @@ $$\Sigma_3=\begin{pmatrix}
    2 & -2 \\
    -2 & 5
 \end{pmatrix} $$
-Las muestrar del tercer postirior obtenida resultan de la forma
+Las muestrar del tercer *posterior* obtenida resultan de la forma
 ```{r, echo=FALSE}
 b3
 ```
@@ -697,28 +697,31 @@ m1 <- ggplot(muestras_2d1_df, aes(x = V1, y = V2,alpha = posicion)) +
   geom_line(color = "#536C8D") +
   labs(x = "X1", y = "X2", title = "Muestra 1")+
   theme(legend.position = "none")+
-  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)
+  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)+
+  theme_minimal()
 
 m2 <- ggplot(muestras_2d2_df, aes(x = V1, y = V2,alpha = posicion)) +
   geom_point(color = "#62A07B") +
   geom_line(color = "#62A07B") +
   labs(x = "X1", y = "X2", title = "Muestra 2")+
   theme(legend.position = "none")+
-  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)
+  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)+
+  theme_minimal()
 
 m3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2,alpha = posicion)) +
   geom_point(color = "#613860") +
   geom_line(color = "#613860") +
   labs(x = "X1", y = "X2", title = "Muestra 3")+
   theme(legend.position = "none")+
-  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)
+  coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)+
+  theme_minimal()
 
 grid.arrange(m1, m2, m3, ncol = 3)
 ```
 
 Se observa que la trayectoria de la primera y tercera muestra parecen presentar valores en todo el recorrido de la función de Rosenbrock, mientras que la muestra obtenida con la segunda cadena se restringe a los valores centrales de dicha función.
 
-A continuación se presentan los **trace plot**, gráficos de autocorrelación y números efectivos de muestras a fin de comparar cómo se comporta el método según la matriz de covariancia propuesta que se utilice.
+A continuación se presentan los *trace plot*, gráficos de autocorrelación y números efectivos de muestras a fin de comparar cómo se comporta el método según la matriz de covariancia propuesta que se utilice.
 
 ```{r, echo=FALSE}
 #Trace plot y gráfico de autocorrelación
@@ -773,11 +776,11 @@ grid.arrange(grafico_corr_x1,grafico_corr_x2, ncol=1)
 #Calculamos el n eff de muestras para ver que muestra resulto mejor
 tabla_Neff <- rbind(round(N_eff(muestras_2d1),2), round(N_eff(muestras_2d2),2), round(N_eff(muestras_2d3),2))
 
-colnames(tabla_Neff) <- c("N° efectivo de muestras para X1", "N° efectivo de muestras para X1")
+colnames(tabla_Neff) <- c("N° efectivo de muestras para X1", "N° efectivo de muestras para X2")
 rownames(tabla_Neff) <- c("Muestra 1","Muestra 2", "Muestra 3")
 kable(tabla_Neff)%>%
   kable_styling(position = "center",full_width = FALSE) %>%
-  row_spec(0, bold = T, background = "#613860", color = "black")
+  row_spec(0, bold = T, background = "#8b7991", color = "black")
 ```
   
 A diferencia de las muestras 1 y 2, la tercera muestra presenta una mayor autocorrelación en sus observaciones, y debido a esto se puede observar que también el número efectivo de muestras disminuye en prácticamente la mitad de las observaciones.
