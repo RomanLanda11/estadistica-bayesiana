@@ -1,6 +1,6 @@
 ---
 title: " Trabajo Práctico 2: Metropolis-Hastings "
-author: "Gazze - Landa - Irisarri"
+author: "Gazze - Irisarri - Landa"
 toc: False
 toc-title: 'Contenido'
 output:
@@ -20,11 +20,10 @@ execute:
 
   \vspace{0.5cm}
   \LARGE
-  Trabajo Práctico 2: Metropolis-Hastings
 
   \vspace{1.5cm}
 
-  \textbf{Alumnos:} Simon Gazze, Malena Irisarri, Román Landa\\
+  \textbf{Alumnos:} Simón Gazze, Malena Irisarri, Román Landa\\
 
   \vfill
 
@@ -35,7 +34,7 @@ execute:
 
   Rosario, Argentina
 
-  7 de mayo de 2024
+  8 de mayo de 2024
 \end{center}
 
 \newpage
@@ -111,7 +110,7 @@ sample_mh <- function (d_objetivo, r_propuesta, d_propuesta = d_propuesta_def, p
     
   }
   tasa_acepta = (salto/n)*100
-  return ( muestras ) 
+  return ( muestras )
 }
 ```
 
@@ -414,7 +413,7 @@ Para comenzar a explorar el comportamiento del algoritmo en dos dimensiones se o
    0.4 & 2.4
 \end{pmatrix} $$
 
-Se comienza graficando trazando la densidad de la distribución objetivo para entenderla mejor y seleccionar un punto inicial que esté dentro de su rango. 
+Se comienza trazando la densidad de la distribución objetivo para entenderla mejor y seleccionar un punto inicial que esté dentro de su rango. 
 
 ```{r warning=FALSE, echo=FALSE}
 mu_obj <- c(0.4, 0.75)
@@ -429,7 +428,7 @@ d_propuesta <- function(x, mean) dmvnorm(x, mean = mean, sigma = sigma_prop)
 df_grilla <- expand.grid(x = seq(-3, 3, length.out = 200), seq(-3, 4, length.out = 200))
 df_grilla$z <- d_objetivo(as.matrix(df_grilla))
 
-curvas <- ggplot(df_grilla)+
+ggplot(df_grilla)+
   aes(x = x, y = Var2, z = z)+
   stat_contour()+
   labs(title = "",
@@ -497,7 +496,7 @@ N_eff(muestras_2d)
 ```
 Se observa nuevamente un patrón de *ruido blanco* en los Trace Plot, lo cual indica una muestra poco correlacionada a través de las observaciones. Mientras que el número efectivo de muestras para $X_1$ es igual a $481.98$ y para $X_2$ resulta $363.31$, lo cual indica que las cinco mil muestras correlacionadas equivalen a cuatrocientas ochenta y dos y trecientas secenta y tres muestras independientes, respectivamente. 
 
-A fines de comparar la calidad de las muestras obtenidas, se calculan y comparan algunas probabilidades mediante distintos metodos.
+A fines de comparar la calidad de las muestras obtenidas, se calculan y comparan algunas probabilidades mediante distintos métodos.
 
 ```{r, echo=FALSE}
 #| label = probs
@@ -565,7 +564,7 @@ $$p^*(x_1, x_2 \mid a, b) = \exp \left\{-\left[(a - x_1) ^ 2 + b(x_2 - x_1^2) ^ 
 
 ## Conociendo a Howard Rosenbrock
 
-El objetivo en este tramo del trabajo es obtener muestras de dicha función utilizando el algoritmo de Metropolis Hasting, para esto, se comienza graficandolá para conocer su recorrido y asi poder seleccionar un punto inicial.
+El objetivo en este tramo del trabajo es obtener muestras de dicha función utilizando el algoritmo de Metropolis Hasting, para esto, se comienza graficandola para conocer su recorrido y asi poder seleccionar un punto inicial.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 set.seed(412)
@@ -613,6 +612,7 @@ muestras_2d1 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(
 muestras_2d1_df <- as.data.frame(muestras_2d1)
 b1 <- ggplot(muestras_2d1_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
+  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
   geom_density2d_filled()+
   labs(title = "",
        x = "X1",
@@ -628,6 +628,7 @@ muestras_2d2_df <- as.data.frame(muestras_2d2)
 b2 <- ggplot(muestras_2d2_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
+  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
   labs(title = "",
        x = "X1",
        y = "X2") +
@@ -642,6 +643,7 @@ muestras_2d3_df <- as.data.frame(muestras_2d3)
 b3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
+  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
   labs(title = "",
        x = "X1",
        y = "X2") +
@@ -783,8 +785,9 @@ kable(tabla_Neff)%>%
   row_spec(0, bold = T, background = "#8b7991", color = "black")
 ```
   
-A diferencia de las muestras 1 y 2, la tercera muestra presenta una mayor autocorrelación en sus observaciones, y debido a esto se puede observar que también el número efectivo de muestras disminuye en prácticamente la mitad de las observaciones.
-Esto podría deberse a que la matriz de covarianza utilizada en esta cadena no acompaña la forma de la distribución a posteriori.
+A diferencia de las muestras 1 y 2, la tercera muestra presenta una mayor autocorrelación en sus observaciones, y debido a esto se puede observar que también el número efectivo de muestras disminuye prácticamente en la mitad de las observaciones.
+Además la probabilidad de aceptación para la primer cadena es $8.24$, es decir que el algoritmo acepta el $8.24$% de los pasos propuestos, significando que queda muchas veces con el mismo valor de la muestra. Similar ocurre con la cadena 3 que acepta el $10.28$ de las veces, mientras que el mayor porcentaje de aceptación es de la cadena 3 con un $19.22$%.
+Todas estas interpretaciones podrían deberse a que las matrices de covarianzas utilizadas en las cadenas 1 y 3 no acompañan la forma de la distribución a posteriori y son muy amplias, mientras que en la 2 se concentra más en los valores centrales de la distribución y sigue más su forma.
 
 Nuevamente, con el motivo de analizar la calidad de las muestras obtenidas, se calculan y comparan algunas probabilidades utilizando las muestras, el método de la grilla y el método de Monte Carlo. Dichas probabilidades se calculan con las muestras de la cadena 2, la cual presenta el mayor número efectivo de muestras.
 
