@@ -433,7 +433,8 @@ ggplot(df_grilla)+
   stat_contour()+
   labs(title = "",
        x = "X1",
-       y = "X2")
+       y = "X2")+
+  theme_minimal()
 ```
 
 
@@ -453,7 +454,7 @@ for (i in 1:n) {
 
 # Graficar
 graf3d <- persp(x, y, z, theta = 30, phi = 20, expand = 0.5, col = "#8b7991",
-      xlab = "X", ylab = "Y", zlab = "Z", ticktype = "detailed", sub = "Función de densidad de probabilidad")
+      xlab = "X", ylab = "Y", zlab = "Z", ticktype = "detailed", sub = "Función normal bivariada")
 
 ```
 
@@ -588,7 +589,8 @@ ggplot(df_grilla)+
  stat_contour()+
  labs(title = "",
       x = "X1",
-      y = "X2")
+      y = "X2")+
+  theme_minimal()
 ```
 
 
@@ -601,7 +603,7 @@ y <- seq(-1, 3, length.out = n)
 z <- outer(x, y, d_objetivo2)
 
 # Graficar
-persp(x, y, z, theta = 30, phi = 30, expand = 0.5, col = "#8b7991",
+persp(x, y, z, theta = 60, phi = 30, expand = 0.5, col = "#8b7991",
       xlab = "X", ylab = "Y", zlab = "Z", ticktype = "detailed")
 title(sub = "Función de Rosenbrock")
 
@@ -612,8 +614,8 @@ muestras_2d1 <- sample_mh_2d(d_objetivo, r_propuesta, d_propuesta, p_inicial= c(
 muestras_2d1_df <- as.data.frame(muestras_2d1)
 b1 <- ggplot(muestras_2d1_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
-  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
   geom_density2d_filled()+
+  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white", alpha = 0.3)+
   labs(title = "",
        x = "X1",
        y = "X2") +
@@ -628,7 +630,7 @@ muestras_2d2_df <- as.data.frame(muestras_2d2)
 b2 <- ggplot(muestras_2d2_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
-  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
+  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white", alpha = 0.3)+
   labs(title = "",
        x = "X1",
        y = "X2") +
@@ -643,7 +645,7 @@ muestras_2d3_df <- as.data.frame(muestras_2d3)
 b3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2)) +
   geom_density_2d(fill = "skyblue", alpha = 0.7) +
   geom_density2d_filled()+
-  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white")+
+  stat_contour(aes(x = x, y = Var2, z = z), data = df_grilla, color = "white", alpha = 0.3)+
   labs(title = "",
        x = "X1",
        y = "X2") +
@@ -666,7 +668,7 @@ $$\Sigma_2=\begin{pmatrix}
    1 & 0 \\
    0 & 1
 \end{pmatrix} $$
-Las muestrar del segundo *posterior* obtenida resultan de la forma
+Las muestras del segundo *posterior* obtenidas resultan de la forma
 ```{r, echo=FALSE}
 b2
 ```
@@ -675,7 +677,7 @@ $$\Sigma_3=\begin{pmatrix}
    2 & -2 \\
    -2 & 5
 \end{pmatrix} $$
-Las muestrar del tercer *posterior* obtenida resultan de la forma
+Las muestras del tercer *posterior* obtenidas resultan de la forma
 ```{r, echo=FALSE}
 b3
 ```
@@ -698,25 +700,25 @@ m1 <- ggplot(muestras_2d1_df, aes(x = V1, y = V2,alpha = posicion)) +
   geom_point(color = "#536C8D") +
   geom_line(color = "#536C8D") +
   labs(x = "X1", y = "X2", title = "Muestra 1")+
-  theme(legend.position = "none")+
   coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)+
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position = "none")
 
 m2 <- ggplot(muestras_2d2_df, aes(x = V1, y = V2,alpha = posicion)) +
   geom_point(color = "#62A07B") +
   geom_line(color = "#62A07B") +
   labs(x = "X1", y = "X2", title = "Muestra 2")+
-  theme(legend.position = "none")+
   coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)+
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position = "none")
 
 m3 <- ggplot(muestras_2d3_df, aes(x = V1, y = V2,alpha = posicion)) +
   geom_point(color = "#613860") +
   geom_line(color = "#613860") +
   labs(x = "X1", y = "X2", title = "Muestra 3")+
-  theme(legend.position = "none")+
   coord_cartesian(xlim = ejes_limites_x, ylim = ejes_limites_y)+
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position = "none")
 
 grid.arrange(m1, m2, m3, ncol = 3)
 ```
@@ -725,7 +727,8 @@ Se observa que la trayectoria de la primera y tercera muestra parecen presentar 
 
 A continuación se presentan los *trace plot*, gráficos de autocorrelación y números efectivos de muestras a fin de comparar cómo se comporta el método según la matriz de covariancia propuesta que se utilice.
 
-```{r, echo=FALSE}
+
+```{r, echo=FALSE, out.width="90%"}
 #Trace plot y gráfico de autocorrelación
 n=5000
 df1 <- as.data.frame(cbind(muestras_2d1_df$V1,muestras_2d2_df$V1,muestras_2d3_df$V1, x=1:n))
@@ -733,14 +736,16 @@ tp1=ggplot(df1, aes(x=x)) +
   geom_line(aes(y = V1), color = "#536C8D") +
   geom_line(aes(y = V2), color = "#62A07B") +
   geom_line(aes(y = V3), color = "#613860") +
-  labs(x = "Muestra X1", y = "Valor", title = "")
+  labs(x = "Muestra X1", y = "Valor", title = "")+
+  theme_minimal()
 
 df2 <- as.data.frame(cbind(muestras_2d1_df$V2,muestras_2d2_df$V2,muestras_2d3_df$V2, x=1:n))
 tp2=ggplot(df2, aes(x=x)) +
   geom_line(aes(y = V1), color = "#536C8D") +
   geom_line(aes(y = V2), color = "#62A07B") +
   geom_line(aes(y = V3), color = "#613860") +
-  labs(x = "Muestra X2", y = "Valor", title = "")
+  labs(x = "Muestra X2", y = "Valor", title = "")+
+  theme_minimal()
 
 grid.arrange(tp1, tp2, ncol=1)
 
@@ -764,14 +769,16 @@ grafico_corr_x1= ggplot(corr_x1)+
   geom_line()+
   labs(x = "Lag", y = "Autocorrelación", title = "")+
   scale_color_manual(values= c("#536C8D","#62A07B","#613860"))+
-  guides(color = guide_legend(title = "Cadenas"))
+  guides(color = guide_legend(title = "Cadenas"))+
+  theme_minimal()
 
 grafico_corr_x2= ggplot(corr_x2)+
   aes(x=lag,y=acf, color=cadena)+
   geom_line()+
   labs(x = "Lag", y = "Autocorrelación", title = "")+
   scale_color_manual(values= c("#536C8D","#62A07B","#613860"))+
-  guides(color = guide_legend(title = "Cadenas"))
+  guides(color = guide_legend(title = "Cadenas"))+
+  theme_minimal()
 
 grid.arrange(grafico_corr_x1,grafico_corr_x2, ncol=1)
 
@@ -831,7 +838,7 @@ prob_ext[1] <- integral2(d_objetivo2, 0,1,0,1)$Q
 prob_ext[2] <- integral2(d_objetivo2, -1,0,0,1)$Q
 prob_ext[3] <- integral2(d_objetivo2, 1,2,2,3)$Q
 ```
-
+\newpage
 
 ```{r, echo=FALSE}
 data_probs= cbind(muestras=probs,
