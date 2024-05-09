@@ -363,7 +363,7 @@ kable(tabla_redondeada)%>%
   kable_styling(position = "center",full_width = FALSE) %>%
   row_spec(0, bold = T, background = "#8b7991", color = "black")
 ```
-\newpage
+
 
 # Metropolis-Hastings en 2D
 
@@ -415,7 +415,7 @@ Para comenzar a explorar el comportamiento del algoritmo en dos dimensiones se o
 
 Se comienza trazando la densidad de la distribución objetivo para entenderla mejor y seleccionar un punto inicial que esté dentro de su rango. 
 
-```{r warning=FALSE, echo=FALSE}
+```{r warning=FALSE, echo=FALSE, out.width="80%"}
 mu_obj <- c(0.4, 0.75)
 sigma_obj <- matrix(c(1.35, 0.4, 0.4, 2.4), ncol = 2)
 
@@ -458,6 +458,8 @@ graf3d <- persp(x, y, z, theta = 30, phi = 20, expand = 0.5, col = "#8b7991",
 
 ```
 
+
+\newpage
 
 Luego se utiliza la función **sample_mh_2d** para obtener cinco mil muestras de esta distribución y se grafican.
 
@@ -567,7 +569,7 @@ $$p^*(x_1, x_2 \mid a, b) = \exp \left\{-\left[(a - x_1) ^ 2 + b(x_2 - x_1^2) ^ 
 
 El objetivo en este tramo del trabajo es obtener muestras de dicha función utilizando el algoritmo de Metropolis Hasting, para esto, se comienza graficandola para conocer su recorrido y asi poder seleccionar un punto inicial.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, out.width="80%"}
 set.seed(412)
 a <- 0.5
 b <- 5
@@ -658,7 +660,7 @@ $$\Sigma_1=\begin{pmatrix}
    1 & 4
 \end{pmatrix} $$
 Las muestras del primer *posterior* resultan de la forma
-```{r, echo=FALSE}
+```{r, echo=FALSE, out.width="90%"}
 b1
 ```
 
@@ -669,7 +671,7 @@ $$\Sigma_2=\begin{pmatrix}
    0 & 1
 \end{pmatrix} $$
 Las muestras del segundo *posterior* obtenidas resultan de la forma
-```{r, echo=FALSE}
+```{r, echo=FALSE, out.width="90%"}
 b2
 ```
 
@@ -678,7 +680,7 @@ $$\Sigma_3=\begin{pmatrix}
    -2 & 5
 \end{pmatrix} $$
 Las muestras del tercer *posterior* obtenidas resultan de la forma
-```{r, echo=FALSE}
+```{r, echo=FALSE, out.width="90%"}
 b3
 ```
 
@@ -842,7 +844,6 @@ prob_ext[1] <- integral2(d_objetivo2, 0,1,0,1)$Q
 prob_ext[2] <- integral2(d_objetivo2, -1,0,0,1)$Q
 prob_ext[3] <- integral2(d_objetivo2, 1,2,2,3)$Q
 ```
-\newpage
 
 ```{r, echo=FALSE}
 data_probs= cbind(muestras=probs,
