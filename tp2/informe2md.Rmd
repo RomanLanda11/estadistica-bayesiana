@@ -781,7 +781,11 @@ grafico_corr_x2= ggplot(corr_x2)+
   theme_minimal()
 
 grid.arrange(grafico_corr_x1,grafico_corr_x2, ncol=1)
+```
 
+\newpage
+
+```{r, echo=FALSE}
 #Calculamos el n eff de muestras para ver que muestra resulto mejor
 tabla_Neff <- rbind(round(N_eff(muestras_2d1),2), round(N_eff(muestras_2d2),2), round(N_eff(muestras_2d3),2))
 
