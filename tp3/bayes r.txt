@@ -1,0 +1,216 @@
+Sys.which("make")
+library(rstan)
+
+# Ejemplo
+N <- 20
+y <- 4
+
+model_beta1_stan <- "
+data {
+  int N;     
+  int Y; 
+}
+parameters {
+  real<lower=0, upper=1> pi;
+}
+model {
+  pi ~ beta(2,2); // prior
+  Y ~ binomial(N, pi);  // likelihood
+}"
+
+model_beta1 <- stan_model(model_code = model_beta1_stan)
+
+data_list <- list(Y = y, N = N)
+
+model_beta1_fit <- sampling(
+  object = model_beta1, 
+  data = data_list, 
+  chains = 2, 
+  iter = 500,
+  warmup = 100
+)
+
+# Ejercicio 1
+#i) 
+datos <- read.csv("https://raw.githubusercontent.com/estadisticaunr/estadistica-bayesiana/main/datos/sales.csv")
+ggplot(datos)+
+  geom_point(aes(x, y))+
+  labs(x = "Publicidad ($)", y = "Ventas ($)")
+
+modelo1 <- stan_model("C:/Users/alumno/Downloads/modelo 1.stan")
+data <- list(N=nrow(datos),x=datos$x,y=datos$y)
+posterior1 <- sampling(modelo1, data)
+posterior1
+plot(posterior1)
+summary(posterior1) # No se usa
+posterior1_draws <- rstan::extract(posterior1) # Son las muestras de cada parámetro
+
+mcmc_trace(posterior1)
+
+data.frame(
+  value = c(
+    posterior1_draws$beta0,
+    posterior1_draws$beta1,
+    posterior1_draws$sigma
+  )
+)
+
+mcmc_dens_overlay(posterior1)
+
+# ii)
+x_grid <- seq(5, 20, length.out = 100) 
+x_i <- 5
+posterior1_draws$beta0
+posterior1_draws$beta1
+
+mu_i <-posterior1_draws$beta0 + posterior1_draws$beta1 * x_i 
+mu_matrix <- matrix(nrow = 4000, ncol = 100)
+for(i in seq_along(x_grid)){
+  mu_matrix[, i] <- posterior1_draws$beta0 + posterior1_draws$beta1 * x_grid[i]
+}
+# para cadaa mu_i tenemos 4k muestras
+# queresmos graficar la recta reg: 
+# representamos a cada posterior de mu_i con la media
+# luego, tenemos tantas medias (de mu_i) 
+mu_mean <- apply(mu_matrix, 2, mean)
+mu_qts <- t(apply(mu_matrix, 2, function(x) quantile(x, c(0.025, 0.975))))
+mu_qts2 <- t(apply(mu_matrix, 2, function(x) quantile(x, c(0.25, 0.75))))
+
+data_mu <- data.frame(x = x_grid, 
+                      y = mu_mean, 
+                      lower_95 = mu_qts[, 1], 
+                      upper_95 = mu_qts[, 2],
+                      lower_50 = mu_qts2[, 1], 
+                      upper_50 = mu_qts2[, 2])
+
+ggplot(datos)+
+  geom_point(aes(x, y)) +
+  geom_ribbon(aes(x, ymin=lower_95, ymax=upper_95), data= data_mu, fill="lightblue", alpha=0.4)+
+  geom_ribbon(aes(x, ymin=lower_50, ymax=upper_50), data= data_mu, fill="lightblue4", alpha=0.4)+
+  geom_line(aes(x, y), color = "red", data = data_mu)+
+  labs(x = "Publicidad ($)", y = "Ventas ($)")
+
+publicidad <-  15
+mu <- posterior1_draws$beta0+posterior1_draws$beta1*publicidad
+data.frame(mu=mu) %>% ggplot()+
+  geom_histogram(aes(mu))
+
+#2
+
+modelo2 <- stan_model("C:/Users/alumno/Downloads/modelo 2.stan")
+data <- list(N=nrow(datos),x=datos$x,y=datos$y)
+posterior2 <- sampling(modelo2, data)
+posterior2
+plot(posterior2)
+posterior2_draws <- rstan::extract(posterior2) # Son las muestras de cada parámetro
+
+mcmc_trace(posterior2)
+
+data.frame(
+  value = c(
+    posterior2_draws$beta0,
+    posterior2_draws$beta1,
+    posterior2_draws$sigma
+  )
+)
+
+mcmc_dens_overlay(posterior2)
+
+# ii)
+x_grid <- seq(5, 20, length.out = 100) 
+x_i <- 5
+posterior2_draws$beta0
+posterior2_draws$beta1
+
+mu_i <-posterior2_draws$beta0 + posterior2_draws$beta1 * x_i 
+mu_matrix <- matrix(nrow = 4000, ncol = 100)
+for(i in seq_along(x_grid)){
+  mu_matrix[, i] <- posterior2_draws$beta0 + posterior2_draws$beta1 * x_grid[i]
+}
+# para cadaa mu_i tenemos 4k muestras
+# queresmos graficar la recta reg: 
+# representamos a cada posterior de mu_i con la media
+# luego, tenemos tantas medias (de mu_i) 
+mu_mean <- apply(mu_matrix, 2, mean)
+mu_qts <- t(apply(mu_matrix, 2, function(x) quantile(x, c(0.025, 0.975))))
+mu_qts2 <- t(apply(mu_matrix, 2, function(x) quantile(x, c(0.25, 0.75))))
+
+data_mu <- data.frame(x = x_grid, 
+                      y = mu_mean, 
+                      lower_95 = mu_qts[, 1], 
+                      upper_95 = mu_qts[, 2],
+                      lower_50 = mu_qts2[, 1], 
+                      upper_50 = mu_qts2[, 2])
+
+ggplot(datos)+
+  geom_point(aes(x, y)) +
+  geom_ribbon(aes(x, ymin=lower_95, ymax=upper_95), data= data_mu, fill="lightblue", alpha=0.4)+
+  geom_ribbon(aes(x, ymin=lower_50, ymax=upper_50), data= data_mu, fill="lightblue4", alpha=0.4)+
+  geom_line(aes(x, y), color = "red", data = data_mu)+
+  labs(x = "Publicidad ($)", y = "Ventas ($)")
+
+publicidad <-  15
+mu <- posterior2_draws$beta0+posterior2_draws$beta1*publicidad
+data.frame(mu=mu) %>% ggplot()+
+  geom_histogram(aes(mu))
+
+print(
+  pars =mu,
+  digit=3,
+  prob = c(0.025, 0.975)
+)
+
+#Prob de q las muestras promedio en el dia 10 sean mayores q en el dia 1?
+dim(posterior2_draws$beta0)
+dim(posterior2_draws$mu)
+
+mean(posterior2_draws$mu[,10] > posterior2_draws$mu[,1])
+
+data.frame(
+  mu1= posterior2_draws$mu[,10],
+  mu2= posterior2_draws$mu[,1]
+) %>% 
+  ggplot() + 
+  geom_point(aes(x=mu1,y=mu2),alpha=0.5)
+
+#EN TODAS LAS MUESTRAS EN VALOR DE MU ES MAYOR EN EL DIA 10 QUE EN EL DIA 1
+
+#Ejercicio 4
+library(readr)
+df <- readr::read_delim("https://raw.githubusercontent.com/estadisticaunr/estadistica-bayesiana/main/datos/heights.txt", delim= " ")
+colnames(df) <- c("alturas_h","alturas_m")
+
+ggplot(df)+
+  geom_point(aes(x=alturas_m, y=alturas_h))+
+  labs(x = "Alturas Hijas", y = "Alturas Madres")
+
+
+# Usamos nuevamente el modelo 1 porque es =
+modelo3 <- stan_model("C:/Users/alumno/Downloads/modelo 3.stan")
+
+#U_i = B_0 + B_1*(X_i-X_media) -> esto cambia la interpretacion de B_0(altura de las hijas cuando las madres tienen altura promedio), y facilita la elecion del prior para este parametro
+#prior para B_0 -> B_0 ~ N(160cm, (15cm)^2)
+#prior para B_1 -> B_1 ~ N(0cm, (5cm)^2)  se centra en 0 para q sea equiprobable que sea mas alta o mas baja
+#prior para sigma -> sigma ~ N+(30cm^2)
+#pasamos los datos a centimetros y agregamos los prior
+df<- df*2.54
+data <- list(N=nrow(df),
+             x=df$alturas_m-mean(df$alturas_m),
+             y=df$alturas_h)
+posterior3 <- sampling(modelo3, data)
+posterior3
+plot(posterior3)
+
+print(
+  posterior_3,
+  pars= c("beta0","beta1,sigma"),
+  digits=3
+)
+#interpretacion de B_0: es de esperar que la alturas de las hijas, cuando las madres presentan una altura promedio, es de 162.195 cm
+#interpretacion de B_1: 1)es de esperar que madres mas altas tienden a tener hijas altas, pero no igual de altas que ellas 
+#                       2)por cada centrimetro de altura que aumenta la madre, se espera que la altura promedio de la hija aumente en 0.55 centimetros
+posterior1_draws <- rstan::extract(posterior1) # Son las muestras de cada parámetro
+
+#terminar ej 4
+
+mcmc_trace(posterior1)
