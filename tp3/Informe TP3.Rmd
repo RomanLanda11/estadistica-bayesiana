@@ -101,27 +101,65 @@ t <- seq(0, 24, length.out=200)
 f <- 14*exp(-r*t)
 ln_f <- log(f)
 df2 <- data.frame(f = c(f,ln_f),t =c(t,t), funcion = rep(c("f", "ln_f"), each = 200))
-g2 <- ggplot(data = df2)+
-    aes(x = t, y = f)+
-    geom_line()+
-    #ylim(c(20, 60))+
-    #scale_x_continuous(breaks = 0:24)+
-    labs(x = "Hora post mortem", y = "Diferencia entre la temperatura corporal y la temperatura amb.")
-g3 <- ggplot(data = df2)+
-    aes(x = t, y = ln_f)+
-    geom_line()+
-    #ylim(c(20, 60))+
-    #scale_x_continuous(breaks = 0:24)+
-    labs(x = "Hora post mortem", y = "Logaritmo de la dif. entre la temp. corporal y la temp. amb.")
-
-grid.arrange(g2, g3, ncol = 2)
 g4 <- ggplot(data = df2)+
     aes(x = t, y = f, color = funcion)+
     geom_line()+
-    labs(x = "Hora post mortem", y = "Diferencia entre la temperatura corporal y la temperatura amb.")
+    labs(x = "Hora post mortem", y = "Diferencia entre la temperatura corporal y la temperatura amb.", 
+         caption = "Gráfico 2:")+
+  theme(plot.caption = element_text(hjust = 0.5))
+  
+
 g4
 ```
  
  El intercepto de la función logaritmo de $T(t)-T_{amb}$ es $ln(T_{diff})=2.639$ , lo que indica que la diferencia entre la temperatura corporal y la temperatura ambiente en el momento de la muerte es $e^{2.639}°C=14°C$. La pendiente es $-r=-0.1$, esto significa que a medida que aumenta una hora, el logaritmo de la diferencia entre la temperatura corporal y la temperatura ambiente disminuye en $0.1°C$.
+ 
+A continuación se presentan los hechos transcurridos en la noche del fallecimiento de Sergio.
+![Imagen 2: Cronología de los hechos](linea_tiempo.png)
+ Likelihood:
+
+ $Y_i| \beta_0, \beta_1, \sigma \sim N (\mu_i, \sigma)$
+ $\mu_i = \beta_0 + \beta_1t $
+ 
+ Priors:
+ $\beta_0 \sim N(\mu=2.5, \sigma=1)$
+ $\beta_1 \sim N(\mu=-0.1, \sigma=0.035)$
+ $\sigma \sim N^+ (\theta=2.5)$
+ 
+ son independientes
+ Basandonos en los priors mencionados y el supuesto de que los parametros, podemos obtener la distribución predictiva a priori a través de muestras
+ 
+```{r}
+muestras_bo = rnorm(5000,2.5, 1)
+muestras_b1 = rnorm(5000,-0.1, 0.035)
+sigma = abs(rnorm(5000,0,2.5))
+mu=muestras_bo + muestras_b1*t
+
+
+df= data.frame(muestras_bo,muestras_b1,sigma,mu)
+df$y_pred = rnorm(5000,df$mu,df$sigma)
+
+ggplot(df) +
+  geom_point(aes(x = t, y = ), alpha = 0.6, size = 2) +
+  geom_abline(
+    aes(intercept = beta0, slope = beta1),
+    alpha = 0.3,
+    color = "gray30",
+1    data = df_draws_1[sample(nrow(df_draws_1), 40), ]
+  ) +
+  geom_abline(
+    intercept = intercept_mean, 
+    slope = slope_mean, 
+    linewidth = 1, 
+    color = "red"
+  ) +
+  labs(x = "Publicidad ($)", y = "Ventas ($)")
+
+t <- seq(0,23, length.out=200)
+for (i in 1:length(t)) {
+  
+}
+
+```
  
  
