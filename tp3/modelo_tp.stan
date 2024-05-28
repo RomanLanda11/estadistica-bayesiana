@@ -3,22 +3,25 @@
 // tambien especificarle el largo del vector
 // la primera linea del data indica que el largo del vector tiene que ser mayor a 1
 data {
-int N;
+int<lower=0> N;
 vector[N] y;
-vector[N] x;
+vector[N] t;
 }
 
 // Definimos los parametros, de que tipo son, y sus cotas
 parameters {
 real beta0;
-real beta1;
-real sigma;
+real<upper=0> beta1;
+real<lower=0> sigma;
 }
 
 
 // Pasamos el modelo
 model {
-y ~ normal(beta0 + beta1 * x, sigma);
+  beta0 ~  normal(2.5,2);
+  beta1 ~  normal(0,0.1);
+  sigma ~  normal(0,2.5);
+  y ~ normal(beta0 + beta1 * t, sigma);
 }
 
 // Si no aclaramos los prior, predeterminadamente son uniformes
