@@ -181,17 +181,30 @@ print(g)
 ```{r}
 library(rstan)
 N <- 1
-y <- log(32.8-22)
+y <- array(log(32.8-22),dim=1)
+t <- array(72,dim=1)
+stan_data <- list(N=1,t=t,y=y)
+stan_model <- stan( 
+    file ="C:/Users/landar/Documents/Facultad/Bayes/estadistica-bayesiana/tp3/modelo_tp.stan", 
+    chains = 2,         # Cantidad de cadenas
+    data = stan_data,
+    model_name = "modelo_tp",
+    seed = 12119       # Para que el resultado sea reproducible
+)
+posterior <- sampling(stan_model, data)
+
+
+
 modelo <- stan_model("modelo_tp.stan")
 model_fit <- sampling(
-  object = model_beta1, 
-  data = data_list, 
+  object = modelo, 
+  data = stan_data, 
   chains = 2, 
   iter = 500,
   warmup = 100
 )
 
-data <- list(N=1,t=72,y=y)
+
 posterior <- sampling(modelo, data)
 ```
 
