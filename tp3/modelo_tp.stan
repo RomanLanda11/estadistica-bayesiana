@@ -18,10 +18,9 @@ real<lower=0> sigma;
 
 // Pasamos el modelo
 model {
-  beta0 ~  normal(2.5,2);
+  beta0 ~  normal(2.7,0.05);
   beta1 ~  normal(0,0.1);
-  sigma ~  normal(0,2.5);
+  sigma ~  normal(0,1);
   y ~ normal(beta0 + beta1 * t, sigma);
 }
 
-// Si no aclaramos los prior, predeterminadamente son uniformes
