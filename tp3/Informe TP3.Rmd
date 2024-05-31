@@ -242,17 +242,20 @@ ggplot(df_muestras, aes(x = y_pred)) +
 
 
 ```{r}
+#Modelo para un dato
 N <- 1
-y <- array(log(32.8-22),dim=1)
-t <- array(72,dim=1)
+y <- array(log(30.5-22),dim=1)
+t <- array(162,dim=1)
 stan_data <- list(N=1,t=t,y=y)
 stan_model <- stan( 
-    file ="modelo_tp.stan", 
+    file ="C:/Users/operador/Downloads/modelo_tp.stan", 
     chains = 2,         # Cantidad de cadenas
     data = stan_data,
     model_name = "modelo_tp",
     seed = 12119       # Para que el resultado sea reproducible
 )
+save(stan_model, file="C:/Users/operador/Downloads/modelo1.RData")
+load("C:/Users/operador/Downloads/modelo1.RData")
 stan_model # TODO: beta1 da muy chico, está bien??
 
 df_draws_1 <- as.data.frame(extract(stan_model))
@@ -268,6 +271,33 @@ mcmc_hist(
   pars = c("beta0", "beta1", "sigma"),
   facet_args = list(nrow = 3)
 )
+#Modelo con 2 datos
+N <- 2
+y <- array(c(log(32.8-22),log(30.5-22)),dim=2)
+t <- array(c(72,162),dim=2)
+stan_data <- list(N=2,t=t,y=y)
+stan_model_2 <- stan( 
+    file ="C:/Users/operador/Downloads/modelo_tp.stan", 
+    chains = 2,         # Cantidad de cadenas
+    data = stan_data,
+    model_name = "modelo_tp",
+    seed = 12119       # Para que el resultado sea reproducible
+)
+stan_model_2
+
+N <- 3
+y <- array(c(log(32.8-22),log(30.5-22),log(23.7-22)),dim=3)
+t <- array(c(72,162,477),dim=3)
+stan_data <- list(N=3,t=t,y=y)
+stan_model_3 <- stan( 
+    file ="C:/Users/operador/Downloads/modelo_tp.stan", 
+    chains = 2,         # Cantidad de cadenas
+    data = stan_data,
+    model_name = "modelo_tp",
+    seed = 12119       # Para que el resultado sea reproducible
+)
+stan_model_3
+
 ```
 
  
