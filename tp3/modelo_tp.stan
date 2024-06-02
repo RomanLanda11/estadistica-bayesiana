@@ -5,7 +5,7 @@
 data {
 int<lower=0> N;
 vector[N] y;
-vector[N] t;
+vector[N] x;
 }
 
 // Definimos los parametros, de que tipo son, y sus cotas
@@ -18,9 +18,9 @@ real<lower=0> sigma;
 
 // Pasamos el modelo
 model {
-  beta0 ~  normal(2.7,0.05);
-  beta1 ~  normal(-0.13, 0.03);
+  beta0 ~  normal(2.7,0.1);
+  beta1 ~  normal(-0.15, 0.04);
   sigma ~  normal(0,1);
-  y ~ normal(beta0 + beta1 * t, sigma);
+  y ~ normal(beta0 + beta1 * x, sigma);
 }
 

@@ -59,7 +59,7 @@ library(bayesplot)
 ```
 
 ```{r, echo=FALSE, error=FALSE, warning=FALSE}
-valores_r = c(-0.1,-0.13, -0.3, 0, 0.1, 0.3, 1)
+valores_r = c(-0.1,-0.15, -0.3, 0, 0.1, 0.3, 1)
 temp_desc <- function(valores_r){
   f <- c()
   r <- c()
@@ -91,57 +91,12 @@ g1 <- ggplot(data = df) +
 }
 temp_desc(valores_r)
 ```
-```{r}
-# valores_r = c(0.15)
-# temp_desc <- function(valores_r){
-# f <- c()
-#   r <- c()
-#   t <- seq(0, 24, length.out=200)
-#   for(i in 1:length(valores_r)){
-#     f <- c(f, 22+15*exp(-valores_r[i]*t))  
-#     r <- c(r,rep(valores_r[i], time = 200))
-#   }
-#   df <- data.frame(f, tiempos = rep(t, time = length(r)), r=factor(r))
-#   
-#   
-#   g1 <- ggplot(data = df) +
-#     aes(x = tiempos, y = f) +
-#     geom_line(color = "#BF0404") + # Color fijo para r = 0.1
-#     ylim(c(20, 40)) +
-#     scale_x_continuous(breaks = 0:24) +
-#     labs(
-#       x = "Hora post mortem", 
-#       y = "Temperatura corporal",
-#       caption = "Gráfico 1: Temperatura corporal post mortem para r = 0.1"
-#     ) +
-#     # Añadir líneas horizontales
-#     geom_hline(yintercept = 32.8, linetype = "dashed", color = "blue") +
-#     geom_hline(yintercept = 30.5, linetype = "dashed", color = "green") +
-#     geom_hline(yintercept = 23.7, linetype = "dashed", color = "red") +
-#     theme(
-#       plot.caption = element_text(hjust = 0.5)
-#     )
-#   
-#   print(g1)
-# 
-# }
-# 
-# # Llamar a la función con r = 0.1
-# temp_desc(valores_r)
-# 
-```
-```{r}
-  print((log((32.8-22)/15))/(-0.13))#=t med 1
-  print((log((30.5-22)/15))/(-0.13))#=t med 2
-  print((log((23.7-22)/15))/(-0.13))#=t med 3
-  #TODO: explicar porque 0.13
-```
  
 Sabemos que la temperatura corporal eventualmente alcanza el equilibrio térmico con el ambiente, por lo que no desciende más de $23°C$. Además, al observar los gráficos, se puede deducir que $r$ representa la rapidez con la que la temperatura corporal disminuye hasta igualarse con la del entorno. Por este motivo, el valor de $r$ no puede ser negativo, ya que en estos casos la temperatura aumenta y no es coherente en este problema.
 
-En general, durante las primeras 12 horas post mortem, la temperatura corporal suele disminuir a un ritmo de 0,5 a 1°C por hora. Luego de este período, la tasa de enfriamiento se vuelve más lenta, aproximándose a la temperatura ambiente en aproximadamente 24 horas.
+En términos generales, el cadáver pierde 2 °C de temperatura durante la primera hora después del deceso. Luego pierde alrededor de 1,5 °C por hora durante las siguientes 12 horas. En las horas posteriores, la temperatura desacelera su descenso hasta llegar a la temperatura ambiente, aproximadamente 24 hs luego de la muerte.
 
-Por lo tanto, llegamos a la conclusión de que $0.1$ es un valor lógico para $r$, ya que en las primeras 12 horas, vemos una disminución de aproximadamente $0.8°C$ por hora en la temperatura corporal.
+Por lo tanto, llegamos a la conclusión de que $0.15$ es un valor lógico para $r$, ya que en las primer hora vemos una disminución de $1.95°C$ en la temperatura corporal, luego, para las siguientes 12 horas la temperatura descendera en razón de entre 1°C y 1.5°C por hora. Posteriormente la temperatura seguirá descendiendo de manera más lenta hasta llegar a la temperatura ambiente aproximadamente 24hs despues de la muerte.
  
  
 Para responder nuestro objetivo tendremos en cuenta las siguientes consideraciones:
@@ -151,9 +106,10 @@ $$T(t)-T_{amb}=T_{diff}e^{-rt}$$
 
 Para linealizar la ecuación aplicamos logaritmo natural a nuestra nueva variables $T(t)-T_{amb}$
 $$ln(T(t)-T_{amb})=ln(T_{diff})-rt$$
-Mostramos esto graficamente utilizando $r = 0.1$:
+Mostramos esto graficamente utilizando $r = 0.15$:
+
 ```{r}
-r = 0.13
+r = 0.15
 t <- seq(0, 24, length.out=200)
 f <- 14*exp(-r*t)
 ln_f <- log(f)
@@ -186,6 +142,42 @@ Para resolver nuestro objetivo proponemos ajustar un modelo lineal normal, en el
 A continuación se presentan los hechos transcurridos en la noche del fallecimiento de Sergio para ingresar estos datos en el modelo.
 
 ![Imagen 2: Cronología de los hechos](linea_tiempo.png)
+Para deducir un prior para el intercepto suponemos que la verdadera función que describe el descenso de temperatura post mortem ( **algor mortis** ) es aquella que presentamos con $r=0.15$. Luego, tomamos las medidciones de las 6:45 am y 8:15 am, las proyectamos a traves de nuestra función y obsevarmos cunatas horas transcurrieron desde la muerte.
+
+```{r}
+valores_r = c(0.15)
+f <- c()
+r <- c()
+t <- seq(0, 12, length.out=100)
+for(i in 1:length(valores_r)){
+  f <- c(f, 22+15*exp(-valores_r[i]*t))
+  r <- c(r,rep(valores_r[i], time = 100))
+}
+  
+df <- data.frame(f, tiempos = rep(t, time = length(r)), r=factor(r))
+
+g1 <- ggplot(data = df) +
+    aes(x = tiempos, y = f) +
+    geom_line(color = "#BF0404") + # Color fijo para r = 0.1
+    ylim(c(20, 40)) +
+    scale_x_continuous(breaks = seq(0, 12, by = 1), labels = seq(0, 12, by = 1)) +
+    labs(
+      x = "Hora post mortem",
+      y = "Temperatura corporal",
+      caption = "Gráfico 1: Temperatura corporal post mortem para r = 0.1"
+    ) +
+    # Añadir líneas horizontales
+    geom_hline(yintercept = 32.8, linetype = "dashed", color = "blue") +
+    geom_hline(yintercept = 30.5, linetype = "dashed", color = "green") +
+    geom_vline(xintercept = (log((32.8-22)/15)/-0.15), linetype = "dashed", color = "blue") +
+    geom_vline(xintercept = (log((30.5-22)/15)/-0.15), linetype = "dashed", color = "green") +
+    theme(plot.caption = element_text(hjust = 0.5))
+print(g1)
+  #log((32.8-22)/15)/-0.15
+  #log((30.5-22)/15)/-0.15)
+
+```
+Viendo esto sabemos que a las 6:45 am el cuerpo deberia llevar 2,19 horas sin vida y a las 8:45 am 3,786 (lo que equivale a 2 hs y 12 minutos y 3 hs y 47 minutos respectivamente). Por lo que pensamos que la hora de muerte puede estas alrededor de las 4:30 am. 
 
  Modelo:
 
@@ -208,28 +200,45 @@ Donde:
  * $t$: minutos transcurridos desde la llamada recibida por la policía.
  
 Hacemos el supuesto de que los parámetros son independientes, por lo que podemos postular un prior marginal para cada uno. 
-Además pensamos que la muerte de Sergio ocurrió en un horario cercano a la hora de la llamada a la policía, tendremos en cuenta esto para deducir nuestras distribuciones a priori.
+Además pensamos que la muerte de Sergio ocurrió en un horario cercano al ya mencionado(4:30am),y tendremos en cuenta esto para deducir nuestras distribuciones a priori.
 
 Para definir el prior de $\beta_0$ sabemos que la temperatura habitual del cuerpo humano oscila como mucho entre $36°C$ y $38°C$, y la temperatura ambiente en Salsipuedes esa noche fue de $22°C$, pensamos que $\beta_0$ puede variar aproximadamente entre $log(38 - 22)=2.773$ y $log(36 - 22)=2.639$. Por lo que nuestro prior para este parámetro es una distribución normal con media igual a 2.7 y desvío 0.05.
 
-Para definir el prior de $\beta_1$ asumimos que la pendiente no puede ser positiva, ya que la diferencia entre la temperatura de un cuerpo sin vida y la temperatura ambiente irá disminuyendo conforme pasen las horas. Por lo tanto, asumimos un prior de $\beta_1$
-con distribución Media Normal Negativa con desvío $\theta_1 = 0.13$.
+Para definir el prior de $\beta_1$ asumimos que la pendiente no puede ser positiva, ya que la diferencia entre la temperatura de un cuerpo sin vida y la temperatura ambiente irá disminuyendo conforme pasen las horas. Por lo tanto, asumimos un prior de $\beta_1$ con distribución Normal con media $\mu = -0.15$ y desvío $\theta_1 = 0.04$.
 
 Por último como $\sigma$ no puede tomar valores negativos, decidimos postular una distribución Media Normal Positiva con desvío $\theta_2 = 1$ porque pensamos que el logaritmo de las diferencias de temperaturas pueden estar como mucho entre 0 y 3.
 
 Mostramos graficamente los prior mencionados:
  
 ```{r}
-t <- seq(from = 0, to = 24, length.out = 200)
+t <- seq(from = -1, to = 24, length.out = 200)
 muestras_bo = rnorm(200,2.7, 0.05)
-muestras_b1 = rnorm(200,-0.13, 0.03)
+muestras_b1 = rnorm(200,-0.15, 0.04)
 
 
-df= data.frame(muestras_bo,muestras_b1,sigma)
+df= data.frame(muestras_bo,muestras_b1)
+
+df_aux <- data.frame(b0=rep(muestras_bo, each=200), 
+                     b1=rep(muestras_b1, each=200),
+                     tiempo=rep(t, times=200),
+                     curva=factor(rep(1:200, each=200)))
+df_aux$tdt <- exp(df_aux$b0+df_aux$b1*df_aux$tiempo)+22
+
+tdt_graf <- ggplot(df_aux)+
+  aes(x = tiempo, y = tdt, group = curva)+
+  geom_line(alpha = 0.1, color = "gray2")+
+  theme(legend.position = "none")+
+  labs(x = "Tiempo (horas)", y = expression(T(t)))+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "blue")+
+  scale_x_continuous(breaks = seq(-1, 24, by = 2), labels = seq(-1, 24, by = 2)) +
+  scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
+  geom_hline(yintercept = 37.5, linetype = "dashed", color = "red")+
+  geom_hline(yintercept = 36.5, linetype = "dashed", color = "red")
+tdt_graf
 
 valores_rectas=muestras_bo + muestras_b1*t
 sigma = abs(rnorm(200,0,1))
-tdet=exp(mu)+22
+
 # Crear un rango para t
 
 y <- seq(from = 0, to = 3, length.out = 200)
@@ -240,27 +249,26 @@ g <- ggplot(df, aes(x = t, y = y)) +
   labs(
     x = expression("Tiempo (" * T[i] * ")"),
     y = expression( Log( T(t) - T[amb] ) ),
-    caption = expression("Gráfico 3: Priors para beta_0 y beta_1")
+    #caption = expression("Gráfico 3: Priors para beta_0 y beta_1")
   ) + # TODO: Poner expresión
   geom_abline(intercept = muestras_bo, slope = muestras_b1, alpha = 0.1, color = "gray3") +
-  coord_cartesian(xlim = c(0, 24), ylim = c(0, 3))+  
-  scale_x_continuous(breaks = seq(0, 24, by = 1), labels = seq(0, 24, by = 1)) +  # Añade valores al eje x
+  coord_cartesian(xlim = c(-2, 24), ylim = c(0, 3))+  
+  scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +  # Añade valores al eje x
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
  theme(plot.caption = element_text(hjust = 0.5))
 # Mostrar el gráfico
 g
 #TODO: Graficar las curcas correspondientes a estos priors
 
-
+grid.arrange(g, tdt_graf, ncol = 2)
 ```
-
 
 Basandonos en los priors mencionados y el supuesto de parámetros independientes, podemos obtener la distribución predictiva a priori a través de muestras. Para realizar esto se toman valores puntuales de t. 
 
 ```{r}
 generar_datos <- function(t) {
   muestras_bo <- rnorm(200, 2.7, 0.05)
-  muestras_b1 <- rnorm(200, -0.13, 0.03) #trampa
+  muestras_b1 <- rnorm(200, -0.15, 0.04) #trampa
   sigma <- abs(rnorm(200, 0, 1))
   mu <- muestras_bo + muestras_b1 * t
   y_pred <- rnorm(200, mu, sigma)
@@ -274,7 +282,7 @@ df_muestras <- data.frame()
 for (t in tiempos) {
   df_muestras <- rbind(df_muestras, generar_datos(t))
 }
-df_muestras$y_pred
+
 ggplot(df_muestras, aes(x = y_pred)) +
   geom_histogram(bins = 20, fill = "gray", color = "black", alpha = 0.7) +
   facet_wrap(~ t, nrow = 2, scales = "fixed") +  # Crear facetas con dos filas
@@ -296,8 +304,8 @@ ggplot(df_muestras, aes(x = y_pred)) +
 #Modelo para un dato
 N <- 1
 y <- array(log(32.8-22),dim=1)
-t <- array(1.2,dim=1)
-stan_data <- list(N=1,t=t,y=y)
+x <- array(1.2,dim=1)
+stan_data <- list(N=1,x=x,y=y)
 stan_model <- stan( 
     file ="modelo_tp.stan", 
     chains = 4,          # Cantidad de cadenas
@@ -328,29 +336,59 @@ mcmc_hist(
 
 ```{r}
 set.seed(511) 
+t= seq(-1,24, length.out=200)
 # Filtrar 200 filas aleatorias
 df_sampled <- df_draws_1[sample(nrow(df_draws_1), 200), ]
-ggplot() +
-  geom_point(aes(x = 1.2, y = 2.3795), color = "purple", size = 2)+
+posterior1= ggplot() +
   labs(
     x = expression("Tiempo (" * T[i] * ")"),
     y = expression( Log( T(t) - T[amb] ) ),
     caption = expression("Gráfico 3: Priors para beta_0 y beta_1")
   ) + # TODO: Poner expresión
   geom_abline(intercept = df_sampled$beta0, slope = df_sampled$beta1, alpha = 0.1, color = "grey3") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "blue")+
   coord_cartesian(xlim = c(0, 24), ylim = c(0, 3))+  
   scale_x_continuous(breaks = seq(0, 24, by = 1), labels = seq(0, 24, by = 1)) +  # Añade valores al eje x
-  scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
+  scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +
+  geom_point(aes(x = 1.2, y = 2.3795), color = "purple", size = 2)+# Añade valores al eje y
  theme(plot.caption = element_text(hjust = 0.5))
+
+df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
+                     b1=rep(df_sampled$beta1, each=200),
+                     tiempo=rep(t, times=200),
+                     curva=factor(rep(1:200, each=200)))
+df_aux$tdt <- exp(df_aux$b0+df_aux$b1*df_aux$tiempo)+22
+
+tdt_graf <- ggplot(df_aux)+
+  aes(x = tiempo, y = tdt, group = curva)+
+  geom_line(alpha = 0.1, color = "gray2")+
+  theme(legend.position = "none")+
+  labs(x = "Tiempo (horas)", y = expression(T(t)))+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "blue")+
+  scale_x_continuous(breaks = seq(-1, 24, by = 2), labels = seq(-1, 24, by = 2)) +
+  scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
+  geom_point(aes(x = 1.2, y = 32.8), color = "purple", size = 2)
+
+
+grid.arrange(posterior1, tdt_graf, ncol=2)
 ```
 
+```{r}
+#Vamos a calcular la distribución de t para la temperatura corporal de 37 grados
+
+df_draws_1$t_muerte <- log(15/exp(df_draws_1$beta0))/(-df_draws_1$beta1)
+ggplot(df_draws_1)+
+  aes(x = t_muerte)+
+  geom_histogram()
+mean(df_draws_1$t_muerte)
+```
 
 ```{r}
 #Modelo con 2 datos
 N <- 2
 y <- array(c(log(32.8-22),log(30.5-22)),dim=2)
-t <- array(c(1.2,2.7),dim=2)
-stan_data <- list(N=2,t=t,y=y)
+x <- array(c(1.2,2.7),dim=2)
+stan_data <- list(N=2,x=x,y=y)
 stan_model_2 <- stan( 
     file ="modelo_tp.stan", 
     chains = 4,         # Cantidad de cadenas
@@ -362,7 +400,6 @@ stan_model_2 <- stan(
 stan_model_2
 save(stan_model_2, file="modelo2.RData")
 load("modelo2.RData")
-stan_model_2 # TODO: beta1 da muy chico, está bien??
 
 df_draws_2 <- as.data.frame(extract(stan_model_2))
 
@@ -383,8 +420,7 @@ mcmc_hist(
 set.seed(511) 
 # Filtrar 200 filas aleatorias
 df_sampled <- df_draws_2[sample(nrow(df_draws_2), 200), ]
-ggplot() +
-  geom_point(aes(x = c(1.2,2.7), y = c(2.3795,2.14)), color = "purple", size = 2)+
+posterior2= ggplot() +
   labs(
     x = expression("Tiempo (" * T[i] * ")"),
     y = expression( Log( T(t) - T[amb] ) ),
@@ -393,16 +429,45 @@ ggplot() +
   geom_abline(intercept = df_sampled$beta0, slope = df_sampled$beta1, alpha = 0.1, color = "grey3") +
   coord_cartesian(xlim = c(0, 24), ylim = c(0, 3))+  
   scale_x_continuous(breaks = seq(0, 24, by = 1), labels = seq(0, 24, by = 1)) +  # Añade valores al eje x
-  scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
+  scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5))+
+  geom_point(aes(x = c(1.2,2.7), y = c(2.3795,2.14)), color = "purple", size = 2)+# Añade valores al eje y
  theme(plot.caption = element_text(hjust = 0.5))
+
+df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
+                     b1=rep(df_sampled$beta1, each=200),
+                     tiempo=rep(t, times=200),
+                     curva=factor(rep(1:200, each=200)))
+df_aux$tdt <- exp(df_aux$b0+df_aux$b1*df_aux$tiempo)+22
+
+tdt_graf <- ggplot(df_aux)+
+  aes(x = tiempo, y = tdt, group = curva)+
+  geom_line(alpha = 0.1, color = "gray2")+
+  theme(legend.position = "none")+
+  labs(x = "Tiempo (horas)", y = expression(T(t)))+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "blue")+
+  scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
+  scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
+  geom_hline(yintercept = 37.5, linetype = "dashed", color = "red")+
+  geom_hline(yintercept = 36.5, linetype = "dashed", color = "red")+
+  geom_point(aes(x = 1.2, y = 32.8), color = "purple", size = 2)+
+  geom_point(aes(x = 2.7, y = 30.5), color = "purple", size = 2)
+
+grid.arrange(posterior2,tdt_graf, ncol=2)
+```
+```{r}
+df_draws_2$t_muerte <- log(15/exp(df_draws_2$beta0))/(-df_draws_2$beta1)
+ggplot(df_draws_2)+
+  aes(x = t_muerte)+
+  geom_histogram()
+mean(df_draws_2$t_muerte)
 ```
 
 
 ```{r}
 N <- 3
 y <- array(c(log(32.8-22),log(30.5-22),log(23.7-22)),dim=3)
-t <- array(c(1.2,2.7,7.95),dim=3)
-stan_data <- list(N=3,t=t,y=y)
+x <- array(c(1.2,2.7,7.95),dim=3)
+stan_data <- list(N=3,x=x,y=y)
 stan_model_3 <- stan( 
     file ="modelo_tp.stan", 
     chains = 4,         # Cantidad de cadenas
@@ -434,8 +499,7 @@ mcmc_hist(
 set.seed(511) 
 # Filtrar 200 filas aleatorias
 df_sampled <- df_draws_2[sample(nrow(df_draws_3), 200), ]
-ggplot() +
-  geom_point(aes(x = c(1.2,2.7, 7.95), y = c(2.3795,2.14, 0.5606 )), color = "purple", size = 2)+
+posterior3 =ggplot() +
   labs(
     x = expression("Tiempo (" * T[i] * ")"),
     y = expression( Log( T(t) - T[amb] ) ),
@@ -445,8 +509,41 @@ ggplot() +
   coord_cartesian(xlim = c(0, 24), ylim = c(0, 3))+  
   scale_x_continuous(breaks = seq(0, 24, by = 1), labels = seq(0, 24, by = 1)) +  # Añade valores al eje x
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
+  geom_point(aes(x = c(1.2,2.7, 7.95), y = c(2.3795,2.14, 0.5606 )), color = "purple", size = 2)+
  theme(plot.caption = element_text(hjust = 0.5))
+
+df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
+                     b1=rep(df_sampled$beta1, each=200),
+                     tiempo=rep(t, times=200),
+                     curva=factor(rep(1:200, each=200)))
+df_aux$tdt <- exp(df_aux$b0+df_aux$b1*df_aux$tiempo)+22
+
+tdt_graf <- ggplot(df_aux)+
+  aes(x = tiempo, y = tdt, group = curva)+
+  geom_line(alpha = 0.1, color = "gray2")+
+  theme(legend.position = "none")+
+  labs(x = "Tiempo (horas)", y = expression(T(t)))+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "blue")+
+  scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
+  scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
+  geom_point(aes(x = 1.2, y = 32.8), color = "purple", size = 2)+
+  geom_point(aes(x = 2.7, y = 30.5), color = "purple", size = 2)+
+  geom_point(aes(x = 7.95, y = 23.7), color = "purple", size = 2)
+
+grid.arrange(posterior3, tdt_graf, ncol=2)
 ```
 Cada morgue cuenta con salas o cuartos destinados a la recepción y almacenamiento de los cuerpos. Cada una de ellas debe estar correctamente refrigerada y, en función de sus condiciones térmicas, se clasifican en dos tipos: de temperatura sobre cero y de temperatura bajo cero.!!!!!
+ 
+```{r}
+df_draws_3$t_muerte <- log(15/exp(df_draws_3$beta0))/(-df_draws_3$beta1)
+ggplot(df_draws_3)+
+  aes(x = t_muerte)+
+  geom_histogram()
+mean(df_draws_3$t_muerte)
+
+```
+ 
+
+
  
  
