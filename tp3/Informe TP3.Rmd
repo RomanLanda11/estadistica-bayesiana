@@ -3,7 +3,11 @@ title: "Trabajo Práctico 3"
 author: "Gazze - Irisarri - Landa"
 date: "2024-05-23"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
 ```{r, include=FALSE, echo=FALSE}
 #| label = Parametros del informe
 modo_prod=FALSE
@@ -12,49 +16,76 @@ knitr::opts_chunk$set(fig.align = "center")
 
 # Introducción
 
-Sumergirse en el mundo de la estadística puede llevarnos a lugares inesperados, desafiando nuestras percepciones y llevándonos a explorar terrenos desconocidos. En esta ocasión, nos sumergimos en un caso peculiar que fusiona el rigor analítico con el misterio de una escena del crimen.
+Sumergirse en el mundo de la estadística puede llevarnos a lugares
+inesperados, desafiando nuestras percepciones y llevándonos a explorar
+terrenos desconocidos. En esta ocasión, nos sumergimos en un caso
+peculiar que fusiona el rigor analítico con el misterio de una escena
+del crimen.
 
-Nuestra historia se centra en Guido, un apasionado estudiante de estadística cuyo amor por la resolución de enigmas lo llevó desde las aulas universitarias hasta las intrigantes calles de Córdoba.
+Nuestra historia se centra en Guido, un apasionado estudiante de
+estadística cuyo amor por la resolución de enigmas lo llevó desde las
+aulas universitarias hasta las intrigantes calles de Córdoba.
 
-Sin embargo, la emoción de seguir su vocación se ve eclipsada por un oscuro suceso. En una madrugada envuelta en sombras, la unidad de trabajo de Guido es convocada de manera urgente para investigar un crimen recién perpetrado en Salsipuedes. 
+Sin embargo, la emoción de seguir su vocación se ve eclipsada por un
+oscuro suceso. En una madrugada envuelta en sombras, la unidad de
+trabajo de Guido es convocada de manera urgente para investigar un
+crimen recién perpetrado en Salsipuedes.
 
-En medio del desorden, muebles destrozados, utensilios de cocina esparcidos y, en el centro de todo, el cuerpo inerte de Sergio Contreras, bañado en un charco de sangre. Ante esta escena, Guido se enfrenta a un desafío crucial: determinar la hora en que se produjo la muerte.
+En medio del desorden, muebles destrozados, utensilios de cocina
+esparcidos y, en el centro de todo, el cuerpo inerte de Sergio
+Contreras, bañado en un charco de sangre. Ante esta escena, Guido se
+enfrenta a un desafío crucial: determinar la hora en que se produjo la
+muerte.
 
 ![Imagen 1: Sergio minutos antes de su muerte](Imagen1.jpeg)
 
 # Objetivos
 
-El objetivo principal de este informe es utilizar métodos estadísticos con enfoque bayesiano para estimar con precisión la hora de muerte de Sergio Contreras. A través del estudio de la temperatura corporal postmortem y la aplicación de modelos lineales, buscaremos proporcionar una estimación confiable del momento en que ocurrió el deceso. Además, nuestro objetivo secundario es presentar los resultados de manera clara y concisa, demostrando un dominio completo del contenido y garantizando así la obtención de una calificación sobresaliente (10😉) en la evaluación del informe.
+El objetivo principal de este informe es utilizar métodos estadísticos
+con enfoque bayesiano para estimar con precisión la hora de muerte de
+Sergio Contreras. A través del estudio de la temperatura corporal
+postmortem y la aplicación de modelos lineales, buscaremos proporcionar
+una estimación confiable del momento en que ocurrió el deceso. Además,
+nuestro objetivo secundario es presentar los resultados de manera clara
+y concisa, demostrando un dominio completo del contenido y garantizando
+así la obtención de una calificación sobresaliente (10😉) en la
+evaluación del informe.
 
 # Metodología
 
-A través del análisis de la temperatura corporal, ecuaciones diferenciales y conceptos matemáticos podremos descifrar el objetivo planteado. 
+A través del análisis de la temperatura corporal, ecuaciones
+diferenciales y conceptos matemáticos podremos descifrar el objetivo
+planteado.
 
-Sabemos que la temperatura del cuerpo de Segio satisface la siguiente ley:
- $$\frac{dT(t)}{dt}=r[T_{amb}-T(t)]$$
-donde:
+Sabemos que la temperatura del cuerpo de Segio satisface la siguiente
+ley: $$\frac{dT(t)}{dt}=r[T_{amb}-T(t)]$$ donde:
 
- * $T_{amb}$ es la temperatura ambiente (un valor fijo y conocido), 
- 
- * $r$ es una constante y 
- 
- * $T(t)$ es la función (en principio desconocida) que describe la temperatura del cuerpo en función del tiempo.
+-   $T_{amb}$ es la temperatura ambiente (un valor fijo y conocido),
 
-Se puede demostrar que Una función que satisface esa ecuación es $T(t)=T_{amb}+(T_i-T_{amb})e^{-rt}$
- 
+-   $r$ es una constante y
+
+-   $T(t)$ es la función (en principio desconocida) que describe la
+    temperatura del cuerpo en función del tiempo.
+
+Se puede demostrar que Una función que satisface esa ecuación es
+$T(t)=T_{amb}+(T_i-T_{amb})e^{-rt}$
+
 $$\frac{dT(t)}{dt}=\frac{d}{dt}(T(t)=T_{amb}+(T_i-T_{amb})e^{-rt})=$$
 $$=(T_i-T_{amb})e^{-rt}(-r)=-r(T_i-T_{amb})e^{-rt}=$$
 $$=-r(T_i-T_{amb})e^{-rt}+rT_{amb}-rT_{amb}=$$
 $$=-r[(T_i-T_{amb})e^{-rt}+T_{amb}]+rT_{amb}=$$
 
-$$=-r[T(t)-T_{amb}]=r[T_{amb}-T(t)]$$
-donde:
+$$=-r[T(t)-T_{amb}]=r[T_{amb}-T(t)]$$ donde:
 
- * $T_i$ la temperatura a la que está inicialmente el cuerpo de Sergio.
- 
+-   $T_i$ la temperatura a la que está inicialmente el cuerpo de Sergio.
+
 # Desarrollo
 
-Para averiguar que indica la constante r, y que valores son coherentes, graficamos la función anterior para distintos valores de $r$, sabiendo que la temperatura del ambiente es $23°C$ y la temperatura al momento de la muerte de Sergio es $37°C$.
+Para averiguar que indica la constante r, y que valores son coherentes,
+graficamos la función anterior para distintos valores de $r$, sabiendo
+que la temperatura del ambiente es $23°C$ y la temperatura al momento de
+la muerte de Sergio es $37°C$.
+
 ```{r, echo=FALSE, error=FALSE, warning=FALSE}
 # Carga de paquetes
 library(ggplot2)
@@ -62,6 +93,13 @@ library(gridExtra)
 library(rstan)
 library(bayesplot)
 library(grid)
+library(StanHeaders)
+library(ggthemes)
+
+# Paletas de colores
+colores1 <- c("#da91d5","#663364", "#897289", "purple", "#7e0b7d", "#9e3d9d")
+colores2 <- c("#897289", "#897289", "#897289", "#663364", "#897289", "#663364")
+
 ```
 
 ```{r echo=FALSE, error=FALSE, warning=FALSE}
@@ -87,32 +125,51 @@ g1 <- ggplot(data = df) +
     caption = "Gráfico 1: Temperatura corporal post mortem para distintos valores de r"
   ) +
   scale_color_manual(
-    values = c("#BF0404","cyan", "#010326", "#0D0D0D", "#717362", "#7d721a", "#8C2E2E")
+    values = c("#982597","#663364", "#897289", "purple", "#7e0b7d", "#af95d2", "#5f3ae0")
   ) +
   #theme_minimal() +  # Utilizar un tema minimalista para una apariencia más limpia
   theme(
     plot.caption = element_text(hjust = 0.5)
-  )
+  )+theme_few()
   g1
 }
 temp_desc(valores_r)
 ```
- 
-Sabemos que la temperatura corporal eventualmente alcanza el equilibrio térmico con el ambiente, por lo que no desciende más de $23°C$. Además, al observar los gráficos, se puede deducir que $r$ representa la rapidez con la que la temperatura corporal disminuye hasta igualarse con la del entorno. Por este motivo, el valor de $r$ no puede ser negativo, ya que en estos casos la temperatura aumenta y no es coherente en este problema.
 
-En términos generales, el cadáver pierde $2 °C$ de temperatura durante la primera hora después del deceso. Luego pierde alrededor de $1.5 °C$ por hora durante las siguientes 12 horas. En las horas posteriores, la temperatura desacelera su descenso hasta llegar a la temperatura ambiente, aproximadamente 24 hs luego de la muerte.
+Sabemos que la temperatura corporal eventualmente alcanza el equilibrio
+térmico con el ambiente, por lo que no desciende más de $23°C$. Además,
+al observar los gráficos, se puede deducir que $r$ representa la rapidez
+con la que la temperatura corporal disminuye hasta igualarse con la del
+entorno. Por este motivo, el valor de $r$ no puede ser negativo, ya que
+en estos casos la temperatura aumenta y no es coherente en este
+problema.
 
-Por lo tanto, llegamos a la conclusión de que $0.15$ es un valor lógico para $r$, ya que en las primer hora vemos una disminución de $1.95°C$ en la temperatura corporal, luego, para las siguientes 12 horas la temperatura descendera en razón de entre $1°C$ y $1.5°C$ por hora. Posteriormente la temperatura seguirá descendiendo de manera más lenta hasta llegar a la temperatura ambiente aproximadamente 24hs despues de la muerte.
- 
- 
-Para responder nuestro objetivo tendremos en cuenta las siguientes consideraciones:
-En lugar de considerar la temperatura del cuerpo, se considerará la diferencia entre la temperatura del cuerpo y la temperatura ambiente $(T-T_{amb})$. Además, se llamará $T_{diff}$ a la diferencia entre la temperatura inicial del cuerpo y la temperatura ambiente $(T_i-T_{amb})$.
+En términos generales, el cadáver pierde $2 °C$ de temperatura durante
+la primera hora después del deceso. Luego pierde alrededor de $1.5 °C$
+por hora durante las siguientes 12 horas. En las horas posteriores, la
+temperatura desacelera su descenso hasta llegar a la temperatura
+ambiente, aproximadamente 24 hs luego de la muerte.
+
+Por lo tanto, llegamos a la conclusión de que $0.15$ es un valor lógico
+para $r$, ya que en las primer hora vemos una disminución de $1.95°C$ en
+la temperatura corporal, luego, para las siguientes 12 horas la
+temperatura descendera en razón de entre $1°C$ y $1.5°C$ por hora.
+Posteriormente la temperatura seguirá descendiendo de manera más lenta
+hasta llegar a la temperatura ambiente aproximadamente 24hs despues de
+la muerte.
+
+Para responder nuestro objetivo tendremos en cuenta las siguientes
+consideraciones: En lugar de considerar la temperatura del cuerpo, se
+considerará la diferencia entre la temperatura del cuerpo y la
+temperatura ambiente $(T-T_{amb})$. Además, se llamará $T_{diff}$ a la
+diferencia entre la temperatura inicial del cuerpo y la temperatura
+ambiente $(T_i-T_{amb})$.
 
 $$T(t)-T_{amb}=T_{diff}e^{-rt}$$
 
-Para linealizar la ecuación aplicamos logaritmo natural a nuestra nueva variables $T(t)-T_{amb}$
-$$ln(T(t)-T_{amb})=ln(T_{diff})-rt$$
-Mostramos esto graficamente utilizando $r = 0.15$:
+Para linealizar la ecuación aplicamos logaritmo natural a nuestra nueva
+variables $T(t)-T_{amb}$ $$ln(T(t)-T_{amb})=ln(T_{diff})-rt$$ Mostramos
+esto graficamente utilizando $r = 0.15$:
 
 ```{r,  echo=FALSE}
 r = 0.15
@@ -130,7 +187,7 @@ g4 <- ggplot(data = df2) +
     color = "Función"  # Cambia el título de la leyenda a mayúsculas
   ) +
   scale_color_manual(
-    values = c("#B10504", "#47421E"),
+    values = c("#5f3ae0", "#7e0b7d"),
     labels = c(expression(T(t) - T[amb]), expression(log(T(t) - T[amb])))
   ) +
   #theme_minimal() +  # Utilizar un tema minimalista para una apariencia más limpia
@@ -138,17 +195,29 @@ g4 <- ggplot(data = df2) +
     plot.caption = element_text(hjust = 0.5),
     legend.title = element_text(face = "bold"),  # Poner el título de la leyenda en negrita
     legend.text = element_text(size = 10)        # Ajustar el tamaño del texto de la leyenda
-  )
+  )+
+  theme_few()
 g4
 ```
- 
- El intercepto de la función logaritmo de $T(t)-T_{amb}$ es $ln(T_{diff})=2.639$ , lo que indica que la diferencia entre la temperatura corporal y la temperatura ambiente en el momento de la muerte es $e^{2.639}°C=14°C$. La pendiente es $-r=-0.13$, esto significa que a medida que aumenta una hora, el logaritmo de la diferencia entre la temperatura corporal y la temperatura ambiente disminuye en $0.1°C$.
- 
-Para resolver nuestro objetivo proponemos ajustar un modelo lineal normal, en el que tomaremos como variable explicativa el tiempo.
-A continuación se presentan los hechos transcurridos en la noche del fallecimiento de Sergio para ingresar estos datos en el modelo.
 
-![Imagen 2: Cronología de los hechos](linea_tiempo.png)
-Para deducir un prior para el intercepto suponemos que la verdadera función que describe el descenso de temperatura post mortem ( **algor mortis** ) es aquella que presentamos con $r=0.15$. Luego, tomamos las medidciones de las 6:45 am y 8:15 am, las proyectamos a traves de nuestra función y obsevarmos cuantas horas transcurrieron desde la muerte.
+El intercepto de la función logaritmo de $T(t)-T_{amb}$ es
+$ln(T_{diff})=2.639$ , lo que indica que la diferencia entre la
+temperatura corporal y la temperatura ambiente en el momento de la
+muerte es $e^{2.639}°C=14°C$. La pendiente es $-r=-0.13$, esto significa
+que a medida que aumenta una hora, el logaritmo de la diferencia entre
+la temperatura corporal y la temperatura ambiente disminuye en $0.1°C$.
+
+Para resolver nuestro objetivo proponemos ajustar un modelo lineal
+normal, en el que tomaremos como variable explicativa el tiempo. A
+continuación se presentan los hechos transcurridos en la noche del
+fallecimiento de Sergio para ingresar estos datos en el modelo.
+
+![Imagen 2: Cronología de los hechos](linea_tiempo.png) Para deducir un
+prior para el intercepto suponemos que la verdadera función que describe
+el descenso de temperatura post mortem ( **algor mortis** ) es aquella
+que presentamos con $r=0.15$. Luego, tomamos las medidciones de las 6:45
+am y 8:15 am, las proyectamos a traves de nuestra función y obsevarmos
+cuantas horas transcurrieron desde la muerte.
 
 ```{r,  echo=FALSE}
 valores_r = c(0.15)
@@ -164,7 +233,7 @@ df <- data.frame(f, tiempos = rep(t, time = length(r)), r=factor(r))
 
 g1 <- ggplot(data = df) +
     aes(x = tiempos, y = f) +
-    geom_line(color = "#BF0404") + # Color fijo para r = 0.1
+    geom_line(color = "#5f3ae0") +
     ylim(c(20, 40)) +
     scale_x_continuous(breaks = seq(0, 12, by = 1), labels = seq(0, 12, by = 1)) +
     labs(
@@ -173,49 +242,71 @@ g1 <- ggplot(data = df) +
       caption = "Gráfico 3: Temperatura corporal post mortem para r = 0.15"
     ) +
     # Añadir líneas horizontales
-    geom_hline(yintercept = 32.8, linetype = "dashed", color = "blue") +
-    geom_hline(yintercept = 30.5, linetype = "dashed", color = "green") +
-    geom_vline(xintercept = (log((32.8-22)/15)/-0.15), linetype = "dashed", color = "blue") +
-    geom_vline(xintercept = (log((30.5-22)/15)/-0.15), linetype = "dashed", color = "green") +
-    theme(plot.caption = element_text(hjust = 0.5))
+    geom_hline(yintercept = 32.8, linetype = "dashed", color = "#7e0b7d") +
+    geom_hline(yintercept = 30.5, linetype = "dashed", color = "#af95d2") +
+    geom_vline(xintercept = (log((32.8-22)/15)/-0.15), linetype = "dashed", color = "#7e0b7d") +
+    geom_vline(xintercept = (log((30.5-22)/15)/-0.15), linetype = "dashed", color = "#af95d2") +
+    theme(plot.caption = element_text(hjust = 0.5))+
+  theme_few()
 print(g1)
   #log((32.8-22)/15)/-0.15
   #log((30.5-22)/15)/-0.15)
 
 ```
-Viendo esto sabemos que a las 6:45 am el cuerpo deberia llevar 2.19 horas sin vida y a las 8:45 am 3,786 horas (lo que equivale a 2 hs y 12 minutos, y 3 hs y 47 minutos respectivamente). Por lo que pensamos que la hora de muerte puede estas alrededor de las 4:30 am. 
 
- Modelo:
+Viendo esto sabemos que a las 6:45 am el cuerpo deberia llevar 2.19
+horas sin vida y a las 8:45 am 3,786 horas (lo que equivale a 2 hs y 12
+minutos, y 3 hs y 47 minutos respectivamente). Por lo que pensamos que
+la hora de muerte puede estas alrededor de las 4:30 am.
 
- $Y_i| \beta_0, \beta_1, \sigma \sim N (\mu_i, \sigma)$
- $\mu_i = \beta_0 + \beta_1t$
- $\beta_0 \sim N(\mu=2.7, \sigma=0.05)$
- $\beta_1 \sim N(\mu=-0.13, \sigma_2=0.03)$
- $\sigma \sim N^+ (\theta_2=1)$
+Modelo:
+
+$Y_i| \beta_0, \beta_1, \sigma \sim N (\mu_i, \sigma)$
+
+$\mu_i = \beta_0 + \beta_1t$ $\beta_0 \sim N(\mu=2.7, \sigma=0.05)$
+
+$\beta_1 \sim N(\mu=-0.13, \sigma_2=0.03)$
+
+$\sigma \sim N^+ (\theta_2=1)$
 
 Donde:
 
- * $Y_i=log(T(t)-T_{amb})$
- 
- * $\beta_0$: es el intercepto de la recta
- 
- * $\beta_1$: es la pendiente de la recta
- 
- * $\sigma$: desvío estándar de $Y_i$
- 
- * $t$: minutos transcurridos desde la muerte de Sergio Contreras.
- 
-Hacemos el supuesto de que los parámetros son independientes, por lo que podemos postular un prior marginal para cada uno. 
-Además pensamos que la muerte de Sergio ocurrió en un horario cercano al ya mencionado (4:30am), y tendremos en cuenta esto para deducir nuestras distribuciones a priori.
+-   $Y_i=log(T(t)-T_{amb})$
 
-Para definir el prior de $\beta_0$ sabemos que la temperatura habitual del cuerpo humano oscila como mucho entre $36°C$ y $38°C$, y la temperatura ambiente en Salsipuedes esa noche fue de $22°C$, pensamos que $\beta_0$ puede variar aproximadamente entre $log(38 - 22)=2.773$ y $log(36 - 22)=2.639$. Por lo que nuestro prior para este parámetro es una distribución normal con media igual a 2.7 y desvío 0.05.
+-   $\beta_0$: es el intercepto de la recta
 
-Para definir el prior de $\beta_1$ asumimos que la pendiente no puede ser positiva, ya que la diferencia entre la temperatura de un cuerpo sin vida y la temperatura ambiente irá disminuyendo conforme pasen las horas. Por lo tanto, asumimos un prior de $\beta_1$ con distribución Normal con media $\mu = -0.15$ y desvío $\theta_1 = 0.04$.
+-   $\beta_1$: es la pendiente de la recta
 
-Por último como $\sigma$ no puede tomar valores negativos, decidimos postular una distribución Media Normal Positiva con desvío $\theta_2 = 1$ porque pensamos que el logaritmo de las diferencias de temperaturas pueden estar como mucho entre 0 y 3.
+-   $\sigma$: desvío estándar de $Y_i$
+
+-   $t$: minutos transcurridos desde la muerte de Sergio Contreras.
+
+Hacemos el supuesto de que los parámetros son independientes, por lo que
+podemos postular un prior marginal para cada uno. Además pensamos que la
+muerte de Sergio ocurrió en un horario cercano al ya mencionado
+(4:30am), y tendremos en cuenta esto para deducir nuestras
+distribuciones a priori.
+
+Para definir el prior de $\beta_0$ sabemos que la temperatura habitual
+del cuerpo humano oscila como mucho entre $36°C$ y $38°C$, y la
+temperatura ambiente en Salsipuedes esa noche fue de $22°C$, pensamos
+que $\beta_0$ puede variar aproximadamente entre $log(38 - 22)=2.773$ y
+$log(36 - 22)=2.639$. Por lo que nuestro prior para este parámetro es
+una distribución normal con media igual a 2.7 y desvío 0.05.
+
+Para definir el prior de $\beta_1$ asumimos que la pendiente no puede
+ser positiva, ya que la diferencia entre la temperatura de un cuerpo sin
+vida y la temperatura ambiente irá disminuyendo conforme pasen las
+horas. Por lo tanto, asumimos un prior de $\beta_1$ con distribución
+Normal con media $\mu = -0.15$ y desvío $\theta_1 = 0.04$.
+
+Por último como $\sigma$ no puede tomar valores negativos, decidimos
+postular una distribución Media Normal Positiva con desvío
+$\theta_2 = 1$ porque pensamos que el logaritmo de las diferencias de
+temperaturas pueden estar como mucho entre 0 y 3.
 
 Mostramos graficamente los prior mencionados:
- 
+
 ```{r,  echo=FALSE}
 t <- seq(from = -1, to = 24, length.out = 200)
 muestras_bo = rnorm(200,2.7, 0.05)
@@ -235,11 +326,12 @@ tdt_graf <- ggplot(df_aux)+
   geom_line(alpha = 0.1, color = "gray2")+
   theme(legend.position = "none")+
   labs(x = expression("Tiempo en horas (" * T[i] * ")"), y = expression(T(t)))+
-  geom_vline(xintercept = 0, linetype = "dashed", color = "blue")+
-  scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
+  scale_x_continuous(breaks = seq(0, 24, by = 2), labels = seq(0, 24, by = 2)) +
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
-  geom_hline(yintercept = 37.5, linetype = "dashed", color = "red")+
-  geom_hline(yintercept = 36.5, linetype = "dashed", color = "red")
+  geom_hline(yintercept = 37.5, linetype = "dashed", color = "#7e0b7d")+
+  geom_hline(yintercept = 36.5, linetype = "dashed", color = "#7e0b7d")+
+  theme_few()
 #tdt_graf
 
 valores_rectas=muestras_bo + muestras_b1*t
@@ -259,9 +351,11 @@ g <- ggplot(df, aes(x = t, y = y)) +
   ) + # TODO: Poner expresión
   geom_abline(intercept = muestras_bo, slope = muestras_b1, alpha = 0.1, color = "gray3") +
   coord_cartesian(xlim = c(-2, 24), ylim = c(0, 3))+  
-  scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +  # Añade valores al eje x
+  geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
+  scale_x_continuous(breaks = seq(0, 24, by = 2), labels = seq(0, 24, by = 2)) +  # Añade valores al eje x
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
- theme(plot.caption = element_text(hjust = 0.5))
+ theme(plot.caption = element_text(hjust = 0.5))+
+  theme_few()
 # Mostrar el gráfico
 #g
 #TODO: Graficar las curcas correspondientes a estos priors
@@ -272,7 +366,9 @@ grid.arrange(g, tdt_graf, ncol = 2,
                             just = "center"))
 ```
 
-Basandonos en los priors mencionados y el supuesto de parámetros independientes, podemos obtener la distribución predictiva a priori a través de muestras. Para realizar esto se toman valores puntuales de t. 
+Basandonos en los priors mencionados y el supuesto de parámetros
+independientes, podemos obtener la distribución predictiva a priori a
+través de muestras. Para realizar esto se toman valores puntuales de t.
 
 ```{r,  echo=FALSE}
 generar_datos <- function(t) {
@@ -301,13 +397,12 @@ ggplot(df_muestras, aes(x = y_pred)) +
     title = "Distribución de las predicciones para diferentes tiempos",
     caption = "Gráfico 5: Histograma de y_pred para t = 0, 6, 12 y 24"
   ) +
-  scale_x_continuous(breaks = seq(floor(min(df_muestras$y_pred)), ceiling(max(df_muestras$y_pred)), by = 1))  # Añadir cortes de a 1 en el eje x
-  #theme(plot.caption = element_text(hjust = 0.5))
+  scale_x_continuous(breaks = seq(floor(min(df_muestras$y_pred)), ceiling(max(df_muestras$y_pred)), by = 1))+  # Añadir cortes de a 1 en el eje x
+  theme(plot.caption = element_text(hjust = 0.5))+
+    theme_few()
 
 # TODO: interpretar y pasar a temperatura
 ```
-
-
 
 ```{r,  echo=FALSE}
 #Modelo para un dato
@@ -331,9 +426,6 @@ stan_model # TODO: beta1 da muy chico, está bien??
 
 df_draws_1 <- as.data.frame(extract(stan_model))
 
-colores1 <- c("#da91d5","#663364", "#897289", "purple", "#7e0b7d", "#9e3d9d")
-colores2 <- c("#897289", "#897289", "#897289", "#663364", "#897289", "#663364")
-
 color_scheme_set(colores1)
 mcmc_trace(
   stan_model,
@@ -355,7 +447,6 @@ dens1 <- mcmc_dens_overlay(stan_model, pars = c("beta0", "beta1", "sigma"))
 
 ```
 
-
 ```{r,  echo=FALSE}
 set.seed(511) 
 t= seq(-1,24, length.out=200)
@@ -364,16 +455,15 @@ df_sampled <- df_draws_1[sample(nrow(df_draws_1), 200), ]
 posterior1= ggplot() +
   labs(
     x = expression("Tiempo (" * T[i] * ")"),
-    y = expression( Log( T(t) - T[amb] ) ),
-    caption = expression("Gráfico 3: Priors para beta_0 y beta_1")
-  ) + # TODO: Poner expresión
+    y = expression( Log( T(t) - T[amb] ) ))+
   geom_abline(intercept = df_sampled$beta0, slope = df_sampled$beta1, alpha = 0.1, color = "grey3") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
   coord_cartesian(xlim = c(0, 24), ylim = c(0, 3))+  
-  scale_x_continuous(breaks = seq(0, 24, by = 1), labels = seq(0, 24, by = 1)) +  # Añade valores al eje x
+  scale_x_continuous(breaks = seq(0, 24, by = 2), labels = seq(0, 24, by = 2)) +  # Añade valores al eje x
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +
   geom_point(aes(x = 1.2, y = 2.3795), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
- theme(plot.caption = element_text(hjust = 0.5))
+  theme(plot.caption = element_text(hjust = 0.5))+
+  theme_few()
 
 df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
                      b1=rep(df_sampled$beta1, each=200),
@@ -383,14 +473,15 @@ df_aux$tdt <- exp(df_aux$b0+df_aux$b1*df_aux$tiempo)+22
 
 tdt_graf <- ggplot(df_aux)+
   aes(x = tiempo, y = tdt, group = curva)+
-  geom_rect(aes(ymin=36.5, ymax=37.5, xmin=-2, xmax=24),fill = "purple", alpha=0.01)+
+  geom_rect(aes(ymin=36.5, ymax=37.5, xmin=-1, xmax=24),fill = "purple", alpha=0.01)+
   geom_line(alpha = 0.1, color = "gray2")+
   theme(legend.position = "none")+
   labs(x = "Tiempo (horas)", y = expression(T(t)))+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
-  scale_x_continuous(breaks = seq(-1, 24, by = 2), labels = seq(-1, 24, by = 2)) +
+  scale_x_continuous(breaks = seq(0, 24, by = 2), labels = seq(0, 24, by = 2)) +
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
-  geom_point(aes(x = 1.2, y = 32.8), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)
+  geom_point(aes(x = 1.2, y = 32.8), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
+  theme_few()
 
 
 grid.arrange(posterior1, tdt_graf, ncol=2,
@@ -406,7 +497,8 @@ df_draws_1$t_muerte <- log(15/exp(df_draws_1$beta0))/(-df_draws_1$beta1)
 
 ggplot(df_draws_1)+
   aes(x = t_muerte)+
-  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)
+  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)+
+  theme_few()
   # #geom_label(aes(x = 0, y = 0,
   #               label = "Media = 0.225"),
   #           stat = "unique")
@@ -461,16 +553,15 @@ df_sampled <- df_draws_2[sample(nrow(df_draws_2), 200), ]
 posterior2= ggplot() +
   labs(
     x = expression("Tiempo (" * T[i] * ")"),
-    y = expression( Log( T(t) - T[amb] ) ),
-    caption = expression("Gráfico 3: Priors para beta_0 y beta_1")
-  ) + # TODO: Poner expresión
+    y = expression( Log( T(t) - T[amb] ) )) + 
   geom_abline(intercept = df_sampled$beta0, slope = df_sampled$beta1, alpha = 0.1, color = "grey3") +
   coord_cartesian(xlim = c(0, 24), ylim = c(0, 3))+  
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5))+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
   geom_point(aes(x = c(1.2,2.7), y = c(2.3795,2.14)), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
- theme(plot.caption = element_text(hjust = 0.5))
+ theme(plot.caption = element_text(hjust = 0.5))+
+  theme_few()
 
 df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
                      b1=rep(df_sampled$beta1, each=200),
@@ -480,15 +571,16 @@ df_aux$tdt <- exp(df_aux$b0+df_aux$b1*df_aux$tiempo)+22
 
 tdt_graf <- ggplot(df_aux)+
   aes(x = tiempo, y = tdt, group = curva)+
-  geom_rect(aes(ymin=36.5, ymax=37.5, xmin=-2, xmax=24),fill = "purple", alpha=0.01)+
+  geom_rect(aes(ymin=36.5, ymax=37.5, xmin=-1, xmax=24),fill = "purple", alpha=0.01)+
   geom_line(alpha = 0.1, color = "gray2")+
   theme(legend.position = "none")+
   labs(x = "Tiempo (horas)", y = expression(T(t)))+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
-  scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
+  scale_x_continuous(breaks = seq(0, 24, by = 2), labels = seq(0, 24, by = 2)) +
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
   geom_point(aes(x = 1.2, y = 32.8), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
-  geom_point(aes(x = 2.7, y = 30.5), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)
+  geom_point(aes(x = 2.7, y = 30.5), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
+  theme_few()
 
 grid.arrange(posterior2,tdt_graf, ncol=2,
              botton = textGrob("Gráfico ?: Posteriors para dos datos",
@@ -500,10 +592,10 @@ grid.arrange(posterior2,tdt_graf, ncol=2,
 df_draws_2$t_muerte <- log(15/exp(df_draws_2$beta0))/(-df_draws_2$beta1)
 ggplot(df_draws_2)+
   aes(x = t_muerte)+
-  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)
+  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)+
+  theme_few()
 mean(df_draws_2$t_muerte)
 ```
-
 
 ```{r,  echo=FALSE}
 if(modo_prod){
@@ -541,6 +633,7 @@ mcmc_hist(
   facet_args = list(nrow = 3)
 )
 ```
+
 ```{r,  echo=FALSE}
 set.seed(511) 
 # Filtrar 200 filas aleatorias
@@ -555,7 +648,8 @@ posterior3 =ggplot() +
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
   geom_point(aes(x = c(1.2,2.7, 7.95), y = c(2.3795,2.14, 0.5606 )), fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
- theme(plot.caption = element_text(hjust = 0.5))
+ theme(plot.caption = element_text(hjust = 0.5))+
+  theme_few()
 
 df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
                      b1=rep(df_sampled$beta1, each=200),
@@ -574,7 +668,8 @@ tdt_graf <- ggplot(df_aux)+
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
   geom_point(aes(x = 1.2, y = 32.8),  fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
   geom_point(aes(x = 2.7, y = 30.5),  fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
-  geom_point(aes(x = 7.95, y = 23.7),  fill = "purple", color = "#7e0b7d", size = 2, shape = 21)
+  geom_point(aes(x = 7.95, y = 23.7),  fill = "purple", color = "#7e0b7d", size = 2, shape = 21)+
+  theme_few()
 
 grid.arrange(posterior3, tdt_graf, ncol=2,
              botton = textGrob("Gráfico ?: Posteriors para tres datos",
@@ -582,18 +677,18 @@ grid.arrange(posterior3, tdt_graf, ncol=2,
                             just = "center"))
 ```
 
-Cada morgue cuenta con salas o cuartos destinados a la recepción y almacenamiento de los cuerpos. Cada una de ellas debe estar correctamente refrigerada y, en función de sus condiciones térmicas, se clasifican en dos tipos: de temperatura sobre cero y de temperatura bajo cero.!!!!!
- 
+Cada morgue cuenta con salas o cuartos destinados a la recepción y
+almacenamiento de los cuerpos. Cada una de ellas debe estar
+correctamente refrigerada y, en función de sus condiciones térmicas, se
+clasifican en dos tipos: de temperatura sobre cero y de temperatura bajo
+cero.!!!!!
+
 ```{r,  echo=FALSE}
 df_draws_3$t_muerte <- log(15/exp(df_draws_3$beta0))/(-df_draws_3$beta1)
 ggplot(df_draws_3)+
   aes(x = t_muerte)+
-  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)
+  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)+
+  theme_few()
 mean(df_draws_3$t_muerte)
 
 ```
- 
-
-
- 
- 
