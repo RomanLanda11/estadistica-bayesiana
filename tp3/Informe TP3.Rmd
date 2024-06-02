@@ -4,6 +4,11 @@ author: "Gazze - Irisarri - Landa"
 date: "2024-05-23"
 output: html_document
 ---
+```{r, include=FALSE, echo=FALSE}
+#| label = Parametros del informe
+modo_prod=FALSE
+knitr::opts_chunk$set(fig.align = "center")
+```
 
 # Introducción
 
@@ -58,7 +63,7 @@ library(rstan)
 library(bayesplot)
 ```
 
-```{r, echo=FALSE, error=FALSE, warning=FALSE}
+```{r echo=FALSE, error=FALSE, warning=FALSE}
 valores_r = c(-0.1,-0.15, -0.3, 0, 0.1, 0.3, 1)
 temp_desc <- function(valores_r){
   f <- c()
@@ -108,7 +113,7 @@ Para linealizar la ecuación aplicamos logaritmo natural a nuestra nueva variabl
 $$ln(T(t)-T_{amb})=ln(T_{diff})-rt$$
 Mostramos esto graficamente utilizando $r = 0.15$:
 
-```{r}
+```{r,  echo=FALSE}
 r = 0.15
 t <- seq(0, 24, length.out=200)
 f <- 14*exp(-r*t)
@@ -144,7 +149,7 @@ A continuación se presentan los hechos transcurridos en la noche del fallecimie
 ![Imagen 2: Cronología de los hechos](linea_tiempo.png)
 Para deducir un prior para el intercepto suponemos que la verdadera función que describe el descenso de temperatura post mortem ( **algor mortis** ) es aquella que presentamos con $r=0.15$. Luego, tomamos las medidciones de las 6:45 am y 8:15 am, las proyectamos a traves de nuestra función y obsevarmos cunatas horas transcurrieron desde la muerte.
 
-```{r}
+```{r,  echo=FALSE}
 valores_r = c(0.15)
 f <- c()
 r <- c()
@@ -210,7 +215,7 @@ Por último como $\sigma$ no puede tomar valores negativos, decidimos postular u
 
 Mostramos graficamente los prior mencionados:
  
-```{r}
+```{r,  echo=FALSE}
 t <- seq(from = -1, to = 24, length.out = 200)
 muestras_bo = rnorm(200,2.7, 0.05)
 muestras_b1 = rnorm(200,-0.15, 0.04)
@@ -234,7 +239,7 @@ tdt_graf <- ggplot(df_aux)+
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
   geom_hline(yintercept = 37.5, linetype = "dashed", color = "red")+
   geom_hline(yintercept = 36.5, linetype = "dashed", color = "red")
-tdt_graf
+#tdt_graf
 
 valores_rectas=muestras_bo + muestras_b1*t
 sigma = abs(rnorm(200,0,1))
@@ -257,7 +262,7 @@ g <- ggplot(df, aes(x = t, y = y)) +
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
  theme(plot.caption = element_text(hjust = 0.5))
 # Mostrar el gráfico
-g
+#g
 #TODO: Graficar las curcas correspondientes a estos priors
 
 grid.arrange(g, tdt_graf, ncol = 2)
@@ -265,7 +270,7 @@ grid.arrange(g, tdt_graf, ncol = 2)
 
 Basandonos en los priors mencionados y el supuesto de parámetros independientes, podemos obtener la distribución predictiva a priori a través de muestras. Para realizar esto se toman valores puntuales de t. 
 
-```{r}
+```{r,  echo=FALSE}
 generar_datos <- function(t) {
   muestras_bo <- rnorm(200, 2.7, 0.05)
   muestras_b1 <- rnorm(200, -0.15, 0.04) #trampa
@@ -300,21 +305,23 @@ ggplot(df_muestras, aes(x = y_pred)) +
 
 
 
-```{r}
+```{r,  echo=FALSE}
 #Modelo para un dato
-N <- 1
-y <- array(log(32.8-22),dim=1)
-x <- array(1.2,dim=1)
-stan_data <- list(N=1,x=x,y=y)
-stan_model <- stan( 
-    file ="modelo_tp.stan", 
-    chains = 4,          # Cantidad de cadenas
-    warmup = 100,
-    data = stan_data,
-    model_name = "modelo_tp",
-    seed = 12119       # Para que el resultado sea reproducible
-)
-save(stan_model, file="modelo1.RData")
+if(modo_prod){
+  N <- 1
+  y <- array(log(32.8-22),dim=1)
+  x <- array(1.2,dim=1)
+  stan_data <- list(N=1,x=x,y=y)
+  stan_model <- stan( 
+      file ="modelo_tp.stan", 
+      chains = 4,          # Cantidad de cadenas
+      warmup = 100,
+      data = stan_data,
+      model_name = "modelo_tp",
+      seed = 12119       # Para que el resultado sea reproducible
+  )
+  save(stan_model, file="modelo1.RData")
+}
 load("modelo1.RData")
 stan_model # TODO: beta1 da muy chico, está bien??
 
@@ -334,7 +341,7 @@ mcmc_hist(
 ```
 
 
-```{r}
+```{r,  echo=FALSE}
 set.seed(511) 
 t= seq(-1,24, length.out=200)
 # Filtrar 200 filas aleatorias
@@ -373,7 +380,7 @@ tdt_graf <- ggplot(df_aux)+
 grid.arrange(posterior1, tdt_graf, ncol=2)
 ```
 
-```{r}
+```{r,  echo=FALSE}
 #Vamos a calcular la distribución de t para la temperatura corporal de 37 grados
 
 df_draws_1$t_muerte <- log(15/exp(df_draws_1$beta0))/(-df_draws_1$beta1)
@@ -383,22 +390,24 @@ ggplot(df_draws_1)+
 mean(df_draws_1$t_muerte)
 ```
 
-```{r}
+```{r,  echo=FALSE}
 #Modelo con 2 datos
-N <- 2
-y <- array(c(log(32.8-22),log(30.5-22)),dim=2)
-x <- array(c(1.2,2.7),dim=2)
-stan_data <- list(N=2,x=x,y=y)
-stan_model_2 <- stan( 
-    file ="modelo_tp.stan", 
-    chains = 4,         # Cantidad de cadenas
-    warmup = 100,
-    data = stan_data,
-    model_name = "modelo_tp",
-    seed = 12119       # Para que el resultado sea reproducible
-)
-stan_model_2
-save(stan_model_2, file="modelo2.RData")
+if(modo_prod){
+  N <- 2
+  y <- array(c(log(32.8-22),log(30.5-22)),dim=2)
+  x <- array(c(1.2,2.7),dim=2)
+  stan_data <- list(N=2,x=x,y=y)
+  stan_model_2 <- stan( 
+      file ="modelo_tp.stan", 
+      chains = 4,         # Cantidad de cadenas
+      warmup = 100,
+      data = stan_data,
+      model_name = "modelo_tp",
+      seed = 12119       # Para que el resultado sea reproducible
+  )
+  stan_model_2
+  save(stan_model_2, file="modelo2.RData")
+}
 load("modelo2.RData")
 
 df_draws_2 <- as.data.frame(extract(stan_model_2))
@@ -416,7 +425,7 @@ mcmc_hist(
 )
 ```
 
-```{r}
+```{r,  echo=FALSE}
 set.seed(511) 
 # Filtrar 200 filas aleatorias
 df_sampled <- df_draws_2[sample(nrow(df_draws_2), 200), ]
@@ -454,7 +463,7 @@ tdt_graf <- ggplot(df_aux)+
 
 grid.arrange(posterior2,tdt_graf, ncol=2)
 ```
-```{r}
+```{r,  echo=FALSE}
 df_draws_2$t_muerte <- log(15/exp(df_draws_2$beta0))/(-df_draws_2$beta1)
 ggplot(df_draws_2)+
   aes(x = t_muerte)+
@@ -463,21 +472,23 @@ mean(df_draws_2$t_muerte)
 ```
 
 
-```{r}
-N <- 3
-y <- array(c(log(32.8-22),log(30.5-22),log(23.7-22)),dim=3)
-x <- array(c(1.2,2.7,7.95),dim=3)
-stan_data <- list(N=3,x=x,y=y)
-stan_model_3 <- stan( 
-    file ="modelo_tp.stan", 
-    chains = 4,         # Cantidad de cadenas
-    warmup = 100,
-    data = stan_data,
-    model_name = "modelo_tp",
-    seed = 12119       # Para que el resultado sea reproducible
-)
-stan_model_3
-save(stan_model_3, file="modelo3.RData")
+```{r,  echo=FALSE}
+if(modo_prod){
+  N <- 3
+  y <- array(c(log(32.8-22),log(30.5-22),log(23.7-22)),dim=3)
+  x <- array(c(1.2,2.7,7.95),dim=3)
+  stan_data <- list(N=3,x=x,y=y)
+  stan_model_3 <- stan( 
+      file ="modelo_tp.stan", 
+      chains = 4,         # Cantidad de cadenas
+      warmup = 100,
+      data = stan_data,
+      model_name = "modelo_tp",
+      seed = 12119       # Para que el resultado sea reproducible
+  )
+  stan_model_3
+  save(stan_model_3, file="modelo3.RData")
+}
 load("modelo3.RData")
 stan_model_3 # TODO: beta1 da muy chico, está bien??
 
@@ -495,7 +506,7 @@ mcmc_hist(
   facet_args = list(nrow = 3)
 )
 ```
-```{r}
+```{r,  echo=FALSE}
 set.seed(511) 
 # Filtrar 200 filas aleatorias
 df_sampled <- df_draws_2[sample(nrow(df_draws_3), 200), ]
@@ -534,7 +545,7 @@ grid.arrange(posterior3, tdt_graf, ncol=2)
 ```
 Cada morgue cuenta con salas o cuartos destinados a la recepción y almacenamiento de los cuerpos. Cada una de ellas debe estar correctamente refrigerada y, en función de sus condiciones térmicas, se clasifican en dos tipos: de temperatura sobre cero y de temperatura bajo cero.!!!!!
  
-```{r}
+```{r,  echo=FALSE}
 df_draws_3$t_muerte <- log(15/exp(df_draws_3$beta0))/(-df_draws_3$beta1)
 ggplot(df_draws_3)+
   aes(x = t_muerte)+
