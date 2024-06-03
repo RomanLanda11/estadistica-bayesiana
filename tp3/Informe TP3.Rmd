@@ -96,6 +96,8 @@ library(grid)
 library(StanHeaders)
 library(ggthemes)
 library(patchwork)
+library(kableExtra)
+library(dplyr)
 # Paletas de colores
 colores1 <- c("#da91d5","#663364", "#897289", "purple", "#7e0b7d", "#9e3d9d")
 colores2 <- c("#897289", "#897289", "#897289", "#663364", "#897289", "#663364")
@@ -412,7 +414,7 @@ ggplot(df_muestras, aes(x = y_pred)) +
   theme_few()+
   theme(plot.caption = element_text(hjust = 0.5),
           legend.title = element_text(face = "bold"),
-          legend.text = element_text(size = 10) )r
+          legend.text = element_text(size = 10) )
 ```
 
 En el gráfico 5 podemos apreciar las distribuciones a priori de la
@@ -479,7 +481,7 @@ hist1 <- mcmc_hist(
 hist1
 ```
 En el gráfico 6, vemos que las distribuciones a priori se modifican muy levemente, esto era de esperarse ya que solo tenemos un dato.
-A continuación observamos las rectas estimadas a posteriori para la $log(T(t)-T_{amb})$ y para $T(t)$
+A continuación observamos las rectas estimadas a posteriori para la $log(T(t)-T_{amb})$ y para $T(t)$.
 
 ```{r,  echo=FALSE}
 set.seed(511) 
@@ -521,7 +523,39 @@ tdt_graf <- ggplot(df_aux)+
 posterior1+tdt_graf+plot_annotation(caption = "Gráfico 7: Posteriors luego de una observación")&
   theme(plot.caption = element_text(hjust = 0.5))
 ```
-Vemos en el gráfico 7 que el intercepto decrece levemente en promedio, en comparación con el gráfico 4 y que el punto observado se ajusta a las rectas. Tambien vemos aqui que la temperatura corporal se encuentra entre 36 y 38 grados para valores de tiempo menores a
+Vemos en el gráfico 7 que el intercepto decrece levemente en promedio, en comparación con el gráfico 4 y que el punto observado se ajusta a las rectas. Tambien vemos aquí que la temperatura corporal se encuentra entre 36 y 38 grados para valores de tiempo menores a cero. A continuación con más proufundidad:
+
+
+```{r,  echo=FALSE}
+#Vamos a calcular la distribución de t para la temperatura corporal de 37 grados
+
+df_draws_1$t_muerte <- log(15/exp(df_draws_1$beta0))/(-df_draws_1$beta1)
+
+ggplot(df_draws_1) +
+  aes(x = t_muerte) +
+  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7) +
+  ylim(c(0, 2000))+
+  scale_x_continuous(limits = c(-4, 4), breaks = seq(-4, 4, by = 1)) +
+  labs(
+    x = "Horas desde las 4:30am",
+    y = "Frecuencia",
+    caption = "Gráfico 8: distribución a posteriori del tiempo cuando la temperatura corporal es 37°C"
+  ) +
+  theme_few() +
+  theme(
+    plot.caption = element_text(hjust = 0.5),
+    plot.margin = unit(c(1, 1, 1.5, 1.5), "cm")
+  ) +
+  annotate("text", x = 3, y = 1900, 
+           label = "Media = 0.225", hjust = 1) +
+  geom_point(aes(x = 0.225, y = 0), color = "#7e0b7d", size = 3)
+
+#mean(df_draws_1$t_muerte)
+quantile(df_draws_1$t_muerte, probs = c(0.025, 0.975))
+```
+Observamos la distribución de los tiempos a posteriori cuando la temperatura corporal de Sergio es $37°C$. Podemos mencionar que la hora de muerte estimada de Sergio entre -1.2 horas antes de las 4:30am y 1.7 horas después, es decir que el verdadero horario de muerte estará entre  las 3:18am y 6:12am. El valor medio de esta distribución es 0.225, lo que indica que el horario promedio de muerte fue a las 4:43am.
+
+A continuación presentamos las medidas diagnóstico para corroborar que el proceso realizado es adecuado.
 
 ```{r,  echo=FALSE}
 df_draws_1 <- as.data.frame(extract(stan_model))
@@ -530,31 +564,20 @@ color_scheme_set(colores1)
 mcmc_trace(
   stan_model,
   pars = c("beta0", "beta1", "sigma"),
-#  facet_args = list(nrow = 3)
   facet_args = list(nrow = 2, labeller = label_parsed))
-#  labs(caption = "Gráfico 6: trace plot de las muestras") +
-#    theme(plot.caption = element_text(hjust = 0.5)))
-dens1 <- mcmc_dens_overlay(stan_model, pars = c("beta0", "beta1", "sigma"))
+  labs(caption = "Gráfico 9: Trace plot")+
+  theme_few()+
+  theme(plot.caption = element_text(hjust = 0.5))
+
+dens1 <- mcmc_dens_overlay(stan_model, pars = c("beta0", "beta1", "sigma"))+
+  labs(caption = "Gráfico 10: Distribuciones para las distintas cadenas")+
+  theme_few()+
+  theme(plot.caption = element_text(hjust = 0.5))
 dens1
 ```
 
 
 
-
-```{r,  echo=FALSE}
-#Vamos a calcular la distribución de t para la temperatura corporal de 37 grados
-
-df_draws_1$t_muerte <- log(15/exp(df_draws_1$beta0))/(-df_draws_1$beta1)
-
-ggplot(df_draws_1)+
-  aes(x = t_muerte)+
-  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)+
-  theme_few()
-  # #geom_label(aes(x = 0, y = 0,
-  #               label = "Media = 0.225"),
-  #           stat = "unique")
-mean(df_draws_1$t_muerte)
-```
 
 ```{r,  echo=FALSE}
 #Modelo con 2 datos
