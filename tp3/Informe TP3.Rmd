@@ -557,6 +557,8 @@ Observamos la distribución de los tiempos a posteriori cuando la temperatura co
 
 A continuación presentamos las medidas diagnóstico para corroborar que el proceso realizado es adecuado.
 
+# Nos quedamos aca
+
 ```{r,  echo=FALSE}
 df_draws_1 <- as.data.frame(extract(stan_model))
 
