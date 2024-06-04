@@ -25,7 +25,7 @@ En la fase inicial, cuando se sabe poco sobre las máquinas, podría ser más pr
 
 En nuestro escenario, no hay costo para jugar, lo que significa que no pierdes nada al jugar con una máquina. Es decir, si obtenemos una combinación ganadora, sumamos una unidad monetaria, pero si no, no perdemos nada. En este estudio se realizará un año de experimentación continua (366 días), dedicando cada día a una sola máquina.
 
-![Adultos mayores usufructuando las diferentes estrategias](adultos_jugando.jpg)
+![Adultos mayores usufructuando las diferentes estrategias](img/adultos_jugando.jpg)
 
 # Objetivos:
 

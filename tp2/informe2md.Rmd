@@ -27,7 +27,7 @@ execute:
 
   \vfill
 
-  \includegraphics[width=0.4\textwidth]{logo_universidad}
+  \includegraphics[width=0.4\textwidth]{img/logo_universidad}
 
   \vspace{0.8cm}
 

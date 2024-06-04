@@ -37,7 +37,7 @@ Contreras, bañado en un charco de sangre. Ante esta escena, Guido se
 enfrenta a un desafío crucial: determinar la hora en que se produjo la
 muerte.
 
-![Imagen 1: Sergio minutos antes de su muerte](Imagen1.jpeg)
+![Imagen 1: Sergio minutos antes de su muerte](img/Imagen1.jpeg)
 
 # Objetivos
 
@@ -216,7 +216,7 @@ pasaron desde la muerte. A continuación se presentan los hechos
 transcurridos en la noche del fallecimiento de Sergio para ingresar
 estos datos en el modelo.
 
-![Imagen 2: Cronología de los hechos](linea_tiempo.png) Para deducir un
+![Imagen 2: Cronología de los hechos](img/linea_tiempo.png) Para deducir un
 prior para el intercepto suponemos que la verdadera función que describe
 el descenso de temperatura post mortem ( *algor mortis* ) es aquella que
 presentamos con $r=0.15$. Luego, tomamos las medidciones de las 6:45 am
