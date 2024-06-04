@@ -473,7 +473,7 @@ if(modo_prod){
   save(stan_model, file="modelo1.RData")
 }
 load("modelo1.RData")
-stan_model
+#stan_model
 ```
 
 ```{r,  echo=FALSE, warning=FALSE}
@@ -688,7 +688,7 @@ hist2 <- mcmc_hist(
   theme_few() +
   theme(plot.caption = element_text(hjust = 0.5))
 hist2
-stan_model_2
+#stan_model_2
 ```
 En el gráfico 11, vemos nuevamente que las distribuciones a posteriori de los
 parámetros se modifican levemente en relación a nuestras creencias a
@@ -983,3 +983,15 @@ dens3
 
 
 # Conclusiones
+
+En este trabajo, hemos aplicado métodos de estadística bayesiana para estimar la hora de muerte de Sergio Contreras, analizando la evolución de su temperatura corporal post mortem. Para nuestro modelo, establecimos distribuciones a priori informativas para el intercepto y la pendiente de la recta que representa el logaritmo natural de la diferencia de temperatura entre el cuerpo y el ambiente, así como para el desvío estándar. Estas distribuciones a priori fueron necesarias debido a la cantidad limitada de observaciones disponibles y para incorporar nuestro conocimiento previo sobre la tasa de enfriamiento del cuerpo humano y la temperatura corporal típica en vida. Utilizando Rstan, pudimos ajustar y actualizar nuestro modelo lineal bayesiano en función de las observaciones obtenidas. Esto nos permitió incorporar variación en la temperatura corporal y actualizar nuestras creencias a priori con los datos observados.
+
+A partir de las mediciones de temperatura, estimamos que la hora de muerte ocurrió alrededor de las 4:05 am, con un intervalo de credibilidad del 95% que va de 2:48 am a 5:16 am, basándonos en las dos primeras observaciones. La tercera medición mostró una desviación significativa debido al enfriamiento en la morgue, lo que afectó las estimaciones. Consideramos la posibilidad de que factores como fiebre alta al momento de la muerte o enfermedades crónicas pudieran influir en el proceso de enfriamiento del cuerpo, lo que implicaría ajustes en nuestro modelo para reflejar una temperatura inicial más alta o una tasa de enfriamiento más rápida. Este análisis demuestra la efectividad de los métodos bayesianos para integrar información previa y posterior, incluso en situaciones con datos limitados.
+
+## Ronda de prensa...
+
+- Periodista: "Buenas tardes, la familia de Sergio quiere respuesta, necesita respuesta. ¿Pueden darnos con certeza el horario de muerte de Contreras?"
+
+- Guido: "Buneas tardes. Desde el equipo de la policía científica de Córdoba, podemos declarar que el día de la fecha, en la localidad de Salsipuedes, ocurrió un lamentable incidente. Tras recibir un llamado de emergencia a las 5:33 hs, la policía se trasladó al lugar y constató la presencia del cuerpo sin vida de Sergio Contreras, masculino,  45 años, en su domicilio. Según nuestras investigaciones y utilizando métodos avanzados de estadística bayesiana, hemos determinado que la muerte de Sergio Contreras ocurrió aproximadamente a las 4:05 am, con un intervalo de confianza entre las 2:48 am y las 5:16 am. La causa de la muerte fue una herida de arma blanca que provocó una hemorragia fatal. 
+Es importante destacar que nuestras estimaciones son producto de un análisis exhaustivo de las mediciones de temperatura corporal, y aunque se consideraron diversas variables y condiciones ambientales, nuestras conclusiones reflejan el momento más probable del deceso del Sr. Contreras. Seguiremos trabajando para esclarecer todos los detalles de este trágico suceso.
+Gracias..."
