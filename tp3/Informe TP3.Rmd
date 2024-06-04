@@ -96,6 +96,8 @@ library(grid)
 library(StanHeaders)
 library(ggthemes)
 library(patchwork)
+library(kableExtra)
+library(dplyr)
 # Paletas de colores
 colores1 <- c("#da91d5","#663364", "#897289", "purple", "#7e0b7d", "#9e3d9d")
 colores2 <- c("#897289", "#897289", "#897289", "#663364", "#897289", "#663364")
@@ -412,7 +414,7 @@ ggplot(df_muestras, aes(x = y_pred)) +
   theme_few()+
   theme(plot.caption = element_text(hjust = 0.5),
           legend.title = element_text(face = "bold"),
-          legend.text = element_text(size = 10) )r
+          legend.text = element_text(size = 10) )
 ```
 
 En el gráfico 5 podemos apreciar las distribuciones a priori de la
@@ -434,10 +436,12 @@ medias <- c(mean(df_muestras$y_pred[df_muestras$t==0]),
             mean(df_muestras$y_pred[df_muestras$t==24]))
 temp <- round(exp(medias)+22, 3)
 df_tabla <- data.frame(tiempos, round(medias, 3),temp)
-colnames(df_tabla) <- c("Tiempo post mortem", "Media de Y predicho", "Temperatura corporal predicha promedio")
+colnames(df_tabla) <- c("Hs post mortem", "Media de Y predicho", "Temperatura predicha promedio")
 kable(df_tabla) %>% 
-  kable_styling() %>% 
+  kable_styling(position = "center",full_width = FALSE) %>% 
+  row_spec(0, bold = T, background = "#897289", color = "black") %>% 
   footnote(general = "Tabla 1: temperatura corporal predicha según tiempo", general_title = "")
+
 #TODO: sacar grid arrange y agregar caption en uno de lo s dos graficos
 ```
 Utilizando la estadística bayesiana, podemos actualizar nuestras creencias a priori a medida que obtengamos nueva evidencia. Aplicaremos modelos lineales normales bayesianos para estimar la hora de muerte de Sergio Contreras. Estos modelos nos ayudarán a relacionar la temperatura corporal con el tiempo transcurrido desde la muerte.
@@ -478,12 +482,13 @@ hist1 <- mcmc_hist(
   theme(plot.caption = element_text(hjust = 0.5))
 hist1
 ```
-En el gráfico 6, vemos que las distribuciones a priori se modifican muy levemente, esto era de esperarse ya que solo tenemos un dato.
-A continuación observamos las rectas estimadas a posteriori para la $log(T(t)-T_{amb})$ y para $T(t)$
+*Corrección 1*En el gráfico 6, vemos que las distribuciones a posteriori de los parámetros se modifican muy levemente en relación a nuestras creencias a priori, esto era de esperarse ya que solo tenemos un dato.
+A continuación observamos las rectas estimadas a posteriori para la $log(T(t)-T_{amb})$ y para $T(t)$.
 
 ```{r,  echo=FALSE}
 set.seed(511) 
-t= seq(-1,24, length.out=200)
+t= seq(-3,24, length.out=200)
+df_draws_1 <- as.data.frame(extract(stan_model))# Corrección 2
 # Filtrar 200 filas aleatorias
 df_sampled <- df_draws_1[sample(nrow(df_draws_1), 200), ]
 posterior1= ggplot() +
@@ -521,8 +526,62 @@ tdt_graf <- ggplot(df_aux)+
 posterior1+tdt_graf+plot_annotation(caption = "Gráfico 7: Posteriors luego de una observación")&
   theme(plot.caption = element_text(hjust = 0.5))
 ```
-Vemos en el gráfico 7 que el intercepto decrece levemente en promedio, en comparación con el gráfico 4 y que el punto observado se ajusta a las rectas. Tambien vemos aqui que la temperatura corporal se encuentra entre 36 y 38 grados para valores de tiempo menores a
+*Sugerencia 1*: Que el eje x arranque de -3 porque cuando la temperaturo es de 37 grados puede tomar ese valor
+Vemos en el gráfico 7 que el intercepto decrece levemente en promedio, en comparación con el gráfico 4 y que el punto observado se ajusta a las rectas. Tambien vemos aquí que la temperatura corporal se encuentra entre 36 y 38 grados para valores de tiempo menores a cero. A continuación con vemos esto con *Corrección 3*más profundidad:
 
+
+```{r,  echo=FALSE}
+#Vamos a calcular la distribución de t para la temperatura corporal de 37 grados
+
+df_draws_1$t_muerte <- log(15/exp(df_draws_1$beta0))/(df_draws_1$beta1)#Sugerencia 2: explicar este razonamiento
+
+ggplot(df_draws_1) +
+  aes(x = t_muerte) +
+  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7) +
+  ylim(c(0, 2000))+
+  scale_x_continuous(limits = c(-4, 4), breaks = seq(-4, 4, by = 1)) +
+  labs(
+    x = "Horas desde las 4:30am",
+    y = "Frecuencia",
+    caption = "Gráfico 8: distribución a posteriori del tiempo cuando la temperatura corporal es 37°C"
+  ) +
+  theme_few() +
+  theme(
+    plot.caption = element_text(hjust = 0.5),
+    plot.margin = unit(c(1, 1, 1.5, 1.5), "cm")
+  ) +
+  annotate("text", x = 3, y = 1900, 
+           label = "Media = -0.225 hs", hjust = 1) +
+  geom_point(aes(x = -0.225, y = 0), color = "#7e0b7d", size = 3)
+
+mean(df_draws_1$t_muerte)
+quantile(df_draws_1$t_muerte, probs = c(0.025, 0.975))
+```
+Observamos la distribución de los tiempos a posteriori cuando la temperatura corporal de Sergio es $37°C$. Podemos mencionar que la hora de muerte estimada de Sergio entre -1.7 horas antes de las 4:30am y 1.2 horas después, es decir que el verdadero horario de muerte estará entre  las 2:48am y 5:42am. El valor medio de esta distribución es -0.225, lo que indica que el horario promedio de muerte fue a las 4:17am.
+
+A continuación presentamos las **medidas diagnóstico** para corroborar que el proceso realizado es adecuado, es decir,queremos analizar como se comportan las cadenas obtenidas a través de MCMC.
+
+# Nos quedamos aca
+#Sigue simon
+
+*Medidas numéricas*
+```{r}
+
+Neff= c(2956,6853,714)
+Rhat= c(1,1,1.01)
+Parametro = c("$\\beta_0$", "$\\beta_1$", "$\\sigma$")
+df_tabla1 <- data.frame(Parámetro=Parametro, Neff, Rhat)
+kable(df_tabla1) %>% 
+  kable_styling(position = "center",full_width = FALSE) %>% 
+  row_spec(0, bold = T, background = "#897289", color = "black") %>% 
+  footnote(general = "Tabla 2: medidas diagnóstico", general_title = "")
+```
+
+Observamos que los valores del $\hat{R}$ para los distintos parámetros presentan valores que practicamente no difieren de 1, lo que nos dice que las distintas cadenas convergen.
+Mientras que analizando el $\ N_{eff}$= **número efectivo de muestras** vemos que obtenemos a cuantas muestras independientes equivalen nuestras 7600 muestras, en todos los parámetros contamos con al menos 700 muestras independientes por lo que podemos concluir que serán una buena representación del posterior.
+
+
+*Trace plots*
 ```{r,  echo=FALSE}
 df_draws_1 <- as.data.frame(extract(stan_model))
 
@@ -530,31 +589,30 @@ color_scheme_set(colores1)
 mcmc_trace(
   stan_model,
   pars = c("beta0", "beta1", "sigma"),
-#  facet_args = list(nrow = 3)
   facet_args = list(nrow = 2, labeller = label_parsed))
-#  labs(caption = "Gráfico 6: trace plot de las muestras") +
-#    theme(plot.caption = element_text(hjust = 0.5)))
-dens1 <- mcmc_dens_overlay(stan_model, pars = c("beta0", "beta1", "sigma"))
+  labs(caption = "Gráfico 9: Trace plot")+
+  theme_few()+
+  theme(plot.caption = element_text(hjust = 0.5))
+
+```
+
+Se observa un patrón de ruido blanco a través de las muestras, esto es un buen indicio del comportamiento de nuestro algoritmo de muestreo.
+
+*Densidad de los parámtros para las distintas cadenas*
+
+```{r}
+
+dens1 <- mcmc_dens_overlay(stan_model, pars = c("beta0", "beta1", "sigma"))+
+  labs(caption = "Gráfico 10: Distribuciones para las distintas cadenas")+
+  theme_few()+
+  theme(plot.caption = element_text(hjust = 0.5))
 dens1
 ```
+Observamos que para cada uno de nuestros parámetros, las densidades calculadas con distintas cadenas no presentan grandes diferencias, lo cual nos llevaría a pensar que estas convergieron y que el proceso de muestreo pareciera ser bueno.
 
+Continuamos nuestro análisis incorporando la información obtenida hasta las 10am, es decir, contaremos con una nueva observación. Procedemos a obtener los nuevos posteriors y sus respectivas muestras, y mediante ellos realizamos la estimación de la hora de muerte de Sergio.
 
-
-
-```{r,  echo=FALSE}
-#Vamos a calcular la distribución de t para la temperatura corporal de 37 grados
-
-df_draws_1$t_muerte <- log(15/exp(df_draws_1$beta0))/(-df_draws_1$beta1)
-
-ggplot(df_draws_1)+
-  aes(x = t_muerte)+
-  geom_histogram(bins = 20, fill = "#897289", color = "black", alpha = 0.7)+
-  theme_few()
-  # #geom_label(aes(x = 0, y = 0,
-  #               label = "Media = 0.225"),
-  #           stat = "unique")
-mean(df_draws_1$t_muerte)
-```
+#Termina simon
 
 ```{r,  echo=FALSE}
 #Modelo con 2 datos
