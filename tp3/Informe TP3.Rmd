@@ -2,17 +2,27 @@
 title: "Trabajo Práctico 3"
 author: "Gazze - Irisarri - Landa"
 date: "2024-05-23"
-output: html_document
-editor_options: 
-  markdown: 
-    wrap: 72
+output: 
+  html_document:
+     toc: false 
+  pdf_document:
+    toc: true         # Activa el índice
+    toc_depth: 2 
 ---
 
 ```{r, include=FALSE, echo=FALSE}
 #| label = Parametros_del_informe
 modo_prod=FALSE
-knitr::opts_chunk$set(fig.align = "center")
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  out.width = '100%',      # Ajusta el tamaño de las imágenes
+  fig.align = 'center',   # Centra las imágenes
+  fig.show = 'hold'
+)
 ```
+
+
 
 # Introducción
 
@@ -20,7 +30,7 @@ Sumergirse en el mundo de la estadística puede llevarnos a lugares
 inesperados, desafiando nuestras percepciones y llevándonos a explorar
 terrenos desconocidos. En esta ocasión, nos sumergimos en un caso
 peculiar que fusiona el rigor analítico con el misterio de una escena
-del crimen.
+del crimen.   
 
 Nuestra historia se centra en Guido, un apasionado estudiante de
 estadística cuyo amor por la resolución de enigmas lo llevó desde las
@@ -42,7 +52,10 @@ tarea de ayudar a Guido a determinar la hora exacta de la muerte de
 Sergio Contreras y, así, acercarnos un paso más hacia la resolución de
 este misterio.
 
-![Imagen 1: Sergio minutos antes de su muerte](img/Imagen1.jpeg)
+<div style="text-align: center;">
+  ![Imagen 1: Sergio minutos antes de su muerte](img/Imagen1.jpeg)
+</div>
+
 
 # Objetivos
 
@@ -103,6 +116,7 @@ library(ggthemes)
 library(patchwork)
 library(kableExtra)
 library(dplyr)
+
 # Paletas de colores
 colores1 <- c("#da91d5","#663364", "#897289", "purple", "#7e0b7d", "#9e3d9d")
 colores2 <- c("#897289", "#897289", "#897289", "#663364", "#897289", "#663364")
@@ -460,7 +474,34 @@ Utilizando la estadística bayesiana, podemos actualizar nuestras
 creencias a priori a medida que obtengamos nueva evidencia. Aplicaremos
 modelos lineales normales bayesianos para estimar la hora de muerte de
 Sergio Contreras. Estos modelos nos ayudarán a relacionar la temperatura
-corporal con el tiempo transcurrido desde la muerte.
+corporal con el tiempo transcurrido desde la muerte. 
+Utilizamos RStan para ajustar el modelo:
+
+```{r, echo=FALSE, eval = TRUE}
+cat("
+  data {
+    int<lower=0> N;
+    vector[N] y;
+    vector[N] x;
+  }
+  
+  // Definimos los parámetros, de qué tipo son, y sus cotas
+  parameters {
+    real beta0;
+    real beta1;
+    real<lower=0> sigma;
+  }
+  
+  // Pasamos el modelo
+  model {
+    beta0 ~ normal(2.7, 0.1);
+    beta1 ~ normal(-0.15, 0.04);
+    sigma ~ normal(0, 1);
+    y ~ normal(beta0 + beta1 * x, sigma);
+  }
+")
+```
+
 
 Para la primer parte de esta sección tendremos en cuenta la información
 recolectada hasta las 7 de la mañana. A través de esta, calcularemos
@@ -604,7 +645,7 @@ A continuación presentamos las **medidas diagnóstico** para corroborar
 que el proceso realizado es adecuado, es decir, analizar como se
 comportan las cadenas obtenidas a través de MCMC.
 
-*Medidas numéricas*
+*Medidas numéricas:*
 
 ```{r, echo=FALSE, warning=FALSE}
 
@@ -626,7 +667,7 @@ muestras independientes equivalen nuestras 7600 muestras, en todos los
 parámetros contamos con al menos 700 muestras independientes por lo que
 podemos concluir que serán una buena representación del posterior.
 
-*Trace plots*
+*Trace plots:*
 
 ```{r,  echo=FALSE, warning=FALSE}
 df_draws_1 <- as.data.frame(extract(stan_model))
@@ -644,7 +685,7 @@ mcmc_trace(
 Se observa un patrón de ruido blanco a través de las muestras, esto es
 un buen indicio del comportamiento de nuestro algoritmo de muestreo.
 
-*Densidad de los parámtros para las distintas cadenas*
+*Densidad de los parámtros para las distintas cadenas:*
 
 ```{r, echo=FALSE , warning=FALSE}
 
@@ -799,7 +840,7 @@ A continuación presentamos las **medidas diagnóstico** para corroborar
 que el proceso realizado es adecuado, es decir, analizar como se
 comportan las cadenas obtenidas a través de MCMC.
 
-*Medidas numéricas*
+*Medidas numéricas:*
 
 ```{r, echo=FALSE, warning=FALSE}
 Neff= c(1001,3055,273)
@@ -821,7 +862,7 @@ comparado con la muestra anterior, en todos los parámetros contamos con
 al menos 250 muestras independientes por lo que podemos concluir que
 serán una buena representación del posterior.
 
-*Trace plots*
+*Trace plots:*
 
 ```{r,  echo=FALSE, warning=FALSE}
 df_draws_2 <- as.data.frame(extract(stan_model_2))
@@ -840,7 +881,7 @@ Nuevamente observamos un patrón de ruido blanco a través de las
 muestras, lo que indica que el comportamiento de nuestro algoritmo es
 bueno.
 
-*Densidad de los parámtros para las distintas cadenas*
+*Densidad de los parámtros para las distintas cadenas:*
 
 ```{r, echo=FALSE, warning=FALSE}
 
@@ -1001,7 +1042,7 @@ A continuación presentamos las **medidas diagnóstico** para corroborar
 que el proceso realizado es adecuado, es decir, analizar como se
 comportan las cadenas obtenidas a través de MCMC.
 
-*Medidas numéricas*
+*Medidas numéricas:*
 
 ```{r, echo=FALSE, warning=FALSE}
 Neff= c(837,106,208)
@@ -1021,7 +1062,7 @@ equivalente a 100 muestras independientes o más en cada caso. El
 $\hat{R}$ sigue siendo menor a $1.1$, por lo que se cumplen los
 criterios de convergencia ya mencionados.
 
-*Trace plots*
+*Trace plots:*
 
 ```{r,  echo=FALSE, warning=FALSE}
 df_draws_3 <- as.data.frame(extract(stan_model_3))
@@ -1039,7 +1080,7 @@ mcmc_trace(
 Vemos el patrón de ruido blanco a través de las muestras al igual que en
 los otros casos.
 
-*Densidad de los parámtros para las distintas cadenas*
+*Densidad de los parámtros para las distintas cadenas:*
 
 ```{r, echo=FALSE, warning=FALSE}
 
