@@ -37,6 +37,11 @@ Contreras, bañado en un charco de sangre. Ante esta escena, Guido se
 enfrenta a un desafío crucial: determinar la hora en que se produjo la
 muerte.
 
+Como estudiantes de estadística, nos embarcamos en este enigma con la
+tarea de ayudar a Guido a determinar la hora exacta de la muerte de
+Sergio Contreras y, así, acercarnos un paso más hacia la resolución de
+este misterio.
+
 ![Imagen 1: Sergio minutos antes de su muerte](img/Imagen1.jpeg)
 
 # Objetivos
@@ -67,7 +72,7 @@ ley: $$\frac{dT(t)}{dt}=r[T_{amb}-T(t)]$$ donde:
 -   $T(t)$ es la función (en principio desconocida) que describe la
     temperatura del cuerpo en función del tiempo.
 
-Se puede demostrar que Una función que satisface esa ecuación es
+Se puede demostrar que una función que satisface esa ecuación es
 $T(t)=T_{amb}+(T_i-T_{amb})e^{-rt}$
 
 $$\frac{dT(t)}{dt}=\frac{d}{dt}(T(t)=T_{amb}+(T_i-T_{amb})e^{-rt})=$$
@@ -127,12 +132,14 @@ g1 <- ggplot(data = df) +
     caption = "Gráfico 1: Temperatura corporal post mortem para distintos valores de r"
   ) +
   scale_color_manual(
-    values = c("#982597", "#897289", "purple", "#7e0b7d", "#af95d2","black", "#5f3ae0")
-  ) +
-  #theme_minimal() +  # Utilizar un tema minimalista para una apariencia más limpia
-  theme(
-    plot.caption = element_text(hjust = 0.5)
-  )+theme_few()
+    values = c("#0000FF","#5f3ae0","#4B0082","purple","#da91d5","black", "#FF00FF")
+  )+
+  geom_hline(yintercept = 23, linetype = "dashed", color = "#af95d2") +
+  theme_grey()+
+  theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0)
+  )
+ 
   g1
 }
 temp_desc(valores_r)
@@ -192,13 +199,14 @@ g4 <- ggplot(data = df2) +
     values = c("#5f3ae0", "#7e0b7d"),
     labels = c(expression(T(t) - T[amb]), expression(log(T(t) - T[amb])))
   ) +
-  #theme_minimal() +  # Utilizar un tema minimalista para una apariencia más limpia
+  theme_grey()+
   theme(
-    plot.caption = element_text(hjust = 0.5),
-    legend.title = element_text(face = "bold"),  # Poner el título de la leyenda en negrita
-    legend.text = element_text(size = 10)        # Ajustar el tamaño del texto de la leyenda
-  )+
-  theme_few()
+    plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0),
+    legend.title = element_text(face = "bold"),  
+    legend.text = element_text(size = 10))      
+  
+
 g4
 ```
 
@@ -219,9 +227,9 @@ estos datos en el modelo.
 ![Imagen 2: Cronología de los hechos](img/linea_tiempo.png) Para deducir
 un prior para el intercepto suponemos que la verdadera función que
 describe el descenso de temperatura post mortem ( *algor mortis* ) es
-aquella que presentamos con $r=0.15$. Luego, tomamos las medidciones de
+aquella que presentamos con $r=0.15$. Luego, tomamos las mediciones de
 las 6:45 am y 8:15 am, las proyectamos a traves de nuestra función y
-obsevarmos cuantas horas transcurrieron desde la muerte.
+obsevarmos cuántas horas transcurrieron desde la muerte.
 
 ```{r,  echo=FALSE, warning=FALSE}
 valores_r = c(0.15)
@@ -250,22 +258,24 @@ g1 <- ggplot(data = df) +
     geom_hline(yintercept = 30.5, linetype = "dashed", color = "#af95d2") +
     geom_vline(xintercept = (log((32.8-22)/15)/-0.15), linetype = "dashed", color = "#7e0b7d") +
     geom_vline(xintercept = (log((30.5-22)/15)/-0.15), linetype = "dashed", color = "#af95d2") +
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5),
+  theme_grey()+
+  theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0),
           legend.title = element_text(face = "bold"),
           legend.text = element_text(size = 10) )
 print(g1)
+
   #log((32.8-22)/15)/-0.15
   #log((30.5-22)/15)/-0.15
 ```
 
-Viendo esto sabemos que a las 6:45 am, horario en el que se constató una
-temperatura corporal post mortem de $32,8°C$ , el cuerpo deberia llevar
-$2.19$ horas sin vida (lo que equivale a 2 hs y 12 minutos) y a las 8:45
-am, horario en el que se constató una temperatura post mortem de
-$30,5°C$ , el cuerpo de Sergio llevaba 3,786 horas sin vida (lo que
-equivale a 3 hs y 47 minutos ). Por lo expuesto pensamos que la hora de
-muerte puede estas alrededor de las 4:30 am.
+Viendo el Gráfico 3 sabemos que a las 6:45 am, horario en el que se
+constató una temperatura corporal post mortem de $32,8°C$ , el cuerpo
+deberia llevar $2.19$ horas sin vida (lo que equivale a 2 hs y 12
+minutos) y a las 8:45 am, horario en el que se constató una temperatura
+post mortem de $30,5°C$ , el cuerpo de Sergio llevaba 3,786 horas sin
+vida (lo que equivale a 3 hs y 47 minutos ). Por lo expuesto pensamos
+que la hora de muerte puede estas alrededor de las 4:30 am.
 
 En este razonamieto no tenemos en cuenta la temperatura constatada a las
 13:30 hs ya que suponemos que, al llegar a la morgue (9:55 am), el
@@ -277,9 +287,11 @@ Planteamos el modelo:
 
 $Y_i| \beta_0, \beta_1, \sigma \sim N (\mu_i, \sigma)$
 
-$\mu_i = \beta_0 + \beta_1t$ $\beta_0 \sim N(\mu=2.7, \sigma=0.05)$
+$\mu_i = \beta_0 + \beta_1t$
 
-$\beta_1 \sim N(\mu=-0.13, \sigma_2=0.03)$
+$\beta_0 \sim N(\mu=2.7, \sigma=0.05)$
+
+$\beta_1 \sim N(\mu=-0.15, \sigma_2=0.03)$
 
 $\sigma \sim N^+ (\theta_2=1)$
 
@@ -293,7 +305,8 @@ Donde:
 
 -   $\sigma$: desvío estándar de $Y_i$
 
--   $t$: horas transcurridos desde la muerte de Sergio Contreras.
+-   $t$: horas transcurridas desde las 4:30 am (hora aproximada 'a
+    priori' de muerte).
 
 Hacemos el supuesto de que los parámetros son independientes, por lo que
 podemos postular un prior marginal para cada uno. Además pensamos que la
@@ -341,11 +354,12 @@ tdt_graf <- ggplot(df_aux)+
   geom_rect(aes(ymin=36, ymax=38, xmin=-3, xmax=24),fill = "purple", alpha=0.01)+
   geom_line(alpha = 0.1, color = "gray2")+
   theme(legend.position = "none")+
+   coord_cartesian(xlim = c(-2, 24), ylim = c(20, 50))+
   labs(x = expression("Horas desde las 4:30am"), y = expression(T(t)))+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
-  theme_few()
+  theme_grey()
 #tdt_graf
 
 valores_rectas=muestras_bo + muestras_b1*t
@@ -369,10 +383,11 @@ g <- ggplot(df, aes(x = t, y = y)) +
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +  # Añade valores al eje x
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +  # Añade valores al eje y
  theme(plot.caption = element_text(hjust = 0.5))+
-  theme_few()
+  theme_grey()
 # Mostrar el gráfico
 g+tdt_graf+plot_annotation(caption = "Gráfico 4: Priors")&
-  theme(plot.caption = element_text(hjust = 0.5))
+  theme(plot.caption = element_text(hjust = 0))
+
 
 ```
 
@@ -405,14 +420,12 @@ ggplot(df_muestras, aes(x = y_pred)) +
   labs(
     x = "Predicciones",
     y = "Frecuencia",
-    title = "Distribución de las predicciones para diferentes tiempos",
-    caption = "Gráfico 5: Histograma de Y predicho para t = 0, 6, 12 y 24"
+    caption = "Gráfico 5: Distribución de Y predicho a priori para t = 0, 6, 12 y 24"
   ) +
   scale_x_continuous(breaks = seq(floor(min(df_muestras$y_pred)),
                                   ceiling(max(df_muestras$y_pred)), by = 1))+  # Añadir cortes de a 1 en el eje x
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5),
-          legend.title = element_text(face = "bold"),
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0),
           legend.text = element_text(size = 10) )
 ```
 
@@ -441,7 +454,6 @@ kable(df_tabla) %>%
   row_spec(0, bold = T, background = "#897289", color = "black") %>% 
   footnote(general = "Tabla 1: temperatura corporal predicha según tiempo", general_title = "")
 
-#TODO: sacar grid arrange y agregar caption en uno de lo s dos graficos
 ```
 
 Utilizando la estadística bayesiana, podemos actualizar nuestras
@@ -484,8 +496,8 @@ hist1 <- mcmc_hist(
   facet_args = list(nrow = 3))+
   scale_color_manual(values = c("#897289"))+
   labs(caption = "Gráfico 6: Distribuciones de los parametros del posterior con una sola observación")+
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5))
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
 hist1
 ```
 
@@ -511,8 +523,9 @@ posterior1= ggplot() +
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +  # Añade valores al eje x
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +
   geom_point(aes(x = 1.2, y = 2.3795), fill = "#FF00FF", color = "black", size = 3, shape = 21)+
-  theme(plot.caption = element_text(hjust = 0.5))+
-  theme_few()
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
+  
 
 df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
                      b1=rep(df_sampled$beta1, each=200),
@@ -526,15 +539,16 @@ tdt_graf <- ggplot(df_aux)+
   geom_line(alpha = 0.1, color = "gray2")+
   theme(legend.position = "none")+
   labs(x = "Horas desde las 4:30am", y = expression(T(t)))+
+  coord_cartesian(ylim = c(20, 50), xlim = c(-3, 24))+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
   geom_point(aes(x = 1.2, y = 32.8), fill = "#FF00FF", color = "black", size = 3, shape = 21)+
-  theme_few()
+  theme_grey()
 
 
 posterior1+tdt_graf+plot_annotation(caption = "Gráfico 7: Posteriors luego de una observación")&
-  theme(plot.caption = element_text(hjust = 0.5))
+  theme(plot.caption = element_text(hjust = 0))
 ```
 
 Vemos en el gráfico 7 que el intercepto decrece levemente en promedio,
@@ -565,9 +579,9 @@ ggplot(df_draws_1) +
     y = "Frecuencia",
     caption = "Gráfico 8: distribución a posteriori del tiempo cuando la temperatura corporal es 37°C"
   ) +
-  theme_few() +
+  theme_grey() +
   theme(
-    plot.caption = element_text(hjust = 0.5),
+    plot.caption = element_text(hjust = 0),
     plot.margin = unit(c(1, 1, 1.5, 1.5), "cm")
   ) +
   annotate("text", x = 3, y = 1900, 
@@ -579,15 +593,15 @@ ggplot(df_draws_1) +
 ```
 
 Observamos la distribución de los tiempos a posteriori cuando la
-
 temperatura corporal de Sergio es $37°C$. Podemos mencionar que la hora
-de muerte estimada de Sergio entre -1.67 horas antes de las 4:30am y 1.18
-horas después, es decir que el verdadero horario de muerte estará entre
-las 2:50am y 5:40am. El valor medio de esta distribución es -0.225, lo
-que indica que el horario promedio de muerte fue a las 4:17am.
+de muerte estimada de Sergio entre -1.67 horas antes de las 4:30am y
+1.18 horas después, es decir que el verdadero horario de muerte estará
+entre las 2:50am y 5:40am. El valor medio de esta distribución es
+-0.225, lo que indica que el horario promedio de muerte fue a las
+4:17am.
 
 A continuación presentamos las **medidas diagnóstico** para corroborar
-que el proceso realizado es adecuado, es decir,queremos analizar como se
+que el proceso realizado es adecuado, es decir, analizar como se
 comportan las cadenas obtenidas a través de MCMC.
 
 *Medidas numéricas*
@@ -622,9 +636,9 @@ mcmc_trace(
   stan_model,
   pars = c("beta0", "beta1", "sigma"),
   facet_args = list(nrow = 2, labeller = label_parsed))+
-  labs(caption = "Gráfico 9: Trace plot")+
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5))
+  labs(caption = "Gráfico 9: Trace plot para los parámetros cuando se utiliza una observación")+
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
 ```
 
 Se observa un patrón de ruido blanco a través de las muestras, esto es
@@ -635,9 +649,9 @@ un buen indicio del comportamiento de nuestro algoritmo de muestreo.
 ```{r, echo=FALSE , warning=FALSE}
 
 dens1 <- mcmc_dens_overlay(stan_model, pars = c("beta0", "beta1", "sigma"))+
-  labs(caption = "Gráfico 10: Distribuciones para las distintas cadenas")+
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5))
+  labs(caption = "Gráfico 10: Distribuciones para las distintas cadenas con una observación")+
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
 dens1
 ```
 
@@ -672,11 +686,8 @@ if(modo_prod){
 load("modelo2.RData")
 
 df_draws_2 <- as.data.frame(extract(stan_model_2))
-
-#colores1 <- c("#da91d5","#663364", "#897289", "purple", "#7e0b7d", "#9e3d9d")
-#colores2 <- c("#897289", "#897289", "#897289", "#663364", "#897289", "#663364")
+color_scheme_set(colores2)
 ```
-
 
 ```{r,  echo=FALSE, warning=FALSE}
 hist2 <- mcmc_hist(
@@ -685,16 +696,20 @@ hist2 <- mcmc_hist(
   facet_args = list(nrow = 3))+ 
   scale_color_manual(values = c("#897289")) +
   labs(caption = "Gráfico 11: Distribuciones de los parametros del posterior con dos observaciones") +
-  theme_few() +
-  theme(plot.caption = element_text(hjust = 0.5))
+  theme_grey() +
+  theme(plot.caption = element_text(hjust = 0))
 hist2
 #stan_model_2
 ```
-En el gráfico 11, vemos nuevamente que las distribuciones a posteriori de los
-parámetros se modifican levemente en relación a nuestras creencias a
-priori. Vemos una tendencia decreciente tanto en $\beta_0$ como en $\beta_1$.
 
-Observamos las distintas rectas para los valores de los posterior y sus respetivos comportamientos de la temperatura corporal luego de la segunda observación.
+En el gráfico 11, vemos nuevamente que las distribuciones a posteriori
+de los parámetros se modifican levemente en relación a nuestras
+creencias a priori. Vemos una tendencia decreciente tanto en $\beta_0$
+como en $\beta_1$.
+
+Observamos las distintas rectas para los valores de los posterior y sus
+respetivos comportamientos de la temperatura corporal luego de la
+segunda observación.
 
 ```{r,  echo=FALSE, warning=FALSE}
 set.seed(511) 
@@ -708,10 +723,11 @@ posterior2= ggplot() +
   coord_cartesian(xlim = c(-3, 24), ylim = c(0, 3))+  
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5))+
+  theme_grey()+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
   geom_point(aes(x = c(1.2,2.7), y = c(2.3795,2.14)), fill = "#FF00FF", color = "black", size = 2, shape = 21)+
- theme(plot.caption = element_text(hjust = 0.5))+
-  theme_few()
+ theme(plot.caption = element_text(hjust = 0))
+  
 
 df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
                      b1=rep(df_sampled$beta1, each=200),
@@ -729,14 +745,20 @@ tdt_graf <- ggplot(df_aux)+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +
   scale_y_continuous(breaks = seq(20, 50, by = 2), labels = seq(20, 50, by = 2))+
+  theme_grey()+
   geom_point(aes(x = 1.2, y = 32.8), fill = "#FF00FF", color = "#7e0b7d", size = 2, shape = 21)+
-  geom_point(aes(x = 2.7, y = 30.5), fill = "#FF00FF", color = "#7e0b7d", size = 2, shape = 21)+
-  theme_few()
+  geom_point(aes(x = 2.7, y = 30.5), fill = "#FF00FF", color = "#7e0b7d", size = 2, shape = 21)
+ 
 
 posterior2+tdt_graf+plot_annotation(caption = "Gráfico 12: Posteriors luego de dos observaciones")&
-  theme(plot.caption = element_text(hjust = 0.5))
+  theme(plot.caption = element_text(hjust = 0))
 ```
-En primer lugar podemos mencionar que las rectas se ajustan cada vez más a los datos, aqui notamos la influencia del likelihood. Tambien podemos ver que cuando la temperatura corporal de Sergio se encantraba entre $36°C$ y $38°C$ los valotes de $t$ suelen ser menores a $0$, lo que nos da indicio de que la muerte sucedio antes de las 4:30 am.
+
+En primer lugar podemos mencionar que las rectas se ajustan cada vez más
+a los datos, aqui notamos la influencia del *likelihood*. Tambien
+podemos ver que, cuando la temperatura corporal de Sergio se encantraba
+entre $36°C$ y $38°C$, los valores de $t$ suelen ser menores a $0$, lo
+que nos da indicio de que la muerte sucedio antes de las 4:30 am.
 
 ```{r,  echo=FALSE, warning=FALSE}
 df_draws_2$t_muerte <- log(15/exp(df_draws_2$beta0))/(df_draws_2$beta1)
@@ -750,9 +772,9 @@ ggplot(df_draws_2)+
     y = "Frecuencia",
     caption = "Gráfico 13: distribución a posteriori del tiempo cuando la temperatura corporal es 37°C"
   ) +
-  theme_few()+
+  theme_grey()+
   theme(
-    plot.caption = element_text(hjust = 0.5),
+    plot.caption = element_text(hjust = 0),
     plot.margin = unit(c(1, 1, 1.5, 1.5), "cm")
   ) +
   annotate("text", x = 3, y = 1900, 
@@ -763,18 +785,22 @@ mean(df_draws_2$t_muerte)
 #mean(df_draws_2$t_muerte)
 #quantile(df_draws_2$t_muerte, probs = c(0.025, 0.975))
 ```
+
 Observamos la distribución de los tiempos a posteriori cuando la
 temperatura corporal de Sergio es $37°C$. Podemos mencionar que la hora
 de muerte estimada de Sergio entre -1.7 horas antes de las 4:30am y 0.77
 horas después, es decir que el verdadero horario de muerte estará entre
-las 2:48am y 5:16am. Vemos que el intervalo horario tiene menor amplitud que cuando teniamos una sola observación. Además, el valor medio de esta distribución es -0.411, lo
-que indica que el horario promedio de muerte fue a las 4:05am. 
+las 2:48am y 5:16am. Vemos que el intervalo horario tiene menor amplitud
+que cuando teniamos una sola observación. Además, el valor medio de esta
+distribución es -0.411, lo que indica que el horario promedio de muerte
+fue a las 4:05am.
 
 A continuación presentamos las **medidas diagnóstico** para corroborar
-que el proceso realizado es adecuado, es decir,queremos analizar como se
+que el proceso realizado es adecuado, es decir, analizar como se
 comportan las cadenas obtenidas a través de MCMC.
 
 *Medidas numéricas*
+
 ```{r, echo=FALSE, warning=FALSE}
 Neff= c(1001,3055,273)
 Rhat= c(1.02,1.00,1.03)
@@ -786,7 +812,14 @@ kable(df_tabla1) %>%
   footnote(general = "Tabla 3: medidas diagnóstico", general_title = "")
 ```
 
-Vemos que los valores del $\hat{R}$, aunque distintos de 1, siguen cumpliendo la condición de convergencia  *"If Rhat is les tan 1.1 for all parameters, then we judge the algorithm to have approximately converged," de este libro Gelman, Andrew, y Jennifer Hill. 2006. Data Analysis Using Regression and Multilevel-Hierarchical Models. 1st edition. Cambridge University Press*. Analizando el $\ N_{eff}$ obtenemos a cuantas muestras independientes equivalen nuestras 7600 muestras, aunque vemos una disminución de las mismas comparado con la muestra anterior, en todos los parámetros contamos con al menos 250 muestras independientes por lo que podemos concluir que serán una buena representación del posterior.
+Vemos que los valores del $\hat{R}$, aunque distintos de 1, siguen
+cumpliendo la condición de ser menores a 1.1 para todos los parámetros,
+lo cual es un indicio de convergencia (Gelman & Hill, 2006)<sup>1</sup>.
+Analizando el $\ N_{eff}$ obtenemos a cuantas muestras independientes
+equivalen nuestras 7600 muestras, aunque vemos una disminución de las
+mismas comparado con la muestra anterior, en todos los parámetros
+contamos con al menos 250 muestras independientes por lo que podemos
+concluir que serán una buena representación del posterior.
 
 *Trace plots*
 
@@ -798,26 +831,34 @@ mcmc_trace(
   stan_model_2,
   pars = c("beta0", "beta1", "sigma"),
   facet_args = list(nrow = 2, labeller = label_parsed))+
-  labs(caption = "Gráfico 14: Trace plot")+
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5))
+  labs(caption = "Gráfico 14: Trace plot para los parámetros con dos observaciones")+
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
 ```
-Nuevamente observamos un patrón de ruido blanco a través de las muestras, lo que indica que el comportamiento de nuestro algoritmo es bueno.
+
+Nuevamente observamos un patrón de ruido blanco a través de las
+muestras, lo que indica que el comportamiento de nuestro algoritmo es
+bueno.
 
 *Densidad de los parámtros para las distintas cadenas*
 
 ```{r, echo=FALSE, warning=FALSE}
 
 dens2 <- mcmc_dens_overlay(stan_model_2, pars = c("beta0", "beta1", "sigma"))+
-  labs(caption = "Gráfico 15: Distribuciones para las distintas cadenas")+
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5))
+  labs(caption = "Gráfico 15: Distribuciones para las distintas cadenas con dos observaciones")+
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
 dens2
 ```
-Se observan pequeñas disimilitudes en las cadenas, pero no parece ser algo por lo que debamos preocuparnos.
 
-Finalmente trabajaremos con toda la información disponible, es decir, contaremos con las tres observaciones de la temperatura corporal post mortem de Sergio. Procedemos a
-obtener los nuevos posteriors y sus respectivas muestras, y realizamos nuevas estimaciones de la hora de muerte de Sergio.
+Se observan pequeñas disimilitudes en las cadenas, pero no parece ser
+algo por lo que debamos preocuparnos.
+
+Finalmente trabajaremos con toda la información disponible, es decir,
+contaremos con las tres observaciones de la temperatura corporal post
+mortem de Sergio. Procedemos a obtener los nuevos posteriors y sus
+respectivas muestras, y realizamos nuevas estimaciones de la hora de
+muerte de Sergio.
 
 ```{r,  echo=FALSE}
 if(modo_prod){
@@ -840,8 +881,9 @@ load("modelo3.RData")
 #stan_model_3 
 
 df_draws_3 <- as.data.frame(extract(stan_model_3))
-color_scheme_set(colores1)
+color_scheme_set(colores2)
 ```
+
 ```{r, , warning=FALSE, echo=FALSE}
 hist3 <- mcmc_hist(
   stan_model_3,
@@ -849,13 +891,19 @@ hist3 <- mcmc_hist(
   facet_args = list(nrow = 3))+ 
   scale_color_manual(values = c("#897289")) +
   labs(caption = "Gráfico 16: Distribuciones de los parametros del posterior con tres observaciones") +
-  theme_few() +
-  theme(plot.caption = element_text(hjust = 0.5))
+  theme_grey() +
+  theme(plot.caption = element_text(hjust = 0))
 hist3
 ```
-Se observan las distribuciones a posterior luego de considerar toda la información disponible, en el gráfico 16 vemos que el parametro $\beta_1$ parece ser el mayormente influenciado por la ultima observacion ya que decrece y se centra en $-0.2$, lo que indica que la temperatura disminuye a mayor velocidad de lo planteado.
 
-Observamos las distintas rectas para los valores de los posterior y sus respetivos comportamientos luego de considerar la tercer observación.
+Se observan las distribuciones a posterior luego de considerar toda la
+información disponible, en el gráfico 16 vemos que el parametro
+$\beta_1$ parece ser el mayormente influenciado por la ultima
+observacion ya que decrece y se centra en $-0.2$, lo que indica que la
+temperatura disminuye a mayor velocidad de lo planteado.
+
+Observamos las distintas rectas para los valores de los posterior y sus
+respetivos comportamientos luego de considerar la tercer observación.
 
 ```{r,  echo=FALSE, warning=FALSE}
 set.seed(511) 
@@ -870,9 +918,10 @@ posterior3 =ggplot() +
   scale_x_continuous(breaks = seq(-2, 24, by = 2), labels = seq(-2, 24, by = 2)) +  
   scale_y_continuous(breaks = seq(0, 3, by = 0.5), labels = seq(0, 3, by = 0.5)) +
   geom_point(aes(x = c(1.2,2.7, 7.95), y = c(2.3795, 2.14, 0.5606 )), fill = "#FF00FF", color = "black", size = 2, shape = 21)+
+  theme_grey()+
   geom_vline(xintercept = 0, linetype = "dashed", color = "#7e0b7d")+
- theme(plot.caption = element_text(hjust = 0.5))+
-  theme_few()
+ theme(plot.caption = element_text(hjust = 0))
+  
 
 df_aux <- data.frame(b0=rep(df_sampled$beta0, each=200), 
                      b1=rep(df_sampled$beta1, each=200),
@@ -893,16 +942,24 @@ tdt_graf <- ggplot(df_aux)+
   geom_point(aes(x = 1.2, y = 32.8),  fill = "#FF00FF", color = "black", size = 2, shape = 21)+
   geom_point(aes(x = 2.7, y = 30.5),  fill = "#FF00FF", color = "black", size = 2, shape = 21)+
   geom_point(aes(x = 7.95, y = 23.7),  fill = "#FF00FF", color = "black", size = 2, shape = 21)+
-  theme_few()
+  theme_grey()
 
 posterior3+tdt_graf+plot_annotation(caption = "Gráfico 17: Posteriors luego de tres observaciones")&
-  theme(plot.caption = element_text(hjust = 0.5))
+  theme(plot.caption = element_text(hjust = 0))
 ```
-Observamos la influencia de esta nueva observación en el grafico de nuestros posteriors, vemos que las pendientes disminuyen, aunque aún asi no logran contener el punto. Esto nos da indicios de dato atípico, el cual no se ajusta al comportamiento natural del algor mortis.
 
-Sabemos que antes de tomarse esta tercer medición de temperatura (a las 13:30 hs) el cuerpo de Sergio fue trasladado en una bolsa de obito y luego resguardado en la morgue desde las 9:55 am hasta la hara de la autopsia. Tambien sabemos que cada morgue cuenta con salas o cuartos destinados a la recepción y
-almacenamiento de los cuerpos, cada una de ellas debe estar correctamente refrigerada. Hete aqui el motivo por el cual el cuerpo de Sergio presenta una temperatura menor a la esperada.
+Observamos la influencia de esta nueva observación en el grafico de
+nuestros posteriors, vemos que las pendientes disminuyen, aunque aún asi
+no logran contener el punto. Esto nos da indicios de dato atípico, el
+cual no se ajusta al comportamiento natural del algor mortis.
 
+Sabemos que antes de tomarse esta tercer medición de temperatura (a las
+13:30 hs) el cuerpo de Sergio fue trasladado en una bolsa de obito y
+luego resguardado en la morgue desde las 9:55 am hasta la hora de la
+autopsia. Tambien sabemos que cada morgue cuenta con salas o cuartos
+destinados a la recepción y almacenamiento de los cuerpos, cada una de
+ellas debe estar correctamente refrigerada. Hete aqui el motivo por el
+cual el cuerpo de Sergio presenta una temperatura menor a la esperada.
 
 ```{r,  echo=FALSE, warning=FALSE}
 df_draws_3$t_muerte <- log(15/exp(df_draws_3$beta0))/(df_draws_3$beta1)
@@ -916,9 +973,9 @@ ggplot(df_draws_3)+
     y = "Frecuencia",
     caption = "Gráfico 18: distribución a posteriori del tiempo cuando la temperatura corporal es 37°C"
   ) +
-  theme_few()+
+  theme_grey()+
   theme(
-    plot.caption = element_text(hjust = 0.5),
+    plot.caption = element_text(hjust = 0),
     plot.margin = unit(c(1, 1, 1.5, 1.5), "cm")
   ) +
   annotate("text", x = 2, y = 1900, 
@@ -928,13 +985,20 @@ ggplot(df_draws_3)+
 mean(df_draws_3$t_muerte)
 quantile(df_draws_3$t_muerte, probs = c(0.025, 0.975))
 ```
-Por ultima vez presentamos la distribución de los tiempos a posteriori cuando la
-temperatura corporal de Sergio es $37°C$. La hora de muerte de Sergio se presenta entre -1.31 horas antes de las 4:30am y 0.79 horas después, es decir que el supuesto horario de muerte estará entre
-las 3:11am y 5:17am y el valor medio de esta distribución es -0.198, lo nos dice que el horario promedio de muerte fue a las 4:18am. 
-Por lo expuesto anteriormente, no creemos que esta sea una representación fidedigna del horario de muerte de Contreras. ya que la temperatura a la que estuvo expuesto entre las 10 am y las 13:30 hs, fue mucho menor a la temperatura ambiente que tuvimos en cuenta a lo largo del informe.
+
+Por ultima vez presentamos la distribución de los tiempos a posteriori
+cuando la temperatura corporal de Sergio es $37°C$. La hora de muerte de
+Sergio se presenta entre -1.31 horas antes de las 4:30am y 0.79 horas
+después, es decir que el supuesto horario de muerte estará entre las
+3:11am y 5:17am y el valor medio de esta distribución es -0.198, lo nos
+dice que el horario promedio de muerte fue a las 4:18am. Por lo expuesto
+anteriormente, no creemos que esta sea una representación fidedigna del
+horario de muerte de Contreras, ya que la temperatura a la que estuvo
+expuesto entre las 10 am y las 13:30 hs, fue mucho menor a la
+temperatura ambiente que tuvimos en cuenta a lo largo del informe.
 
 A continuación presentamos las **medidas diagnóstico** para corroborar
-que el proceso realizado es adecuado, es decir,queremos analizar como se
+que el proceso realizado es adecuado, es decir, analizar como se
 comportan las cadenas obtenidas a través de MCMC.
 
 *Medidas numéricas*
@@ -950,8 +1014,12 @@ kable(df_tabla1) %>%
   footnote(general = "Tabla 4: medidas diagnóstico", general_title = "")
 ```
 
-Observamos que los números efectivos de muestras para nuestros parámetros decrecen, lo que nos indica que el procesos no es igual de óptimo que en los casos anteriores, de igual forma obtenemos el equivalente a 100 muestras independientes o más en cada caso. El $\hat{R}$ sigue siendo menor a $1.1$, por lo que se cumplen los criterios de convergencia.
-
+Observamos que los números efectivos de muestras para nuestros
+parámetros decrecen, lo que nos indica que el procesos no es igual de
+óptimo que en los casos anteriores, de igual forma obtenemos el
+equivalente a 100 muestras independientes o más en cada caso. El
+$\hat{R}$ sigue siendo menor a $1.1$, por lo que se cumplen los
+criterios de convergencia ya mencionados.
 
 *Trace plots*
 
@@ -963,35 +1031,84 @@ mcmc_trace(
   stan_model_3,
   pars = c("beta0", "beta1", "sigma"),
   facet_args = list(nrow = 2, labeller = label_parsed))+
-  labs(caption = "Gráfico 19: Trace plot")+
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5))
+  labs(caption = "Gráfico 19: Trace plot para los parámetros con tres observaciones")+
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
 ```
 
-Vemos el patrón de ruido blanco a través de las muestras al igual que en los otros casos.
+Vemos el patrón de ruido blanco a través de las muestras al igual que en
+los otros casos.
 
 *Densidad de los parámtros para las distintas cadenas*
 
 ```{r, echo=FALSE, warning=FALSE}
 
 dens3 <- mcmc_dens_overlay(stan_model_3, pars = c("beta0", "beta1", "sigma"))+
-  labs(caption = "Gráfico 20: Distribuciones para las distintas cadenas")+
-  theme_few()+
-  theme(plot.caption = element_text(hjust = 0.5))
+  labs(caption = "Gráfico 20: Distribuciones para las distintas cadenas con tres observaciones")+
+  theme_grey()+
+  theme(plot.caption = element_text(hjust = 0))
 dens3
 ```
 
+TODO: concluir
 
 # Conclusiones
 
-En este trabajo, hemos aplicado métodos de estadística bayesiana para estimar la hora de muerte de Sergio Contreras, analizando la evolución de su temperatura corporal post mortem. Para nuestro modelo, establecimos distribuciones a priori informativas para el intercepto y la pendiente de la recta que representa el logaritmo natural de la diferencia de temperatura entre el cuerpo y el ambiente, así como para el desvío estándar. Estas distribuciones a priori fueron necesarias debido a la cantidad limitada de observaciones disponibles y para incorporar nuestro conocimiento previo sobre la tasa de enfriamiento del cuerpo humano y la temperatura corporal típica en vida. Utilizando Rstan, pudimos ajustar y actualizar nuestro modelo lineal bayesiano en función de las observaciones obtenidas. Esto nos permitió incorporar variación en la temperatura corporal y actualizar nuestras creencias a priori con los datos observados.
+En este trabajo, hemos aplicado métodos de estadística bayesiana para
+estimar la hora de muerte de Sergio Contreras, analizando la evolución
+de su temperatura corporal post mortem. Para nuestro modelo,
+establecimos distribuciones a priori informativas para el intercepto y
+la pendiente de la recta, la cual representa el logaritmo natural de la
+diferencia de temperatura entre el cuerpo y el ambiente, así como para
+su desvío estándar. Estas distribuciones a priori fueron necesarias
+debido a la cantidad limitada de observaciones disponibles y para
+incorporar nuestro conocimiento previo sobre la tasa de enfriamiento del
+cuerpo humano y la temperatura corporal típica en vida. Utilizando
+Rstan, pudimos ajustar y actualizar nuestro modelo lineal bayesiano en
+función de las observaciones obtenidas. Esto nos permitió incorporar
+variación en la temperatura corporal y actualizar nuestras creencias a
+priori con los datos observados.
 
-A partir de las mediciones de temperatura, estimamos que la hora de muerte ocurrió alrededor de las 4:05 am, con un intervalo de credibilidad del 95% que va de 2:48 am a 5:16 am, basándonos en las dos primeras observaciones. La tercera medición mostró una desviación significativa debido al enfriamiento en la morgue, lo que afectó las estimaciones. Consideramos la posibilidad de que factores como fiebre alta al momento de la muerte o enfermedades crónicas pudieran influir en el proceso de enfriamiento del cuerpo, lo que implicaría ajustes en nuestro modelo para reflejar una temperatura inicial más alta o una tasa de enfriamiento más rápida. Este análisis demuestra la efectividad de los métodos bayesianos para integrar información previa y posterior, incluso en situaciones con datos limitados.
+A partir de las mediciones de temperatura, estimamos que la hora de
+muerte ocurrió alrededor de las 4:05 am, con un intervalo de
+credibilidad del 95% que va de 2:48 am a 5:16 am, basándonos en las dos
+primeras observaciones. La tercera medición mostró una desviación
+significativa debido al enfriamiento en la morgue, lo que afectó las
+estimaciones.
+
+Consideramos la posibilidad de que factores como fiebre alta al momento
+de la muerte o enfermedades crónicas pudieran influir en el proceso de
+enfriamiento del cuerpo, lo que implicaría ajustes en nuestro modelo
+para reflejar una temperatura inicial más alta o una tasa de
+enfriamiento más rápida. Este análisis demuestra la efectividad de los
+métodos bayesianos para integrar información previa y posterior, incluso
+en situaciones con datos limitados.
 
 ## Ronda de prensa...
 
-- Periodista: "Buenas tardes, la familia de Sergio quiere respuesta, necesita respuesta. ¿Pueden darnos con certeza el horario de muerte de Contreras?"
+-   Periodista: "Buenas tardes, la familia de Sergio quiere respuesta,
+    necesita respuesta. ¿Pueden darnos con certeza el horario de muerte
+    de Contreras?"
 
-- Guido: "Buneas tardes. Desde el equipo de la policía científica de Córdoba, podemos declarar que el día de la fecha, en la localidad de Salsipuedes, ocurrió un lamentable incidente. Tras recibir un llamado de emergencia a las 5:33 hs, la policía se trasladó al lugar y constató la presencia del cuerpo sin vida de Sergio Contreras, masculino,  45 años, en su domicilio. Según nuestras investigaciones y utilizando métodos avanzados de estadística bayesiana, hemos determinado que la muerte de Sergio Contreras ocurrió aproximadamente a las 4:05 am, con un intervalo de confianza entre las 2:48 am y las 5:16 am. La causa de la muerte fue una herida de arma blanca que provocó una hemorragia fatal. 
-Es importante destacar que nuestras estimaciones son producto de un análisis exhaustivo de las mediciones de temperatura corporal, y aunque se consideraron diversas variables y condiciones ambientales, nuestras conclusiones reflejan el momento más probable del deceso del Sr. Contreras. Seguiremos trabajando para esclarecer todos los detalles de este trágico suceso.
-Gracias..."
+-   Guido: "Buenas tardes. Desde el equipo de la policía científica de
+    Córdoba, podemos declarar que el día de la fecha, en la localidad de
+    Salsipuedes, ocurrió un lamentable incidente. Tras recibir un
+    llamado de emergencia a las 5:33 hs, la policía se trasladó al lugar
+    y constató la presencia del cuerpo sin vida de Sergio Contreras,
+    masculino, 45 años, en su domicilio. Según nuestras investigaciones
+    y utilizando métodos avanzados de estadística bayesiana, hemos
+    determinado que la muerte de Sergio Contreras ocurrió
+    aproximadamente a las 4:05 am, y estamos muy convencidos que
+    realmente ocurrió entre las 2:48 am y las 5:16 am. La causa de la
+    muerte fue una herida de arma blanca que provocó una hemorragia
+    fatal. Es importante destacar que nuestras estimaciones son producto
+    de un análisis exhaustivo de las mediciones de temperatura corporal,
+    y aunque se consideraron diversas variables y condiciones
+    ambientales, nuestras conclusiones reflejan el momento más probable
+    del deceso del Sr. Contreras. Seguiremos trabajando para esclarecer
+    todos los detalles de este trágico suceso. Gracias..."
+
+### Referencias bibliográficas
+
+<sup>1</sup> *Gelman, A. & Hill, J. (2006). Data Analysis Using
+Regression and Multilevel-Hierarchical Models. 1st edition.*
