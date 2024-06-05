@@ -9,7 +9,7 @@ editor_options:
 ---
 
 ```{r, include=FALSE, echo=FALSE}
-#| label = Parametros del informe
+#| label = Parametros_del_informe
 modo_prod=FALSE
 knitr::opts_chunk$set(fig.align = "center")
 ```
@@ -91,7 +91,7 @@ graficamos la función anterior para distintos valores de $r$, sabiendo
 que la temperatura del ambiente es $23°C$ y la temperatura al momento de
 la muerte de Sergio es $37°C$.
 
-```{r, echo=FALSE, error=FALSE, warning=FALSE}
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
 # Carga de paquetes
 library(ggplot2)
 library(gridExtra)
@@ -488,7 +488,7 @@ load("modelo1.RData")
 #stan_model
 ```
 
-```{r,  echo=FALSE, warning=FALSE}
+```{r,  echo=FALSE, warning=FALSE, message=FALSE}
 color_scheme_set(colores2)
 hist1 <- mcmc_hist(
   stan_model,
@@ -689,7 +689,7 @@ df_draws_2 <- as.data.frame(extract(stan_model_2))
 color_scheme_set(colores2)
 ```
 
-```{r,  echo=FALSE, warning=FALSE}
+```{r,  echo=FALSE, warning=FALSE, message=FALSE}
 hist2 <- mcmc_hist(
   stan_model_2,
   pars = c("beta0", "beta1", "sigma"),
@@ -780,7 +780,7 @@ ggplot(df_draws_2)+
   annotate("text", x = 3, y = 1900, 
            label = "Media = -0.411 hs", hjust = 1) +
   geom_point(aes(x = -0.411, y = 0), color = "#7e0b7d", size = 3)
-mean(df_draws_2$t_muerte)
+#mean(df_draws_2$t_muerte)
 
 #mean(df_draws_2$t_muerte)
 #quantile(df_draws_2$t_muerte, probs = c(0.025, 0.975))
@@ -814,13 +814,12 @@ kable(df_tabla1) %>%
 
 Vemos que los valores del $\hat{R}$, aunque distintos de 1, siguen
 cumpliendo la condición de ser menores a 1.1 para todos los parámetros,
-lo cual es un indicio de convergencia (Gelman & Hill,
-2006)([1](Gelman,%20A.%20&%20Hill,%20J.%20(2006).%20Data%20Analysis%20Using%20Regression%20and%20Multilevel-Hierarchical%20Models.%201st%20edition.)).
-Analizando el $\ N_{eff}$ obtenemos a cuantas muestras independientes
-equivalen nuestras 7600 muestras, aunque vemos una disminución de las
-mismas comparado con la muestra anterior, en todos los parámetros
-contamos con al menos 250 muestras independientes por lo que podemos
-concluir que serán una buena representación del posterior.
+lo cual es un indicio de convergencia (Gelman & Hill, 2006). Analizando
+el $\ N_{eff}$ obtenemos a cuantas muestras independientes equivalen
+nuestras 7600 muestras, aunque vemos una disminución de las mismas
+comparado con la muestra anterior, en todos los parámetros contamos con
+al menos 250 muestras independientes por lo que podemos concluir que
+serán una buena representación del posterior.
 
 *Trace plots*
 
@@ -885,7 +884,7 @@ df_draws_3 <- as.data.frame(extract(stan_model_3))
 color_scheme_set(colores2)
 ```
 
-```{r, , warning=FALSE, echo=FALSE}
+```{r, , warning=FALSE, echo=FALSE, message=FALSE}
 hist3 <- mcmc_hist(
   stan_model_3,
   pars = c("beta0", "beta1", "sigma"),
@@ -983,8 +982,8 @@ ggplot(df_draws_3)+
            label = "Media = -0.198 hs", hjust = 1) +
   geom_point(aes(x = -0.198, y = 0), color = "#7e0b7d", size = 3)
 
-mean(df_draws_3$t_muerte)
-quantile(df_draws_3$t_muerte, probs = c(0.025, 0.975))
+# mean(df_draws_3$t_muerte)
+# quantile(df_draws_3$t_muerte, probs = c(0.025, 0.975))
 ```
 
 Por ultima vez presentamos la distribución de los tiempos a posteriori
@@ -1117,7 +1116,7 @@ posterior, incluso en situaciones con datos limitados.
     del deceso del Sr. Contreras. Seguiremos trabajando para esclarecer
     todos los detalles de este trágico suceso. Gracias..."
 
-### Referencias bibliográficas
+# Referencias bibliográficas
 
 *Gelman, A. & Hill, J. (2006). Data Analysis Using Regression and
 Multilevel-Hierarchical Models. 1st edition.*
