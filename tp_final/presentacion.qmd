@@ -124,12 +124,12 @@ g2 <- ggplot(df)+
   aes(x=edad, y=lh_cortex_superiorfrontal_thickness)+
   geom_point()+
   geom_smooth(method = "lm", se=FALSE, color = "#027368")+
-  labs(x = "", y = "Vol. corteza sup. frontal")
+  labs(x = "", y = "Espesor corteza sup. frontal")
 g3 <- ggplot(df)+
   aes(x=edad, y=lh_cortex_fusiform_volume)+
   geom_point()+
   geom_smooth(method = "lm", se=FALSE, color = "#027368")+
-  labs(x = "Edad", y = "Vol. corteza fusiforme")
+  labs(x = "Edad", y = "Vol. Corteza fusiforme")
 
 g1/g2/g3/plot_annotation(caption = "Gráfico 2: Edad vs cuantitativas")&
   theme(plot.caption = element_text(hjust = 0))
@@ -186,3 +186,17 @@ contingency_table <- table(df$diag, df$resonador_fab)
 chisq.test(contingency_table)
 ```
 
+# Propuesta y ajuste de modelos
+
+## Descripción matemática
+
+Considerando que nuestro interes esta en explicar que variables muestran o dan indicio de predisposicion a desarrollar una enfermedad neurodegenerativa, analizaremos nuestra respuesta `enfermedad` como una variable binaria que toma el valor 1 si el paciente tiene una enfermedad, o 0 si su control resultó sano. 
+
+```{r}
+df$enfermedad <- ifelse(df$diag=="HC",0,1)
+```
+
+Modelaremos `enfermedad` como la respuesta de una regresión logística, matematicamente estamos diciendo que:
+
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
+$$logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i + \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$$
