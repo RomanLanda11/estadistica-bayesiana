@@ -26,8 +26,7 @@ Para nuestra investigación, vamos a abordar las siguientes preguntas clave:
 
 ## Abordaje
 
-Para abordar este problema, primero realizaremos un análisis exploratorio de datos para entender mejor la distribución y las características de las variables disponibles. Posteriormente, utilizaremos un enfoque bayesiano en nuestro análisis para ajustar y comparar modelos para identificar las relaciones entre variables morfológicas del cerebro, características demográficas y el riesgo de desarrollar DCL o Alzheimer. Al evaluar la importancia de cada variable en la predicción de estas condiciones, podremos seleccionar el mejor modelo que represente los datos y las relaciones de manera más precisa. 
-Nuestro objetivo final es mejorar nuestra comprensión de los factores que contribuyen al desarrollo de enfermedades neurodegenerativas.
+Para abordar este problema, primero realizaremos un análisis exploratorio de datos para entender mejor la distribución y las características de las variables disponibles. Posteriormente, utilizaremos un enfoque bayesiano en nuestro análisis para ajustar y comparar modelos para identificar las relaciones entre variables morfológicas del cerebro, características demográficas y el riesgo de desarrollar DCL o Alzheimer. Al evaluar la importancia de cada variable en la predicción de estas condiciones, podremos seleccionar el mejor modelo que represente los datos y las relaciones de manera más precisa. Nuestro objetivo final es mejorar nuestra comprensión de los factores que contribuyen al desarrollo de enfermedades neurodegenerativas.
 
 # Descripción del Conjunto de Datos
 
@@ -65,17 +64,16 @@ Utilizamos el conjunto de datos llamado `cerebros.csv`. Este conjunto incluye in
 
 ![Imagen 5: Corteza Fusiforme](img/fusiforme2.png)
 
-# Analisis Exploratorio 
+# Analisis Exploratorio
 
-En primer instancia se realizo un `auto EDA` para elegir relaciones de interes y presentarlas con mayor profundidad. De alli surgió el interes en la variable/relaciones 
+En primer instancia se realizo un `auto EDA` para elegir relaciones de interes y presentarlas con mayor profundidad. De alli surgió el interes en la variable/relaciones
 
-- Distribucion de la edad
+-   Distribucion de la edad
 
 ```{r}
 library(ggplot2)
 library(patchwork)
 ```
-
 
 ```{r}
 ggplot(df) +
@@ -88,14 +86,15 @@ ggplot(df) +
   theme_minimal()
 ```
 
-- Edad vs diagnóstico 
+-   Edad vs diagnóstico
+
 ```{r}
 ggplot(df)+
   aes(x=edad, y= diag, color=diag)+
   geom_boxplot()
 ```
 
-- Edad vs volumen de lh
+-   Edad vs volumen de lh
 
 ```{r}
 g1 <- ggplot(df)+
@@ -115,8 +114,8 @@ g1+g2+g3+plot_annotation(caption = "Gráfico : ")&
 
 ```
 
+-   Marca del resonador y intensidad
 
-- Marca del resonador y intensidad
 ```{r}
 # Gráfico de barras apiladas
 ggplot(df, aes(x = intensidad_campo, fill = resonador_fab)) +
@@ -139,6 +138,7 @@ ggplot(df)+
        y = "Volumen de Hipocampo") +
   theme_minimal()
 ```
+
 ```{r}
 ggplot(df, aes(x = intensidad_campo, fill = diag)) +
   geom_bar(position = "fill", width = 0.7) +
@@ -148,7 +148,9 @@ ggplot(df, aes(x = intensidad_campo, fill = diag)) +
        fill = "Diagnóstico") +
   theme_minimal()
 ```
-sexo y diag 
+
+sexo y diag
+
 ```{r}
 ggplot(df, aes(x = sexo, fill = diag)) +
   geom_bar(position = "fill", width = 0.7) +
@@ -158,4 +160,3 @@ ggplot(df, aes(x = sexo, fill = diag)) +
        fill = "Diagnóstico") +
   theme_minimal()
 ```
-
