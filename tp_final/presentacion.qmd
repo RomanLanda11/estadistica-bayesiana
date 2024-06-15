@@ -1,0 +1,53 @@
+---
+title: "presentacion"
+format: revealjs
+editor: visual
+---
+
+En simples palabras, una de las diferencias entre 1.5 Teslas y 3 Teslas en imagen médica, radica principalmente en la potencia de su campo magnético, lo que se traduce que mientras más elevado sean los Teslas, nos permite obtener información cada vez más detallada y sensible del cuerpo humano, mejorando el diagnóstico
+
+```{r}
+1 + 1
+```
+
+## Preguntas de Investigación
+
+Para nuestra investigación, vamos a abordar las siguientes preguntas clave:
+
+### Asociación con Patologías Neurodegenerativas:
+
+-   ¿Cuáles de las variables morfológicas del cerebro están más asociadas con el DCL y el Alzheimer?
+
+### Predictores Demográficos:
+
+-   ¿Qué características demográficas (como la edad y el sexo) pueden predecir los valores de estas variables morfológicas?
+
+### Impacto de la Tecnología:
+
+-   ¿Hay alguna relación entre las características tecnológicas (como la marca del resonador y la intensidad del campo magnético) y las variables morfológicas que estamos interesados en estudiar?
+
+## Descripción del Conjunto de Datos
+
+Utilizamos el conjunto de datos llamado `cerebros.csv`. Este conjunto incluye información de 128 pacientes que se sometieron a estudios de resonancia magnética en diferentes partes del mundo. Las variables en este conjunto de datos son:
+
+-   id: Identificación del paciente.
+
+-   intensidad_campo: Intensidad del campo magnético utilizado en la imagen (puede ser 3 T o 1.5 T). Sabemos que a mayor intensidad, se obtiene información más detallada de los pacientes.
+
+-   resonador_fab: Marca del resonador (Phillips, Siemens, General Electric).
+
+-   edad: Edad del paciente (en años).
+
+-   sexo: Sexo del paciente.
+
+-   diag: Diagnóstico, que puede ser HC (control sano), MCI (deterioro cognitivo leve) o AD (enfermedad de Alzheimer).
+
+-   lh_subcx_hippocampus_volume: Es la medida del tamaño del hipocampo en el hemisferio izquierdo del cerebro (en mm³).
+
+    ![Imagen 1: Hipocampo](tp_final/img/Hipocampo.jpg)
+
+-   xh_general_etiv_volume: Volumen intracraneal. Es el volumen total dentro del cráneo, incluyendo el cerebro, el líquido cerebroespinal y otros componentes (en mm³).
+
+-    lh_cortex_superiorfrontal_thickness: Espesor de la corteza superior frontal. Es la medida del grosor de la corteza cerebral en la región superior del lóbulo frontal (en mm).
+
+-   lh_cortex_fusiform_volume: Volumen de la corteza fusiforme (en mm³).
