@@ -60,7 +60,6 @@ Utilizamos el conjunto de datos llamado `cerebros.csv`. Este conjunto incluye in
 
 -   **lh_cortex_fusiform_volume**: Volumen de la corteza fusiforme, una región del cerebro situada en el lóbulo temporal. (en mm³).
 
-![Imagen 4: Corteza fusiforme](img/fusiforme1.png)
 
 ![Imagen 5: Corteza Fusiforme](img/fusiforme2.png)
 
@@ -82,30 +81,39 @@ df$diag <- factor(df$diag, levels = c("HC", "MCI", "AD"))
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
-ggplot(df) +
+dist_edad <- ggplot(df) +
   aes(x = edad, y = ..density..) +
   geom_histogram(binwidth = 5, fill = "#53A6A6", alpha = 0.5) +
   geom_density(color = "#027368", size = 1) +
   labs(x = "Edad",
-       y = "Densidad",
-       caption = "Gráfico 1: Distribución de la edad de los pacientes") +
+       y = "Densidad") +
   theme(plot.caption = element_text(hjust = 0))
-```
 
--   Edad vs diagnóstico
-
-```{r}
-ggplot(df)+
-  aes(x=edad, y= diag, color=diag)+
+edad_diag <- ggplot(df)+
+  aes(x=edad, y= diag, fill=diag)+
   geom_boxplot()+
-  labs(caption = "Gráfico 2: Edad según el diagnóstico")+
+  labs(x = "Edad",
+       y = "",
+       fill = "Diagnóstico") +
   theme(plot.caption = element_text(hjust = 0))+
-  scale_color_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))
+  scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))
+
+hipo_diag <- ggplot(df)+
+  aes(y = diag, x = lh_subcx_hippocampus_volume, fill=diag) +
+  geom_boxplot( outlier.shape = NA) +
+  labs(x = "Volumen de Hipocampo",
+       y = "",
+       fill = "Diagnóstico") +
+   scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
+  theme(plot.caption = element_text(hjust = 0))
+
+dist_edad+edad_diag/hipo_diag&plot_annotation(caption = "Gráfico 1: Exploratorio de edad")&
+  theme(plot.caption = element_text(hjust = 0))
 ```
 
 -   Edad vs volumen de lh
 
-```{r, include=FALSE}
+```{r, echo=FALSE, fig.width=8, fig.height=7}
 g1 <- ggplot(df)+
   aes(x=edad, y=lh_subcx_hippocampus_volume)+
   geom_point()+
@@ -123,61 +131,58 @@ g3 <- ggplot(df)+
   geom_smooth(method = "lm", se=FALSE, color = "#027368")+
   labs(x = "Edad", y = "Vol. corteza fusiforme")
 
-```
-
-
-```{r, fig.width=8, fig.height=7}
-g1/g2/g3/plot_annotation(caption = "Gráfico 3: Edad vs Volumen del hipocampo, de la corteza superior frontal y de la corteza fusiforme")&
+g1/g2/g3/plot_annotation(caption = "Gráfico 2: Edad vs cuantitativas")&
   theme(plot.caption = element_text(hjust = 0))
 ```
 
 -   Marca del resonador y intensidad
 
-```{r}
+```{r, echo=FALSE, fig.width=8, fig.height=6}
 # Gráfico de barras apiladas
-ggplot(df, aes(x = factor(intensidad_campo), fill = resonador_fab)) +
+campo_res <- ggplot(df, aes(x = factor(intensidad_campo), fill = resonador_fab)) +
   geom_bar(position = "fill", width = 0.7) +
   labs(x = "Intensidad de Campo",
        y = "Proporción",
-       fill = "Resonador",
-       caption = "Gráfico 4: Relación entre Resonador y Intensidad de Campo") +
+       fill = "Resonador") +
   scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
   theme(plot.caption = element_text(hjust = 0))
-```
 
-diag vs volumen_hipocampo
-
-```{r}
-ggplot(df)+
-  aes(y = diag, x = lh_subcx_hippocampus_volume, color=diag) +
-  geom_boxplot( outlier.shape = NA) +
-  labs(caption = "Gráfico 4: Volumen de Hipocampo según Diagnóstico",
-       x = "Diagnóstico",
-       y = "Volumen de Hipocampo") +
-   scale_color_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
-  theme(plot.caption = element_text(hjust = 0))
-```
-
-```{r}
-ggplot(df, aes(x = intensidad_campo, fill = diag)) +
+campo_diag <- ggplot(df, aes(x = factor(intensidad_campo), fill = diag)) +
   geom_bar(position = "fill", width = 0.7) +
-  labs(caption = "Gráfico 5: Diagnóstico según Intensidad de Campo",
-       x = "Intensidad de Campo",
+  labs(x = "Intensidad de Campo",
        y = "Proporción",
        fill = "Diagnóstico") +
    scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
   theme(plot.caption = element_text(hjust = 0))
-```
 
-sexo y diag
-
-```{r}
-ggplot(df, aes(x = sexo, fill = diag)) +
+sex_diag <- ggplot(df, aes(x = sexo, fill = diag)) +
   geom_bar(position = "fill", width = 0.7) +
-  labs(caption = "Gráfico 6: Diagnóstico según Sexo",
-       x = "Sexo",
+  labs(x = "",
        y = "Proporción",
        fill = "Diagnóstico") +
    scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
   theme(plot.caption = element_text(hjust = 0))
+
+res_diag <- ggplot(df, aes(x = resonador_fab, fill = diag)) +
+  geom_bar(position = "fill", width = 0.7) +
+  labs(x = "",
+       y = "Proporción",
+       fill = "Diagnóstico") +
+   scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
+  theme(plot.caption = element_text(hjust = 0))
+
+(campo_res+campo_diag)/(sex_diag+res_diag)/plot_annotation(caption = "Gráfico 3: Exploratorio categoricas")&
+  theme(plot.caption = element_text(hjust = 0))
 ```
+
+$H_0)$ Las dos variables categóricas son independientes. Esto significa que la distribución de una variable es la misma en todas las categorías de la otra variable.
+
+$H_1)$ Las dos variables categóricas no son independientes. Esto significa que la distribución de una variable es diferente en al menos una categoría de la otra variable.
+
+
+```{r}
+contingency_table <- table(df$diag, df$resonador_fab)
+# Realizar el test de Chi-cuadrado de independencia
+chisq.test(contingency_table)
+```
+
