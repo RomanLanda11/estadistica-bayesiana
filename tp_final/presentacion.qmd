@@ -30,24 +30,34 @@ Para nuestra investigación, vamos a abordar las siguientes preguntas clave:
 
 Utilizamos el conjunto de datos llamado `cerebros.csv`. Este conjunto incluye información de 128 pacientes que se sometieron a estudios de resonancia magnética en diferentes partes del mundo. Las variables en este conjunto de datos son:
 
--   id: Identificación del paciente.
+-   **id**: Identificación del paciente.
 
--   intensidad_campo: Intensidad del campo magnético utilizado en la imagen (puede ser 3 T o 1.5 T). Sabemos que a mayor intensidad, se obtiene información más detallada de los pacientes.
+-   **intensidad_campo**: Intensidad del campo magnético utilizado en la imagen (puede ser 3 T o 1.5 T). Sabemos que a mayor intensidad, se obtiene información más detallada de los pacientes.
 
--   resonador_fab: Marca del resonador (Phillips, Siemens, General Electric).
+-   **resonador_fab**: Marca del resonador (Phillips, Siemens, General Electric).
 
--   edad: Edad del paciente (en años).
+-   **edad**: Edad del paciente (en años).
 
--   sexo: Sexo del paciente.
+-   **sexo**: Sexo del paciente.
 
--   diag: Diagnóstico, que puede ser HC (control sano), MCI (deterioro cognitivo leve) o AD (enfermedad de Alzheimer).
+-   **diag**: Diagnóstico, que puede ser HC (control sano), MCI (deterioro cognitivo leve) o AD (enfermedad de Alzheimer).
 
--   lh_subcx_hippocampus_volume: Es la medida del tamaño del hipocampo en el hemisferio izquierdo del cerebro (en mm³).
+-   **lh_subcx_hippocampus_volume**: Es la medida del tamaño del hipocampo en el hemisferio izquierdo del cerebro (en mm³).
 
-    ![Imagen 1: Hipocampo](tp_final/img/Hipocampo.jpg)
+![Imagen 1: Hipocampo](img/Hipocampo.jpg)
 
--   xh_general_etiv_volume: Volumen intracraneal. Es el volumen total dentro del cráneo, incluyendo el cerebro, el líquido cerebroespinal y otros componentes (en mm³).
+![Imagen 2: Hipocampo](img/Hipocampo2.png)
 
--    lh_cortex_superiorfrontal_thickness: Espesor de la corteza superior frontal. Es la medida del grosor de la corteza cerebral en la región superior del lóbulo frontal (en mm).
+-   **xh_general_etiv_volume**: Volumen intracraneal. Es el volumen total dentro del cráneo, incluyendo el cerebro, el líquido cerebroespinal y otros componentes (en mm³).
 
--   lh_cortex_fusiform_volume: Volumen de la corteza fusiforme (en mm³).
+![Imagen 3: Volumen intercraneal](img/cerebro.png)
+
+-   **lh_cortex_superiorfrontal_thickness**: Espesor de la corteza superior frontal. Es la medida del grosor de la corteza cerebral en la región superior del lóbulo frontal (en mm).
+
+![Imagen 4: Corteza frontal superior](img/corteza_frontal_superior.png)
+
+-   **lh_cortex_fusiform_volume**: Volumen de la corteza fusiforme, una región del cerebro situada en el lóbulo temporal. (en mm³).
+
+![Imagen 4: Corteza fusiforme](img/fusiforme1.png)
+
+![Imagen 5: Corteza Fusiforme](img/fusiforme2.png)
