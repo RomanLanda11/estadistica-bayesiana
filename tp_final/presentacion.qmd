@@ -1,34 +1,35 @@
 ---
-title: "presentacion"
 format: revealjs
-editor: visual
+self-contained: true
 ---
 
-# Introducción
+## {background-image="img\caratula.png" background-size=cover}
+
+## Introducción{background-color="#F2F2F2" .smaller}
 
 El deterioro cognitivo leve (DCL) es una condición en la que las personas experimentan una disminución en sus habilidades cognitivas mayor a la esperada para su edad, sin que esto interfiera significativamente con su vida diaria. Aunque el DCL puede mantenerse estable durante años, es una señal de alerta porque puede progresar a enfermedades más graves, como la enfermedad de Alzheimer. El Alzheimer es la causa más común de demencia, se caracteriza por la acumulación de proteínas anormales en el cerebro, que dañan las neuronas y causan pérdida de memoria y otras capacidades cognitivas avanzadas. Estos cambios comienzan mucho antes de que los síntomas sean evidentes, por lo que la detección temprana es crucial.
 
-## Preguntas de Investigación
+## Preguntas de Investigación{background-color="#F2F2F2" .smaller}
 
 Para nuestra investigación, vamos a abordar las siguientes preguntas clave:
 
-### Asociación con Patologías Neurodegenerativas:
+#### Asociación con Patologías Neurodegenerativas:
 
 -   ¿Cuáles de las variables morfológicas del cerebro están más asociadas con el DCL y el Alzheimer?
 
-### Predictores Demográficos:
+#### Predictores Demográficos:
 
 -   ¿Qué características demográficas (como la edad y el sexo) pueden predecir los valores de estas variables morfológicas?
 
-### Impacto de la Tecnología:
+#### Impacto de la Tecnología:
 
 -   ¿Hay alguna relación entre las características tecnológicas (como la marca del resonador y la intensidad del campo magnético) y las variables morfológicas que estamos interesados en estudiar?
 
-## Abordaje
+## Abordaje{background-color="#F2F2F2" .smaller}
 
 Para abordar este problema, primero realizaremos un análisis exploratorio de datos para entender mejor la distribución y las características de las variables disponibles. Posteriormente, utilizaremos un enfoque bayesiano en nuestro análisis para ajustar y comparar modelos para identificar las relaciones entre variables morfológicas del cerebro, características demográficas y el riesgo de desarrollar DCL o Alzheimer. Al evaluar la importancia de cada variable en la predicción de estas condiciones, podremos seleccionar el mejor modelo que represente los datos y las relaciones de manera más precisa. Nuestro objetivo final es mejorar nuestra comprensión de los factores que contribuyen al desarrollo de enfermedades neurodegenerativas.
 
-# Descripción del Conjunto de Datos
+## Descripción del Conjunto de Datos{.scrollable background-color="#F2F2F2"}
 
 Utilizamos el conjunto de datos llamado `cerebros.csv`. Este conjunto incluye información de 128 pacientes que se sometieron a estudios de resonancia magnética en diferentes partes del mundo. Las variables en este conjunto de datos son:
 
@@ -46,35 +47,36 @@ Utilizamos el conjunto de datos llamado `cerebros.csv`. Este conjunto incluye in
 
 -   **lh_subcx_hippocampus_volume**: Es la medida del tamaño del hipocampo en el hemisferio izquierdo del cerebro (en mm³).
 
-![Imagen 1: Hipocampo](img/Hipocampo.png)
+::: {layout-ncol=2}
 
-![Imagen 2: Hipocampo](img/Hipocampo2.png)
+![Imagen 1: Hipocampo](img/Hipocampo.png){width=300}
+
+![Imagen 2: Hipocampo](img/Hipocampo2.png){width=300}
+
+:::
 
 -   **xh_general_etiv_volume**: Volumen intracraneal. Es el volumen total dentro del cráneo, incluyendo el cerebro, el líquido cerebroespinal y otros componentes (en mm³).
 
-![Imagen 3: Volumen intercraneal](img/cerebro.png)
+![Imagen 3: Volumen intercraneal](img/cerebro.png){width=300}
 
 -   **lh_cortex_superiorfrontal_thickness**: Espesor de la corteza superior frontal. Es la medida del grosor de la corteza cerebral en la región superior del lóbulo frontal (en mm).
 
-![Imagen 4: Corteza frontal superior](img/corteza_frontal_superior.png)
+![Imagen 4: Corteza frontal superior](img/corteza_frontal_superior.png){width=300}
 
 -   **lh_cortex_fusiform_volume**: Volumen de la corteza fusiforme, una región del cerebro situada en el lóbulo temporal. (en mm³).
 
+![Imagen 5: Corteza Fusiforme](img/fusiforme2.png){width=300}
 
-![Imagen 5: Corteza Fusiforme](img/fusiforme2.png)
-
-# Analisis Exploratorio
+# Analisis Exploratorio{.smaller background-color="#F2F2F2"}
 
 En primer instancia se realizo un `auto EDA` para elegir relaciones de interes y presentarlas con mayor profundidad. De alli surgió el interes en la variable/relaciones
 
--   Distribucion de la edad
 
-```{r}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Carga de librerias
 library(ggplot2)
 library(patchwork)
 library(readr)
-
 #carga de datos
 df <- read_csv("data/cerebros.csv")
 df$diag <- factor(df$diag, levels = c("HC", "MCI", "AD"))
@@ -110,10 +112,8 @@ hipo_diag <- ggplot(df)+
 dist_edad+edad_diag/hipo_diag&plot_annotation(caption = "Gráfico 1: Exploratorio de edad")&
   theme(plot.caption = element_text(hjust = 0))
 ```
-
--   Edad vs volumen de lh
-
-```{r, echo=FALSE, fig.width=8, fig.height=7}
+## Analisis Exploratorio{ background-color="#F2F2F2"}
+```{r, echo=FALSE, fig.width=10, fig.height=9, fig.align='center'}
 g1 <- ggplot(df)+
   aes(x=edad, y=lh_subcx_hippocampus_volume)+
   geom_point()+
@@ -135,9 +135,9 @@ g1/g2/g3/plot_annotation(caption = "Gráfico 2: Edad vs cuantitativas")&
   theme(plot.caption = element_text(hjust = 0))
 ```
 
--   Marca del resonador y intensidad
+## Analisis Exploratorio{ background-color="#F2F2F2"}
 
-```{r, echo=FALSE, fig.width=8, fig.height=6}
+```{r, echo=FALSE, fig.width=8, fig.height=6, fig.align='center'}
 # Gráfico de barras apiladas
 campo_res <- ggplot(df, aes(x = factor(intensidad_campo), fill = resonador_fab)) +
   geom_bar(position = "fill", width = 0.7) +
@@ -174,11 +174,10 @@ res_diag <- ggplot(df, aes(x = resonador_fab, fill = diag)) +
 (campo_res+campo_diag)/(sex_diag+res_diag)/plot_annotation(caption = "Gráfico 3: Exploratorio categoricas")&
   theme(plot.caption = element_text(hjust = 0))
 ```
-
+## Diagnóstico vs Fábrica del resonador{background-color="#F2F2F2"}
 $H_0)$ Las dos variables categóricas son independientes. Esto significa que la distribución de una variable es la misma en todas las categorías de la otra variable.
 
 $H_1)$ Las dos variables categóricas no son independientes. Esto significa que la distribución de una variable es diferente en al menos una categoría de la otra variable.
-
 
 ```{r}
 contingency_table <- table(df$diag, df$resonador_fab)
@@ -186,17 +185,27 @@ contingency_table <- table(df$diag, df$resonador_fab)
 chisq.test(contingency_table)
 ```
 
-# Propuesta y ajuste de modelos
+# Propuesta y ajuste de modelos{background-color="#F2F2F2"}
 
-## Descripción matemática
+## Descripción matemática{background-color="#F2F2F2"}
 
-Considerando que nuestro interes esta en explicar que variables muestran o dan indicio de predisposicion a desarrollar una enfermedad neurodegenerativa, analizaremos nuestra respuesta `enfermedad` como una variable binaria que toma el valor 1 si el paciente tiene una enfermedad, o 0 si su control resultó sano. 
+Considerando que nuestro interes esta en explicar que variables muestran o dan indicio de predisposicion a desarrollar una enfermedad neurodegenerativa, analizaremos nuestra respuesta `enfermedad` como una variable binaria que toma el valor 1 si el paciente tiene una enfermedad, o 0 si su control resultó sano.
 
 ```{r}
 df$enfermedad <- ifelse(df$diag=="HC",0,1)
 ```
 
-Modelaremos `enfermedad` como la respuesta de una regresión logística, matematicamente estamos diciendo que:
+Modelaremos `enfermedad` como la respuesta de una regresión logística.
+Los modelos que nos ayudan a responder los objetivos son los siguientes.
+
+## Modelado {background-color="#F2F2F2" .smaller}
 
 $$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
-$$logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i + \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$$
+
+$$logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i +$$
+$$+ \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$$
+
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
+
+$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$
+
