@@ -78,6 +78,7 @@ library(ggplot2)
 library(patchwork)
 library(readr)
 library(rstan)
+library(dplyr)
 #carga de datos
 df <- read_csv("data/cerebros.csv")
 df$diag <- factor(df$diag, levels = c("HC", "MCI", "AD"))
@@ -202,39 +203,143 @@ Considerando que nuestro interes esta en explicar que variables muestran o dan i
 df$enfermedad <- ifelse(df$diag=="HC",0,1)
 ```
 
-Modelaremos `enfermedad` como la respuesta de una regresión logística.
+Modelaremos `enfermedad` como la respuesta de una regresión logística. Además, reescalamos algunas variables
+
+
 Los modelos que nos ayudan a responder los objetivos son los siguientes.
 
 ## Modelado {background-color="#F2F2F2" .smaller}
 
-$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
-
-$$logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i +$$
-$$+ \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$$
+### Variables demograficas:
 
 $$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
 
 $$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$
+### Variables tecnologicas:
+
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
+$$logit(\pi_i) = \beta_0 + \beta_1 . Intensidad_i + \beta_2 . Phillips_i + \beta_3 . Siemens_i$$
+
+
+
+### Variables morfologicas:
+
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
+
+$logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i + \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$
+
+
 seleccion de modelos con intervalo de credibilidad 
 ver si cambian mucho los coeficientes
 modelo parsimonioso
 
-```{r}
-#Planteamos 8 modelos univariados y vemos cuales efectos resultan significativos
-stan_data <- list(
-  N = nrow(df),
-  x = df$edad,
-  y = df$enfermedad 
-)
 
-stan_model <- stan( 
-      file ="modelo_x1.stan", 
-      chains = 4,          # Cantidad de cadenas
-      warmup = 100,
-      data = stan_data,
-      model_name = "modelo_tp",
-      seed = 12119       # Para que el resultado sea reproducible
+```{r}
+df$sexo_idx <- as.numeric(as.factor(df$sexo)) #female = 1 y male=2
+
+correr_modelos=FALSE
+if(correr_modelos){
+  # Definición de los datos para Stan
+  stan_data <- list(
+    N = nrow(df),
+    edad = df$edad,
+    sexo_idx = df$sexo_idx,
+    y = df$enfermedad
   )
+  
+  stan_model <- stan( 
+    file = "modelo_demograficas.stan", 
+    data = stan_data,
+    chains = 4,           # Cantidad de cadenas
+    warmup = 400,         # Iteraciones de warmup
+    iter = 2000,          # Iteraciones totales (warmup + sampleo)
+    seed = 12119          # Para que el resultado sea reproducible
+  )
+  save(stan_model, file="modelo_demograficas.stan")
+}
+load("modelo_demograficas.stan")
+stan_model
+
+# Visualizar trazas de las cadenas
+traceplot(stan_model)
+# Pares de parámetros para detectar correlaciones
+pairs(stan_model)
+# Resumen del modelo
+print(stan_model, pars = c("a", "b"))
 
 ```
+de aca mas o menos lo que e ve e que edad si es significativa pero sexo no explica nada.
+
+
+```{r}
+df$resonador_idx <- as.numeric(as.factor(df$resonador_fab)) # 1 = GE, 2=Phillips, 3=Siemens
+df$teslas_idx <- ifelse(df$intensidad_campo == 1.5, 1, 2)  # 1 para 1.5T, 2 para 3T
+
+correr_modelos=FALSE
+if(correr_modelos){
+  # Definición de los datos para Stan
+  stan_data <- list(
+    N = nrow(df),
+    teslas = df$teslas_idx,
+    resonador_idx = df$resonador_idx,
+    y = df$enfermedad
+    )
+  
+  stan_model <- stan( 
+    file = "modelo_tecnologicas.stan", 
+    data = stan_data,
+    chains = 4,           # Cantidad de cadenas
+    warmup = 500,         # Iteraciones de warmup
+    iter = 5000,          # Iteraciones totales (warmup + sampleo)
+    seed = 12119          # Para que el resultado sea reproducible
+  )
+  save(stan_model, file="modelo_tecnologicas.stan")
+}
+load("modelo_tecnologicas.stan")
+stan_model
+
+# Visualizar trazas de las cadenas
+traceplot(stan_model)
+# Pares de parámetros para detectar correlaciones
+pairs(stan_model)
+# Resumen del modelo
+print(stan_model, pars = c("a", "b"))
+
+```
+
+```{r}
+correr_modelos=FALSE
+if(correr_modelos){
+  # Definición de los datos para Stan
+  stan_data <- list(
+    N = nrow(df),
+    hipocampo = df$lh_subcx_hippocampus_volume ,       
+    intercraneal = df$xh_general_etiv_volume,
+    fusiforme = df$lh_cortex_fusiform_volume,
+    sup_frontal = df$lh_cortex_superiorfrontal_thickness,
+    y = df$enfermedad
+    )
+  
+  stan_model <- stan( 
+    file = "modelo_morfologicas.stan", 
+    data = stan_data,
+    chains = 4,           # Cantidad de cadenas
+    warmup = 500,         # Iteraciones de warmup
+    iter = 5000,          # Iteraciones totales (warmup + sampleo)
+    seed = 12119          # Para que el resultado sea reproducible
+  )
+  save(stan_model, file="modelo_morfologicas.stan")
+}
+load("modelo_morfologicas.stan")
+stan_model
+
+# Visualizar trazas de las cadenas
+traceplot(stan_model)
+# Pares de parámetros para detectar correlaciones
+pairs(stan_model)
+# Resumen del modelo
+print(stan_model, pars = c("a", "b"))
+
+```
+
 
