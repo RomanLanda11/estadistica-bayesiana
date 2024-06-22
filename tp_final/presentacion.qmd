@@ -76,6 +76,7 @@ library(patchwork)
 library(readr)
 library(rstan)
 library(dplyr)
+library(bayesplot)
 #carga de datos
 df <- read_csv("data/cerebros.csv")
 df$diag <- factor(df$diag, levels = c("HC", "MCI", "AD"))
@@ -214,9 +215,11 @@ Los modelos que nos ayudan a responder los objetivos son los siguientes.
 
 $$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
 
-$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$ \### Variables tecnologicas:
+$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$ 
+### Variables tecnologicas:
 
-$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$ $$logit(\pi_i) = \beta_0 + \beta_1 . Intensidad_i + \beta_2 . Phillips_i + \beta_3 . Siemens_i$$
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$ 
+$$logit(\pi_i) = \beta_0 Intensidad1.5 + \beta_1 . Intensidad3_i + \beta_2 . Phillips_i + \beta_3 . Siemens_i$$
 
 ### Variables morfologicas:
 
@@ -247,20 +250,18 @@ if(correr_modelos){
     iter = 2000,          # Iteraciones totales (warmup + sampleo)
     seed = 12119          # Para que el resultado sea reproducible
   )
-  save(stan_model, file="modelo_demograficas.stan")
+  save(stan_model, file="modelo_demograficas_run.stan")
 }
-load("modelo_demograficas.stan")
+load("modelo_demograficas_run.stan")
 stan_model
 
-# Visualizar trazas de las cadenas
 traceplot(stan_model)
-# Pares de parámetros para detectar correlaciones
 pairs(stan_model)
-# Resumen del modelo
-print(stan_model, pars = c("a", "b"))
+
 
 library(bayesplot)
-mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "b[1]", "b[2]"))
+mcmc_intervals(stan_model, pars = c("a[1]", "a[2]"))
+mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
 ```
 
 de aca mas o menos lo que e ve e que edad si es significativa pero sexo no explica nada.
@@ -274,7 +275,7 @@ if(correr_modelos){
   # Definición de los datos para Stan
   stan_data <- list(
     N = nrow(df),
-    teslas = df$teslas_idx,
+    teslas_idx = df$teslas_idx,
     resonador_idx = df$resonador_idx,
     y = df$enfermedad
     )
@@ -287,7 +288,7 @@ if(correr_modelos){
     iter = 5000,          # Iteraciones totales (warmup + sampleo)
     seed = 12119          # Para que el resultado sea reproducible
   )
-  save(stan_model, file="modelo_tecnologicas.stan")
+  save(stan_model, file="modelo_tecnologicas_run.stan")
 }
 load("modelo_tecnologicas.stan")
 stan_model
@@ -297,11 +298,14 @@ traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
 
-mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "a[3]", "b[1]", "b[2]"))
+mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "a[3]"))#, "b[1]", "b[2]"))
+mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
 
 ```
 
-los ic de marca se solapan y cubren al 0, marca e intensidad no signif? pensarlo
+Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viejas no pueden usar 3t por tema implantes y demas, por eso vemos una relacion entre la enfermedad y la intensidad del campo o la marca del resonador.
+
+
 
 ```{r}
 df$fusiforme_norm <- ((df$lh_cortex_fusiform_volume)-mean(df$lh_cortex_fusiform_volume))/sd(df$lh_cortex_fusiform_volume)
@@ -329,9 +333,9 @@ if(correr_modelos){
     iter = 5000,          # Iteraciones totales (warmup + sampleo)
     seed = 12119          # Para que el resultado sea reproducible
   )
-  save(stan_model, file="modelo_morfologicas.stan")
+  save(stan_model, file="modelo_morfologicas_run.stan")
 }
-load("modelo_morfologicas.stan")
+load("modelo_morfologicas_run.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -339,6 +343,6 @@ traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
 
-mcmc_intervals(stan_model, pars = c("a", "b[1]", "b[2]", "b[3]", "b[4]"))
+mcmc_intervals(stan_model, pars = c("a", "b1", "b2", "b3", "b4"))
 
 ```

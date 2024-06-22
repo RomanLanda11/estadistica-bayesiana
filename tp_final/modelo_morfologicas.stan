@@ -32,6 +32,8 @@ model {
   b2 ~ normal(0,1);
   b3 ~ normal(0,1);
   b4 ~ normal(0,1);
+  
+  
   y ~ bernoulli_logit(a + b1*hipocampo +b2*intercraneal + b3*fusiforme + b4*sup_frontal);
 }
 
