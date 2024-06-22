@@ -320,7 +320,7 @@ if(correr_modelos){
     N = nrow(df),
     hipocampo = df$hipocampo_norm ,       
     intercraneal = df$intercraneal_norm,
-    fusiforme = df$fusiforme_norm,
+    fusiforme = df$fusiforme_norm, #no sig con la otras en el modelo
     sup_frontal = df$sup_frontal_norm,
     y = df$enfermedad
     )
@@ -333,9 +333,9 @@ if(correr_modelos){
     iter = 5000,          # Iteraciones totales (warmup + sampleo)
     seed = 12119          # Para que el resultado sea reproducible
   )
-  save(stan_model, file="modelo_morfologicas_run.stan")
+  save(stan_model, file="modelo_morfologicas_b124.stan")
 }
-load("modelo_morfologicas_run.stan")
+load("modelo_morfologicas_b124.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -343,6 +343,6 @@ traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
 
-mcmc_intervals(stan_model, pars = c("a", "b1", "b2", "b3", "b4"))
+mcmc_intervals(stan_model, pars = c("b1", "b2", "b4"))
 
 ```
