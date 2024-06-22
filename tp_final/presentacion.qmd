@@ -302,21 +302,28 @@ stan_model
 traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
-# Resumen del modelo
-print(stan_model, pars = c("a", "b"))
+
 
 ```
 
+los ic de marca se solapan y cubren al 0, marca e intensidad no signif? pensarlo
+
+
 ```{r}
+df$fusiforme_norm <- ((df$lh_cortex_fusiform_volume)-mean(df$lh_cortex_fusiform_volume))/sd(df$lh_cortex_fusiform_volume)
+df$hipocampo_norm <- ((df$lh_subcx_hippocampus_volume)-mean(df$lh_subcx_hippocampus_volume))/sd(df$lh_subcx_hippocampus_volume)
+df$intercraneal_norm <- ((df$xh_general_etiv_volume)-mean(df$xh_general_etiv_volume))/sd(df$xh_general_etiv_volume)
+df$sup_frontal_norm <- ((df$lh_cortex_superiorfrontal_thickness)-mean(df$lh_cortex_superiorfrontal_thickness))/sd(df$lh_cortex_superiorfrontal_thickness)
+
 correr_modelos=FALSE
 if(correr_modelos){
   # Definición de los datos para Stan
   stan_data <- list(
     N = nrow(df),
-    hipocampo = df$lh_subcx_hippocampus_volume ,       
-    intercraneal = df$xh_general_etiv_volume,
-    fusiforme = df$lh_cortex_fusiform_volume,
-    sup_frontal = df$lh_cortex_superiorfrontal_thickness,
+    hipocampo = df$hipocampo_norm ,       
+    intercraneal = df$intercraneal_norm,
+    fusiforme = df$fusiforme_norm,
+    sup_frontal = df$sup_frontal_norm,
     y = df$enfermedad
     )
   
@@ -337,8 +344,7 @@ stan_model
 traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
-# Resumen del modelo
-print(stan_model, pars = c("a", "b"))
+
 
 ```
 
