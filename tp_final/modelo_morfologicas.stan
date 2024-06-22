@@ -18,23 +18,24 @@ data {
 }
 
 parameters {
-  real a;
+  //real a;
   real b1; 
   real b2; 
-  real b3;
+  //real b3;
   real b4; 
   
 }
 
 model {
-  a ~ normal(0,2);
+  //a ~ normal(0,2);
   b1 ~ normal(0,1);
   b2 ~ normal(0,1);
-  b3 ~ normal(0,1);
+  //b3 ~ normal(0,1);
   b4 ~ normal(0,1);
   
   
-  y ~ bernoulli_logit(a + b1*hipocampo +b2*intercraneal + b3*fusiforme + b4*sup_frontal);
+  y ~ bernoulli_logit( b1*hipocampo + b2*intercraneal + b4*sup_frontal);
+
 }
 
 
