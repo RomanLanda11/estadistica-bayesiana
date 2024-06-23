@@ -14,3 +14,4 @@ parameters {
 model {
   y ~ bernoulli_logit(a + b * edad);
 }
+
