@@ -77,6 +77,7 @@ library(readr)
 library(rstan)
 library(dplyr)
 library(bayesplot)
+library(tidybayes)
 #carga de datos
 df <- read_csv("data/cerebros.csv")
 df$diag <- factor(df$diag, levels = c("HC", "MCI", "AD"))
@@ -313,6 +314,10 @@ df$hipocampo_norm <- ((df$lh_subcx_hippocampus_volume)-mean(df$lh_subcx_hippocam
 df$intercraneal_norm <- ((df$xh_general_etiv_volume)-mean(df$xh_general_etiv_volume))/sd(df$xh_general_etiv_volume)
 df$sup_frontal_norm <- ((df$lh_cortex_superiorfrontal_thickness)-mean(df$lh_cortex_superiorfrontal_thickness))/sd(df$lh_cortex_superiorfrontal_thickness)
 
+
+# mean(df$xh_general_etiv_volume[df$enfermedad==1])
+# mean(df$xh_general_etiv_volume[df$enfermedad==0])
+
 correr_modelos=FALSE
 if(correr_modelos){
   # Definición de los datos para Stan
@@ -333,9 +338,9 @@ if(correr_modelos){
     iter = 5000,          # Iteraciones totales (warmup + sampleo)
     seed = 12119          # Para que el resultado sea reproducible
   )
-  save(stan_model, file="modelo_morfologicas_b124.stan")
+  save(stan_model, file="modelo_morfologicas_a14.stan")
 }
-load("modelo_morfologicas_b124.stan")
+load("modelo_morfologicas_a14.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -343,6 +348,42 @@ traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
 
-mcmc_intervals(stan_model, pars = c("b1", "b2", "b4"))
+mcmc_intervals(stan_model, pars = c("a","b1", "b2", "b4"))
 
 ```
+
+```{r}
+stan_model
+
+df_draws <- as.data.frame(extract(stan_model)) # tomo las muestras en un df
+df_draws_long <- tidyr::pivot_longer(df_draws, c("a", "b1", "b2", "b4"), names_to = "param") #pivoteo la tabla
+head(df_draws_long)
+
+ggplot(df_draws_long) +
+  geom_histogram(aes(x = value), bins = 30, fill = "darkcyan") +
+  labs(x = "Valor", y = NULL) +
+  facet_wrap(~ param, ncol = 2, scales = "free") +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+```
+
+```{r}
+library(bayesplot)
+
+library(loo)
+
+loo_1 <- loo(stan_model, pars = "log_likelihood")
+loo_1
+
+
+loo_2 <- loo(stan_model, pars = "log_likelihood")
+loo_2
+loo_compare(loo_1,loo_2)
+
+
+mean(df_draws$a < 0)
+expit <- function(x) exp(x) / (1 + exp(x))
+
+```
+
+
