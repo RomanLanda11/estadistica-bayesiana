@@ -113,8 +113,8 @@ hipo_diag <- ggplot(df)+
    scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
   theme(plot.caption = element_text(hjust = 0))
 
-dist_edad+edad_diag/hipo_diag&plot_annotation(caption = "Gráfico 1: Exploratorio de edad")&
-  theme(plot.caption = element_text(hjust = 0))
+dist_edad+edad_diag/hipo_diag&plot_annotation(caption = "Variables demográficas")&
+  theme(plot.caption = element_text(hjust = 0.5))
 ```
 
 ## Analisis Exploratorio {background-color="#F2F2F2"}
@@ -124,27 +124,46 @@ g1 <- ggplot(df)+
   aes(x=edad, y=lh_subcx_hippocampus_volume,color=sexo)+
   geom_point()+
   geom_smooth(method = "lm", se=FALSE, color = "#027368")+
-  labs(x = "", y = "Vol. Hipocampo")
+  labs(x = "", y = "Vol. Hipocampo")+
+theme(legend.position = "none")
+#  guides(color = guide_legend(title = "Sexo"))+
+  # scale_color_manual(name = "Sexo",labels = c("Mujer", "Hombre"), values = c("Mujer" = "#F57C73", "Hombre" = "#00BEC3"))
 
 g2 <- ggplot(df)+
   aes(x=edad, y=lh_cortex_superiorfrontal_thickness,color=sexo)+
   geom_point()+
   geom_smooth(method = "lm", se=FALSE, color = "#027368")+
-  labs(x = "", y = "Espesor corteza sup. frontal")
+  labs(x = "", y = "Espesor corteza sup. frontal", color = "Sexo")+
+  scale_color_discrete(labels = c("Mujer", "Hombre"))+
+theme(legend.position = "bottom")
+
+grid.arrange(g1, g2, ncol = 1)
 g3 <- ggplot(df)+
   aes(x=edad, y=lh_cortex_fusiform_volume,color=sexo)+
   geom_point()+
   geom_smooth(method = "lm", se=FALSE, color = "#027368")+
-  labs(x = "Edad", y = "Vol. Corteza fusiforme")
-
+  labs(x = "Edad", y = "Vol. Corteza fusiforme")+
+  theme(legend.position = "none")
 g4 <- ggplot(df)+
   aes(x=edad, y=xh_general_etiv_volume,color=sexo)+
   geom_point()+
   geom_smooth(method = "lm", se=FALSE, color = "#027368")+
-  labs(x = "Edad", y = "Vol. Corteza fusiforme")
+  labs(x = "Edad", y = "Vol. Intracraneal", color = "Sexo")+
+  scale_color_discrete(labels = c("Mujer", "Hombre"))+
+theme(legend.position = "bottom")
 
-g1/g2/g3/g4/plot_annotation(caption = "Gráfico 2: Edad vs cuantitativas")&
-  theme(plot.caption = element_text(hjust = 0))
+grid.arrange(g3, g4, ncol = 1)
+
+
+
+(g1 | g2) /
+(g3 | g4) +plot_annotation(caption = "Gráfico de Edad vs variables morfológicas según el sexo de la persona")&
+  theme(plot.caption = element_text(hjust = 0),
+                       legend.position = 'bottom') &
+                 plot_layout(guides = 'collect')
+
+
+
 ```
 
 ## Analisis Exploratorio {background-color="#F2F2F2"}
@@ -183,7 +202,7 @@ res_diag <- ggplot(df, aes(x = resonador_fab, fill = diag)) +
    scale_fill_manual(values = c("#BAD9D6", "#53A6A6", "#027368"))+
   theme(plot.caption = element_text(hjust = 0))
 
-(campo_res+campo_diag)/(sex_diag+res_diag)/plot_annotation(caption = "Gráfico 3: Exploratorio categoricas")&
+(campo_res+campo_diag)/(sex_diag+res_diag)/plot_annotation(caption = "Exploratorio categoricas")&
   theme(plot.caption = element_text(hjust = 0))
 ```
 
@@ -227,14 +246,13 @@ Los modelos que nos ayudan a responder los objetivos son los siguientes.
 
 ## Modelado {.smaller background-color="#F2F2F2"}
 
-
 seleccion de modelos con intervalo de credibilidad ver si cambian mucho los coeficientes modelo parsimonioso
 
 ### Variables demograficas:
 
 $$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
 
-$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$ 
+$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$
 
 ```{r}
 df$sexo_idx <- as.numeric(as.factor(df$sexo)) #female = 1 y male=2
@@ -265,29 +283,33 @@ if(correr_modelos){
 load("models/modelo_demograficas_run.stan")
 stan_model
 
-#traceplot(stan_model)
-#pairs(stan_model)
+traceplot(stan_model)
+pairs(stan_model)
 
 mcmc_intervals(stan_model, pars = c("a","b1", "b2", "b3", "b4"))
 ```
 
 de aca mas o menos lo que e ve e que edad si es significativa pero sexo no explica nada.
 
-```{r}
-y_rep_1 <- extract(stan_model, "y_rep")$y_rep
-#y_rep_1[sample(2000, 200), ]
-ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
-```
-
-
-```{r}
+```{r, out.width="20%"}
 # tiene sentido hacerlo?
-loo_1demo <- loo(stan_model, pars = "log_likelihood")
+#load("")
+loo_1 <- loo(stan_model, pars = "log_likelihood")
 loo_1
-# load("")
-# loo_2 <- loo(stan_model, pars = "log_likelihood")
-# loo_2
-# loo_com
+#load("")
+loo_2 <- loo(stan_model, pars = "log_likelihood")
+loo_2
+#loo_com
+
+loo_1$estimates
+
+fila1 <- as.data.frame(loo_1$estimates)[1, ]
+names(fila1) <- c("Estimación", "Desvío Estándar")
+row.names(fila1) <- "elpd loo"
+kable(fila1) %>% 
+row_spec(0, background = "#53A6A6") %>% 
+kable_styling
+
 ```
 
 ```{r}
@@ -306,7 +328,9 @@ ggplot(df_draws_long) +
 ```
 
 ```{r}
-#mean(df_draws$a < 0)
+mean(df_draws$a < 0)
+
+
 eta_e1<- df_draws$a  + df_draws$b1
 eta_e2<- df_draws$a  + df_draws$b2
 eta_e3<- df_draws$a  + df_draws$b3
@@ -349,14 +373,19 @@ p_e4 <- data.frame(x = pi_e4) |>
   theme(plot.caption = element_text(hjust = 0))
 
 ```
+
 TODO: RO para comparacion de grupos y graficos de ppcheck
 
-
+```{r}
+# y_rep_1 <- extract(stan_model, "y_rep")$y_rep
+# ppc_dens_overlay(df$edad, y_rep_1[sample(2000, 200), ]) +
+#   labs(x = "Temperatura a las 3 p.m. (C°)", y = "Densidad") + 
+#   theme_bw()
+```
 
 ### Variables tecnologicas:
 
-$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$ 
-$$logit(\pi_i) = \beta_0 Intensidad1.5 + \beta_1 . Intensidad3_i + \beta_2 . Phillips_i + \beta_3 . Siemens_i$$
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$ $$logit(\pi_i) = \beta_0 Intensidad1.5 + \beta_1 . Intensidad3_i + \beta_2 . Phillips_i + \beta_3 . Siemens_i$$
 
 ```{r}
 df$resonador_idx <- as.numeric(as.factor(df$resonador_fab)) # 1 = GE, 2=Phillips, 3=Siemens
@@ -373,16 +402,16 @@ if(correr_modelos){
     )
   
   stan_model <- stan( 
-    file = "models/modelo_tecnologicas.stan", 
+    file = "modelo_tecnologicas.stan", 
     data = stan_data,
     chains = 4,           # Cantidad de cadenas
     warmup = 500,         # Iteraciones de warmup
     iter = 5000,          # Iteraciones totales (warmup + sampleo)
     seed = 12119          # Para que el resultado sea reproducible
   )
-  save(stan_model, file="modelo_tecnologicas_ambas.stan")
+  save(stan_model, file="modelo_tecnologicas_run.stan")
 }
-load("modelo_tecnologicas_intensidad.stan")
+load("models/modelo_tecnologicas_run.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -390,14 +419,8 @@ traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
 
-#mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "a[3]", "b[1]", "b[2]"))
-mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
-```
-
-```{r}
-y_rep_1 <- extract(stan_model, "y_rep")$y_rep
-#y_rep_1[sample(2000, 200), ]
-ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
+mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "a[3]"))#, "b[1]", "b[2]"))
+#mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
 ```
 
 Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viejas no pueden usar 3t por tema implantes y demas, por eso vemos una relacion entre la enfermedad y la intensidad del campo o la marca del resonador.
@@ -405,7 +428,7 @@ Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viej
 ```{r}
 # tiene sentido hacerlo?
 #TODO ajustar solo marca y solo intensidad y comparar
-load("models/modelo_tecnologicas_run.stan") # solo marca
+oad("models/modelo_tecnologicas_run.stan") # solo marca
 loo_1tec <- loo(stan_model, pars = "log_likelihood")
 loo_1tec
 load("models/modelo_tecnologicas_intensidad.stan") # solo intensidad
@@ -415,14 +438,35 @@ load("models/modelo_tecnologicas_ambas.stan") # amabs
 loo_3tec <- loo(stan_model, pars = "log_likelihood") 
 loo_3tec
 
-loo_compare(loo_1tec,loo_2tec,loo_3tec)
+comp_tec <- loo_compare(loo_1tec,loo_2tec,loo_3tec)
+
+fila1 <- round(as.data.frame(loo_1tec$estimates)[1, ],4)
+fila2 <- round(as.data.frame(loo_2tec$estimates)[1, ],4)
+fila3 <- round(as.data.frame(loo_3tec$estimates)[1, ],4)
+tabla1_tec <- rbind(fila1[1], fila2[1], fila3[1])
+
+columnas <- round(as.data.frame(comp_tec)[,1:2],4)
+li <- c(0, -0.382494-1.96*1.9635, -7.045310-1.96*7.0468)
+ls <- c(0, -0.382494+1.96*1.9635, -7.045310+1.96*7.0468)
+
+ic <- c("[0.0000;0.0000]", "[-4.2309;3.4659]", "[-20.8570;6.7664]")
+
+tabla1_tec <- cbind(tabla1_tec, columnas,ic)
+
+names(tabla1_tec) <- c("Estimación", "Diferencia elpd", "Desvío Estándar de la diferencia", "IC para la diferencia")
+row.names(tabla1_tec) <- c("elpd loo modelo 1", "elpd loo modelo 2","elpd loo modelo 3") 
+
+
+kable(tabla1_tec) %>% 
+row_spec(0, background = "#53A6A6") %>% 
+kable_styling
 ```
-Los modelos son iguales, nos quedamos con intensidad
 
 ```{r}
-load("models/modelo_tecnologicas_intensidad.stan") # solo intensidad
+#stan_model
+
 df_draws <- as.data.frame(extract(stan_model)) # tomo las muestras en un df
-df_draws_long <- tidyr::pivot_longer(df_draws, c("b.1", "b.2"), names_to = "param") #pivoteo la tabla
+df_draws_long <- tidyr::pivot_longer(df_draws, c("a.1", "a.2", "a.3"), names_to = "param") #pivoteo la tabla
 
 
 ggplot(df_draws_long) +
@@ -432,35 +476,42 @@ ggplot(df_draws_long) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 ```
+
 ```{r}
 #mean(df_draws$a < 0)
-eta_15<- df_draws$b.1 # + df_draws$a.1 +df_draws$a.3
-eta_3<- df_draws$b.2 
-#eta_siem<- df_draws$a.3 
-pi_15 <- expit(eta_15)
-pi_3 <- expit(eta_3)
-#pi_siem <- expit(eta_siem)
-p_15 <- data.frame(x = pi_15) |> 
+eta_ge<- df_draws$a.1 # + df_draws$a.1 +df_draws$a.3
+eta_phi<- df_draws$a.2 
+eta_siem<- df_draws$a.3 
+pi_ge <- expit(eta_ge)
+pi_phi <- expit(eta_phi)
+pi_siem <- expit(eta_siem)
+p_ge <- data.frame(x = pi_morf) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Si se uso resonador de 1.5T)", y = NULL) +
+  labs(x = "P(Enfermo | General Electric)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
-p_3 <- data.frame(x = pi_3) |> 
+p_phi <- data.frame(x = pi_phi) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Si se uso resonador de 3T)", y = NULL) +
+  labs(x = "P(Enfermo | Phillips)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
-p_15/p_3/plot_annotation(caption = "")&
+p_siem <- data.frame(x = pi_siem) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Siemens)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_ge/p_phi/p_siem/plot_annotation(caption = "")&
   theme(plot.caption = element_text(hjust = 0))
 
 ```
 
 TODO: razones de odds y ppchecks
-
 
 ### Variables morfologicas:
 
@@ -513,24 +564,33 @@ mcmc_intervals(stan_model, pars = c("a","b1", "b4"))
 ```
 
 ```{r}
-y_rep_1 <- extract(stan_model, "y_rep")$y_rep
-#y_rep_1[sample(2000, 200), ]
-ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
-
-```
-
-
-```{r}
 load("models/modelo_morfologicas_a14.stan")
 loo_1morf <- loo(stan_model, pars = "log_likelihood")
 loo_1morf
 load("models/modelo_morfologicas_a124yrep.stan")
 loo_2morf <- loo(stan_model, pars = "log_likelihood")
 loo_2morf
-loo_compare(loo_1morf,loo_2morf)
-```
-la dif entre modelos no es significativa, me quedo ocn el mas parsimonioso
+comp_morf <- loo_compare(loo_1morf,loo_2morf)
 
+fila1 <- round(as.data.frame(loo_1morf$estimates)[1, ],4)
+fila2 <- round(as.data.frame(loo_2morf$estimates)[1, ],4)
+tabla1_morf <- rbind(fila1[1], fila2[1])
+
+columnas <- round(as.data.frame(comp_morf)[,1:2],4)
+ic <- c("[0.0000;0.0000]", "[-8.7030;2.2134]")
+
+tabla1_morf <- cbind(tabla1_morf, columnas,ic)
+
+names(tabla1_morf) <- c("Estimación", "Diferencia elpd", "Desvío Estándar de la diferencia", "IC para la diferencia")
+row.names(tabla1_morf) <- c("elpd loo modelo 1", "elpd loo modelo 2") 
+
+
+kable(tabla1_morf) %>% 
+row_spec(0, background = "#53A6A6") %>% 
+kable_styling
+```
+
+la dif entre modelos no es significativa, me quedo ocn el mas parsimonioso
 
 ```{r}
 #stan_model
@@ -546,8 +606,6 @@ ggplot(df_draws_long) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 ```
-
-
 
 ```{r}
 #mean(df_draws$a < 0)
@@ -579,21 +637,34 @@ p_bajos/p_altos/plot_annotation(caption = "")&
   theme(plot.caption = element_text(hjust = 0))
 ```
 
-
-# Conclusiones
-
 ```{r}
-loo_1demo
-loo_2tec
-loo_1morf
+calcular_eta <- function(pars, x) {
+    intercepto <- pars[1]
+    pendiente <- pars[2]
+    intercepto + pendiente * x
+}
 
-loo_compare(loo_1demo, loo_2tec, loo_1morf)
+n_seq <- 100
+n_draws <- 18000
+edad_seq <- seq(30, 95, length.out = n_seq)
+
+eta_matrix <- apply(df_draws[c("a", "b1", "b4")],  1, calcular_eta, x = edad_seq)
+#dim(eta_matrix)
+
+df_lines <- data.frame(
+    eta = as.vector(eta_matrix),
+    edad = rep(edad_seq, n_draws),
+    draw = rep(seq_len(n_draws), each = n_seq)
+)
+
+head(df_lines)
+
+df_lines |>
+  ggplot(aes(x = edad, y = expit(eta))) +
+  stat_lineribbon(aes(fill_ramp = after_stat(level)), fill = "cyan", color = "grey20") +
+  labs(x = "Edad", y = "Predictor lineal") +
+  theme_bw() +
+  theme(legend.position = "none")
 ```
-el modelo de las morf es el que mejor explica.
 
-
-
-
-
-
-
+TODO: ppchecks y RO

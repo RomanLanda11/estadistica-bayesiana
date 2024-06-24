@@ -16,8 +16,8 @@ mean_enfermedad <- df_nuevo %>%
 ggplot(mean_enfermedad, aes(x = edades_grupos, y = media_enfermedad)) +
   geom_point(size = 3, color = "darkcyan") +
   labs(
-    title = "Proporción de enfermos según grupo etario",
+    caption = "Proporción de enfermos según grupo etario",
     x = "Grupo Etario",
     y = "Proporción de Enfermos"
   ) +
-  theme_minimal()
+  theme(plot.caption = element_text(hjust = 0.5))
