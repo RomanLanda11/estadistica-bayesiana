@@ -228,10 +228,13 @@ Los modelos que nos ayudan a responder los objetivos son los siguientes.
 ## Modelado {.smaller background-color="#F2F2F2"}
 
 
-
-
-
 seleccion de modelos con intervalo de credibilidad ver si cambian mucho los coeficientes modelo parsimonioso
+
+### Variables demograficas:
+
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
+
+$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$ 
 
 ```{r}
 df$sexo_idx <- as.numeric(as.factor(df$sexo)) #female = 1 y male=2
@@ -259,7 +262,7 @@ if(correr_modelos){
   )
   save(stan_model, file="modelo_demograficas_run.stan")
 }
-load("modelo_demograficas_run.stan")
+load("models/modelo_demograficas_run.stan")
 stan_model
 
 traceplot(stan_model)
@@ -312,28 +315,28 @@ pi_e4 <- expit(eta_e4)
 p_e1 <- data.frame(x = pi_e1) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | General Electric)", y = NULL) +
+  labs(x = "P(Enfermo | Menor 58)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
 p_e2 <- data.frame(x = pi_e2) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Phillips)", y = NULL) +
+  labs(x = "P(Enfermo | Entre 58 y 72)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
 p_e3 <- data.frame(x = pi_e3) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Siemens)", y = NULL) +
+  labs(x = "P(Enfermo | Entre 72 y 77)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
 p_e4 <- data.frame(x = pi_e4) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Siemens)", y = NULL) +
+  labs(x = "P(Enfermo | Mayor a 77)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
@@ -341,13 +344,16 @@ p_e4 <- data.frame(x = pi_e4) |>
   theme(plot.caption = element_text(hjust = 0))
 
 ```
+TODO: RO para comparacion de grupos y graficos de ppcheck
+
+```{r}
+# y_rep_1 <- extract(stan_model, "y_rep")$y_rep
+# ppc_dens_overlay(df$edad, y_rep_1[sample(2000, 200), ]) +
+#   labs(x = "Temperatura a las 3 p.m. (C°)", y = "Densidad") + 
+#   theme_bw()
+```
 
 
-### Variables demograficas:
-
-$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
-
-$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$ 
 ### Variables tecnologicas:
 
 $$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$ 
@@ -377,7 +383,7 @@ if(correr_modelos){
   )
   save(stan_model, file="modelo_tecnologicas_run.stan")
 }
-load("modelo_tecnologicas_run.stan")
+load("models/modelo_tecnologicas_run.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -392,6 +398,7 @@ Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viej
 
 ```{r}
 # tiene sentido hacerlo?
+#TODO ajustar solo marca y solo intensidad y comparar
 load("")
 loo_1 <- loo(stan_model, pars = "log_likelihood")
 loo_1
@@ -416,9 +423,7 @@ ggplot(df_draws_long) +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 ```
 ```{r}
-mean(df_draws$a < 0)
-
-
+#mean(df_draws$a < 0)
 eta_ge<- df_draws$a.1 # + df_draws$a.1 +df_draws$a.3
 eta_phi<- df_draws$a.2 
 eta_siem<- df_draws$a.3 
@@ -450,6 +455,9 @@ p_ge/p_phi/p_siem/plot_annotation(caption = "")&
   theme(plot.caption = element_text(hjust = 0))
 
 ```
+
+TODO: razones de odds y ppchecks
+
 
 ### Variables morfologicas:
 
@@ -489,7 +497,7 @@ if(correr_modelos){
   )
   save(stan_model, file="modelo_morfologicas_a14.stan")
 }
-load("modelo_morfologicas_a14.stan")
+load("models/modelo_morfologicas_a14.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -510,7 +518,7 @@ loo_2 <- loo(stan_model, pars = "log_likelihood")
 loo_2
 loo_compare(loo_1,loo_2)
 ```
-la dif entre modelos no es significativa, me quedo ocn el mas parsimoñoso
+la dif entre modelos no es significativa, me quedo ocn el mas parsimonioso
 
 
 ```{r}
@@ -531,54 +539,68 @@ ggplot(df_draws_long) +
 
 
 ```{r}
-mean(df_draws$a < 0)
+#mean(df_draws$a < 0)
 
-eta_morf<- df_draws$a + 
+eta_morf_bajos<- df_draws$a + 
           df_draws$b1 * quantile(df$hipocampo_norm, .25) + 
           df_draws$b4* quantile(df$sup_frontal_norm, .25)
-pi_morf <- expit(eta_morf)
-data.frame(x = pi_morf) |> 
+eta_morf_altos<- df_draws$a + 
+          df_draws$b1 * quantile(df$hipocampo_norm, .75) + 
+          df_draws$b4* quantile(df$sup_frontal_norm, .75)
+pi_morf_bajos <- expit(eta_morf_bajos)
+pi_morf_altos <- expit(eta_morf_altos)
+
+p_bajos <- data.frame(x = pi_morf_bajos) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | hipocampo y sup_frontal medias)", y = NULL) +
+  labs(x = "P(Enfermo | hipocampo y sup_frontal chicos)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
+p_altos <- data.frame(x = pi_morf_altos) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | hipocampo y sup_frontal grandes)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_bajos/p_altos/plot_annotation(caption = "")&
+  theme(plot.caption = element_text(hjust = 0))
 ```
 
 ```{r}
-# calcular_eta <- function(pars, x) {
-#     intercepto <- pars[1]
-#     pendiente <- pars[2]
-#     intercepto + pendiente * x
-# }
-# 
-# n_seq <- 100
-# n_draws <- 18000
-# edad_seq <- seq(30, 95, length.out = n_seq)
-# 
-# eta_matrix <- apply(df_draws[c("a", "b1", "b4")],  1, calcular_eta, x = edad_seq)
-# #dim(eta_matrix)
-# 
-# df_lines <- data.frame(
-#     eta = as.vector(eta_matrix),
-#     edad = rep(edad_seq, n_draws),
-#     draw = rep(seq_len(n_draws), each = n_seq)
-# )
-# 
-# head(df_lines)
-# 
-# df_lines |>
-#   ggplot(aes(x = edad, y = expit(eta))) +
-#   stat_lineribbon(aes(fill_ramp = after_stat(level)), fill = "cyan", color = "grey20") + 
-#   labs(x = "Edad", y = "Predictor lineal") +
-#   theme_bw() +
-#   theme(legend.position = "none")
+calcular_eta <- function(pars, x) {
+    intercepto <- pars[1]
+    pendiente <- pars[2]
+    intercepto + pendiente * x
+}
+
+n_seq <- 100
+n_draws <- 18000
+edad_seq <- seq(30, 95, length.out = n_seq)
+
+eta_matrix <- apply(df_draws[c("a", "b1", "b4")],  1, calcular_eta, x = edad_seq)
+#dim(eta_matrix)
+
+df_lines <- data.frame(
+    eta = as.vector(eta_matrix),
+    edad = rep(edad_seq, n_draws),
+    draw = rep(seq_len(n_draws), each = n_seq)
+)
+
+head(df_lines)
+
+df_lines |>
+  ggplot(aes(x = edad, y = expit(eta))) +
+  stat_lineribbon(aes(fill_ramp = after_stat(level)), fill = "cyan", color = "grey20") +
+  labs(x = "Edad", y = "Predictor lineal") +
+  theme_bw() +
+  theme(legend.position = "none")
 ```
 
-```{r}
+TODO: ppchecks y RO
 
-```
+
 
 
 
