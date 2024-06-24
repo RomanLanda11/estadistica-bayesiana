@@ -78,6 +78,9 @@ library(rstan)
 library(dplyr)
 library(bayesplot)
 library(tidybayes)
+library(ggdist)
+library(loo)
+expit <- function(x) exp(x) / (1 + exp(x))
 #carga de datos
 df <- read_csv("data/cerebros.csv")
 df$diag <- factor(df$diag, levels = c("HC", "MCI", "AD"))
@@ -204,6 +207,18 @@ Considerando que nuestro interes esta en explicar que variables muestran o dan i
 
 ```{r}
 df$enfermedad <- ifelse(df$diag=="HC",0,1)
+summary(df$edad)
+df <- df %>%
+  mutate(
+    menor_58 = ifelse(edad <= 58, 1, 0),
+    menor_72 = ifelse((edad <= 72)&(edad > 58), 1, 0),
+    menor_77 = ifelse((edad <= 77)&(edad > 72), 1, 0),
+    mayor_77 = ifelse(edad > 77, 1, 0)
+  )
+sum(df$menor_58)
+sum(df$menor_72)
+sum(df$menor_77)
+sum(df$mayor_77)
 ```
 
 Modelaremos `enfermedad` como la respuesta de una regresión logística. Además, reescalamos algunas variables
@@ -212,21 +227,9 @@ Los modelos que nos ayudan a responder los objetivos son los siguientes.
 
 ## Modelado {.smaller background-color="#F2F2F2"}
 
-### Variables demograficas:
 
-$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
 
-$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$ 
-### Variables tecnologicas:
 
-$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$ 
-$$logit(\pi_i) = \beta_0 Intensidad1.5 + \beta_1 . Intensidad3_i + \beta_2 . Phillips_i + \beta_3 . Siemens_i$$
-
-### Variables morfologicas:
-
-$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
-
-$logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i + \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$
 
 seleccion de modelos con intervalo de credibilidad ver si cambian mucho los coeficientes modelo parsimonioso
 
@@ -238,7 +241,10 @@ if(correr_modelos){
   # Definición de los datos para Stan
   stan_data <- list(
     N = nrow(df),
-    edad = df$edad,
+    menor_58 = df$menor_58,
+    menor_72 = df$menor_72,
+    menor_77 = df$menor_77,
+    mayor_77 = df$mayor_77,
     sexo_idx = df$sexo_idx,
     y = df$enfermedad
   )
@@ -259,13 +265,93 @@ stan_model
 traceplot(stan_model)
 pairs(stan_model)
 
+mcmc_intervals(stan_model, pars = c("a","b1", "b2", "b3", "b4"))
+```
+de aca mas o menos lo que e ve e que edad si es significativa pero sexo no explica nada.
 
-library(bayesplot)
-mcmc_intervals(stan_model, pars = c("a[1]", "a[2]"))
-mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
+```{r}
+# tiene sentido hacerlo?
+load("")
+loo_1 <- loo(stan_model, pars = "log_likelihood")
+loo_1
+load("")
+loo_2 <- loo(stan_model, pars = "log_likelihood")
+loo_2
+loo_com
 ```
 
-de aca mas o menos lo que e ve e que edad si es significativa pero sexo no explica nada.
+```{r}
+#stan_model
+
+df_draws <- as.data.frame(extract(stan_model)) # tomo las muestras en un df
+df_draws_long <- tidyr::pivot_longer(df_draws, c("a", "b1", "b2", "b3", "b4"), names_to = "param") #pivoteo la tabla
+
+
+ggplot(df_draws_long) +
+  geom_histogram(aes(x = value), bins = 30, fill = "darkcyan") +
+  labs(x = "Valor", y = NULL) +
+  facet_wrap(~ param, ncol = 2, scales = "free") +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+```
+
+```{r}
+mean(df_draws$a < 0)
+
+
+eta_e1<- df_draws$a  + df_draws$b1
+eta_e2<- df_draws$a  + df_draws$b2
+eta_e3<- df_draws$a  + df_draws$b3
+eta_e4<- df_draws$a  + df_draws$b4
+
+pi_e1 <- expit(eta_e1)
+pi_e2 <- expit(eta_e2)
+pi_e3 <- expit(eta_e3)
+pi_e4 <- expit(eta_e4)
+
+p_e1 <- data.frame(x = pi_e1) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | General Electric)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_e2 <- data.frame(x = pi_e2) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Phillips)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_e3 <- data.frame(x = pi_e3) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Siemens)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_e4 <- data.frame(x = pi_e4) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Siemens)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+(p_e1+p_e2)/(p_e3+p_e4)/plot_annotation(caption = "")&
+  theme(plot.caption = element_text(hjust = 0))
+
+```
+
+
+### Variables demograficas:
+
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
+
+$$logit(\pi_i) = \beta_0 + \beta_1 . Edad_i + \beta_2 . Sexo_i$$ 
+### Variables tecnologicas:
+
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$ 
+$$logit(\pi_i) = \beta_0 Intensidad1.5 + \beta_1 . Intensidad3_i + \beta_2 . Phillips_i + \beta_3 . Siemens_i$$
 
 ```{r}
 df$resonador_idx <- as.numeric(as.factor(df$resonador_fab)) # 1 = GE, 2=Phillips, 3=Siemens
@@ -291,7 +377,7 @@ if(correr_modelos){
   )
   save(stan_model, file="modelo_tecnologicas_run.stan")
 }
-load("modelo_tecnologicas.stan")
+load("modelo_tecnologicas_run.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -300,13 +386,76 @@ traceplot(stan_model)
 pairs(stan_model)
 
 mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "a[3]"))#, "b[1]", "b[2]"))
-mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
+#mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
+```
+Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viejas no pueden usar 3t por tema implantes y demas, por eso vemos una relacion entre la enfermedad y la intensidad del campo o la marca del resonador.
+
+```{r}
+# tiene sentido hacerlo?
+load("")
+loo_1 <- loo(stan_model, pars = "log_likelihood")
+loo_1
+load("")
+loo_2 <- loo(stan_model, pars = "log_likelihood")
+loo_2
+loo_com
+```
+
+```{r}
+#stan_model
+
+df_draws <- as.data.frame(extract(stan_model)) # tomo las muestras en un df
+df_draws_long <- tidyr::pivot_longer(df_draws, c("a.1", "a.2", "a.3"), names_to = "param") #pivoteo la tabla
+
+
+ggplot(df_draws_long) +
+  geom_histogram(aes(x = value), bins = 30, fill = "darkcyan") +
+  labs(x = "Valor", y = NULL) +
+  facet_wrap(~ param, ncol = 2, scales = "free") +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+```
+```{r}
+mean(df_draws$a < 0)
+
+
+eta_ge<- df_draws$a.1 # + df_draws$a.1 +df_draws$a.3
+eta_phi<- df_draws$a.2 
+eta_siem<- df_draws$a.3 
+pi_ge <- expit(eta_ge)
+pi_phi <- expit(eta_phi)
+pi_siem <- expit(eta_siem)
+p_ge <- data.frame(x = pi_morf) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | General Electric)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_phi <- data.frame(x = pi_phi) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Phillips)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_siem <- data.frame(x = pi_siem) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Siemens)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_ge/p_phi/p_siem/plot_annotation(caption = "")&
+  theme(plot.caption = element_text(hjust = 0))
 
 ```
 
-Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viejas no pueden usar 3t por tema implantes y demas, por eso vemos una relacion entre la enfermedad y la intensidad del campo o la marca del resonador.
+### Variables morfologicas:
 
+$$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
 
+$logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i + \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$
 
 ```{r}
 df$fusiforme_norm <- ((df$lh_cortex_fusiform_volume)-mean(df$lh_cortex_fusiform_volume))/sd(df$lh_cortex_fusiform_volume)
@@ -348,16 +497,28 @@ traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
 
-mcmc_intervals(stan_model, pars = c("a","b1", "b2", "b4"))
+mcmc_intervals(stan_model, pars = c("a","b1", "b4"))
 
 ```
 
 ```{r}
-stan_model
+load("modelo_morfologicas_a14.stan")
+loo_1 <- loo(stan_model, pars = "log_likelihood")
+loo_1
+load("modelo_morfologicas_a124yrep.stan")
+loo_2 <- loo(stan_model, pars = "log_likelihood")
+loo_2
+loo_compare(loo_1,loo_2)
+```
+la dif entre modelos no es significativa, me quedo ocn el mas parsimoñoso
+
+
+```{r}
+#stan_model
 
 df_draws <- as.data.frame(extract(stan_model)) # tomo las muestras en un df
-df_draws_long <- tidyr::pivot_longer(df_draws, c("a", "b1", "b2", "b4"), names_to = "param") #pivoteo la tabla
-head(df_draws_long)
+df_draws_long <- tidyr::pivot_longer(df_draws, c("a", "b1", "b4"), names_to = "param") #pivoteo la tabla
+
 
 ggplot(df_draws_long) +
   geom_histogram(aes(x = value), bins = 30, fill = "darkcyan") +
@@ -367,23 +528,59 @@ ggplot(df_draws_long) +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 ```
 
+
+
 ```{r}
-library(bayesplot)
-
-library(loo)
-
-loo_1 <- loo(stan_model, pars = "log_likelihood")
-loo_1
-
-
-loo_2 <- loo(stan_model, pars = "log_likelihood")
-loo_2
-loo_compare(loo_1,loo_2)
-
-
 mean(df_draws$a < 0)
-expit <- function(x) exp(x) / (1 + exp(x))
+
+eta_morf<- df_draws$a + 
+          df_draws$b1 * quantile(df$hipocampo_norm, .25) + 
+          df_draws$b4* quantile(df$sup_frontal_norm, .25)
+pi_morf <- expit(eta_morf)
+data.frame(x = pi_morf) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | hipocampo y sup_frontal medias)", y = NULL) +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
 ```
+
+```{r}
+# calcular_eta <- function(pars, x) {
+#     intercepto <- pars[1]
+#     pendiente <- pars[2]
+#     intercepto + pendiente * x
+# }
+# 
+# n_seq <- 100
+# n_draws <- 18000
+# edad_seq <- seq(30, 95, length.out = n_seq)
+# 
+# eta_matrix <- apply(df_draws[c("a", "b1", "b4")],  1, calcular_eta, x = edad_seq)
+# #dim(eta_matrix)
+# 
+# df_lines <- data.frame(
+#     eta = as.vector(eta_matrix),
+#     edad = rep(edad_seq, n_draws),
+#     draw = rep(seq_len(n_draws), each = n_seq)
+# )
+# 
+# head(df_lines)
+# 
+# df_lines |>
+#   ggplot(aes(x = edad, y = expit(eta))) +
+#   stat_lineribbon(aes(fill_ramp = after_stat(level)), fill = "cyan", color = "grey20") + 
+#   labs(x = "Edad", y = "Predictor lineal") +
+#   theme_bw() +
+#   theme(legend.position = "none")
+```
+
+```{r}
+
+```
+
+
+
 
 

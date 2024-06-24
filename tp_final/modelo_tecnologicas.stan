@@ -18,3 +18,15 @@ model {
   y ~ bernoulli_logit(a[resonador_idx]);// + b[teslas_idx]);
   //y ~ bernoulli_logit(b[teslas_idx]);
 }
+generated quantities {
+  vector[N] y_rep;
+  vector[N] log_likelihood;
+
+  for (i in 1:N) {
+    // Obtención de muestras de la distribución predictiva a posteriori
+    y_rep[i] = bernoulli_logit_rng(a[resonador_idx[i]]);
+
+    // Cálculo de la log-verosimilitud
+    log_likelihood[i] = bernoulli_logit_lpmf(y[i] | a[resonador_idx[i]]);
+  }
+}
