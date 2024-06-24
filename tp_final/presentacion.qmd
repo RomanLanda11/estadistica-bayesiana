@@ -265,22 +265,29 @@ if(correr_modelos){
 load("models/modelo_demograficas_run.stan")
 stan_model
 
-traceplot(stan_model)
-pairs(stan_model)
+#traceplot(stan_model)
+#pairs(stan_model)
 
 mcmc_intervals(stan_model, pars = c("a","b1", "b2", "b3", "b4"))
 ```
+
 de aca mas o menos lo que e ve e que edad si es significativa pero sexo no explica nada.
 
 ```{r}
+y_rep_1 <- extract(stan_model, "y_rep")$y_rep
+#y_rep_1[sample(2000, 200), ]
+ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
+```
+
+
+```{r}
 # tiene sentido hacerlo?
-load("")
-loo_1 <- loo(stan_model, pars = "log_likelihood")
+loo_1demo <- loo(stan_model, pars = "log_likelihood")
 loo_1
-load("")
-loo_2 <- loo(stan_model, pars = "log_likelihood")
-loo_2
-loo_com
+# load("")
+# loo_2 <- loo(stan_model, pars = "log_likelihood")
+# loo_2
+# loo_com
 ```
 
 ```{r}
@@ -299,9 +306,7 @@ ggplot(df_draws_long) +
 ```
 
 ```{r}
-mean(df_draws$a < 0)
-
-
+#mean(df_draws$a < 0)
 eta_e1<- df_draws$a  + df_draws$b1
 eta_e2<- df_draws$a  + df_draws$b2
 eta_e3<- df_draws$a  + df_draws$b3
@@ -346,12 +351,6 @@ p_e4 <- data.frame(x = pi_e4) |>
 ```
 TODO: RO para comparacion de grupos y graficos de ppcheck
 
-```{r}
-# y_rep_1 <- extract(stan_model, "y_rep")$y_rep
-# ppc_dens_overlay(df$edad, y_rep_1[sample(2000, 200), ]) +
-#   labs(x = "Temperatura a las 3 p.m. (C°)", y = "Densidad") + 
-#   theme_bw()
-```
 
 
 ### Variables tecnologicas:
@@ -374,16 +373,16 @@ if(correr_modelos){
     )
   
   stan_model <- stan( 
-    file = "modelo_tecnologicas.stan", 
+    file = "models/modelo_tecnologicas.stan", 
     data = stan_data,
     chains = 4,           # Cantidad de cadenas
     warmup = 500,         # Iteraciones de warmup
     iter = 5000,          # Iteraciones totales (warmup + sampleo)
     seed = 12119          # Para que el resultado sea reproducible
   )
-  save(stan_model, file="modelo_tecnologicas_run.stan")
+  save(stan_model, file="modelo_tecnologicas_ambas.stan")
 }
-load("models/modelo_tecnologicas_run.stan")
+load("modelo_tecnologicas_intensidad.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -391,28 +390,39 @@ traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
 pairs(stan_model)
 
-mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "a[3]"))#, "b[1]", "b[2]"))
-#mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
+#mcmc_intervals(stan_model, pars = c("a[1]", "a[2]", "a[3]", "b[1]", "b[2]"))
+mcmc_intervals(stan_model, pars = c("b[1]", "b[2]"))
 ```
+
+```{r}
+y_rep_1 <- extract(stan_model, "y_rep")$y_rep
+#y_rep_1[sample(2000, 200), ]
+ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
+```
+
 Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viejas no pueden usar 3t por tema implantes y demas, por eso vemos una relacion entre la enfermedad y la intensidad del campo o la marca del resonador.
 
 ```{r}
 # tiene sentido hacerlo?
 #TODO ajustar solo marca y solo intensidad y comparar
-load("")
-loo_1 <- loo(stan_model, pars = "log_likelihood")
-loo_1
-load("")
-loo_2 <- loo(stan_model, pars = "log_likelihood")
-loo_2
-loo_com
+load("models/modelo_tecnologicas_run.stan") # solo marca
+loo_1tec <- loo(stan_model, pars = "log_likelihood")
+loo_1tec
+load("models/modelo_tecnologicas_intensidad.stan") # solo intensidad
+loo_2tec <- loo(stan_model, pars = "log_likelihood")
+loo_2tec
+load("models/modelo_tecnologicas_ambas.stan") # amabs
+loo_3tec <- loo(stan_model, pars = "log_likelihood") 
+loo_3tec
+
+loo_compare(loo_1tec,loo_2tec,loo_3tec)
 ```
+Los modelos son iguales, nos quedamos con intensidad
 
 ```{r}
-#stan_model
-
+load("models/modelo_tecnologicas_intensidad.stan") # solo intensidad
 df_draws <- as.data.frame(extract(stan_model)) # tomo las muestras en un df
-df_draws_long <- tidyr::pivot_longer(df_draws, c("a.1", "a.2", "a.3"), names_to = "param") #pivoteo la tabla
+df_draws_long <- tidyr::pivot_longer(df_draws, c("b.1", "b.2"), names_to = "param") #pivoteo la tabla
 
 
 ggplot(df_draws_long) +
@@ -424,34 +434,27 @@ ggplot(df_draws_long) +
 ```
 ```{r}
 #mean(df_draws$a < 0)
-eta_ge<- df_draws$a.1 # + df_draws$a.1 +df_draws$a.3
-eta_phi<- df_draws$a.2 
-eta_siem<- df_draws$a.3 
-pi_ge <- expit(eta_ge)
-pi_phi <- expit(eta_phi)
-pi_siem <- expit(eta_siem)
-p_ge <- data.frame(x = pi_morf) |> 
+eta_15<- df_draws$b.1 # + df_draws$a.1 +df_draws$a.3
+eta_3<- df_draws$b.2 
+#eta_siem<- df_draws$a.3 
+pi_15 <- expit(eta_15)
+pi_3 <- expit(eta_3)
+#pi_siem <- expit(eta_siem)
+p_15 <- data.frame(x = pi_15) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | General Electric)", y = NULL) +
+  labs(x = "P(Enfermo | Si se uso resonador de 1.5T)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
-p_phi <- data.frame(x = pi_phi) |> 
+p_3 <- data.frame(x = pi_3) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Phillips)", y = NULL) +
+  labs(x = "P(Enfermo | Si se uso resonador de 3T)", y = NULL) +
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
-p_siem <- data.frame(x = pi_siem) |> 
-  ggplot() + 
-  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Siemens)", y = NULL) +
-  theme_bw() +
-  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
-
-p_ge/p_phi/p_siem/plot_annotation(caption = "")&
+p_15/p_3/plot_annotation(caption = "")&
   theme(plot.caption = element_text(hjust = 0))
 
 ```
@@ -510,13 +513,21 @@ mcmc_intervals(stan_model, pars = c("a","b1", "b4"))
 ```
 
 ```{r}
-load("modelo_morfologicas_a14.stan")
-loo_1 <- loo(stan_model, pars = "log_likelihood")
-loo_1
-load("modelo_morfologicas_a124yrep.stan")
-loo_2 <- loo(stan_model, pars = "log_likelihood")
-loo_2
-loo_compare(loo_1,loo_2)
+y_rep_1 <- extract(stan_model, "y_rep")$y_rep
+#y_rep_1[sample(2000, 200), ]
+ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
+
+```
+
+
+```{r}
+load("models/modelo_morfologicas_a14.stan")
+loo_1morf <- loo(stan_model, pars = "log_likelihood")
+loo_1morf
+load("models/modelo_morfologicas_a124yrep.stan")
+loo_2morf <- loo(stan_model, pars = "log_likelihood")
+loo_2morf
+loo_compare(loo_1morf,loo_2morf)
 ```
 la dif entre modelos no es significativa, me quedo ocn el mas parsimonioso
 
@@ -568,37 +579,17 @@ p_bajos/p_altos/plot_annotation(caption = "")&
   theme(plot.caption = element_text(hjust = 0))
 ```
 
+
+# Conclusiones
+
 ```{r}
-calcular_eta <- function(pars, x) {
-    intercepto <- pars[1]
-    pendiente <- pars[2]
-    intercepto + pendiente * x
-}
+loo_1demo
+loo_2tec
+loo_1morf
 
-n_seq <- 100
-n_draws <- 18000
-edad_seq <- seq(30, 95, length.out = n_seq)
-
-eta_matrix <- apply(df_draws[c("a", "b1", "b4")],  1, calcular_eta, x = edad_seq)
-#dim(eta_matrix)
-
-df_lines <- data.frame(
-    eta = as.vector(eta_matrix),
-    edad = rep(edad_seq, n_draws),
-    draw = rep(seq_len(n_draws), each = n_seq)
-)
-
-head(df_lines)
-
-df_lines |>
-  ggplot(aes(x = edad, y = expit(eta))) +
-  stat_lineribbon(aes(fill_ramp = after_stat(level)), fill = "cyan", color = "grey20") +
-  labs(x = "Edad", y = "Predictor lineal") +
-  theme_bw() +
-  theme(legend.position = "none")
+loo_compare(loo_1demo, loo_2tec, loo_1morf)
 ```
-
-TODO: ppchecks y RO
+el modelo de las morf es el que mejor explica.
 
 
 

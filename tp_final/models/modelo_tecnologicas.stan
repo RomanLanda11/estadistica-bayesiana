@@ -7,15 +7,15 @@ data {
 
 parameters {
   vector[3] a; // Intercepto para cada resonador
-  //vector[2] b; // Coeficiente para cada nivel de teslas
+  vector[2] b; // Coeficiente para cada nivel de teslas
 }
 
 model {
   // Priors
   a ~ normal(0, 1.5); // Prior para interceptos
-  //b ~ normal(0, 1.5); // Prior para coeficientes
+  b ~ normal(0, 1.5); // Prior para coeficientes
 
-  y ~ bernoulli_logit(a[resonador_idx]);// + b[teslas_idx]);
+  y ~ bernoulli_logit(a[resonador_idx] + b[teslas_idx]);
   //y ~ bernoulli_logit(b[teslas_idx]);
 }
 generated quantities {
@@ -24,9 +24,10 @@ generated quantities {
 
   for (i in 1:N) {
     // Obtención de muestras de la distribución predictiva a posteriori
-    y_rep[i] = bernoulli_logit_rng(a[resonador_idx[i]]);
+    //y_rep[i] = bernoulli_logit_rng(a[resonador_idx[i]]);
+    y_rep[i] = bernoulli_logit_rng(a[resonador_idx[i]] + b[teslas_idx[i]]);
 
     // Cálculo de la log-verosimilitud
-    log_likelihood[i] = bernoulli_logit_lpmf(y[i] | a[resonador_idx[i]]);
+    log_likelihood[i] = bernoulli_logit_lpmf(y[i] |a[resonador_idx[i]] + b[teslas_idx[i]]);
   }
 }
