@@ -321,6 +321,7 @@ p_e1 <- data.frame(x = pi_e1) |>
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
   labs(x = "P(Enfermo | Menor 58)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
@@ -328,6 +329,7 @@ p_e2 <- data.frame(x = pi_e2) |>
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
   labs(x = "P(Enfermo | Entre 58 y 72)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
@@ -335,6 +337,7 @@ p_e3 <- data.frame(x = pi_e3) |>
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
   labs(x = "P(Enfermo | Entre 72 y 77)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
@@ -342,6 +345,7 @@ p_e4 <- data.frame(x = pi_e4) |>
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
   labs(x = "P(Enfermo | Mayor a 77)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
@@ -349,7 +353,39 @@ p_e4 <- data.frame(x = pi_e4) |>
   theme(plot.caption = element_text(hjust = 0))
 
 ```
-TODO: RO para comparacion de grupos y graficos de ppcheck
+TODO: graficos de ppcheck
+
+```{r}
+# calcular_eta <- function(pars, x) {
+#     intercepto <- pars[1]
+#     pendiente <- pars[2]
+#     intercepto + pendiente * x
+# }
+# 
+# n_seq <- 100
+# n_draws <- 6400
+# edad_seq <- seq(20, 90, length.out = n_seq)
+# 
+# # (100, 4000)
+# eta_matrix <- apply(df_draws[c("a", "b1")],  1, calcular_eta, x = edad_seq)
+# 
+# 
+# df_lines <- data.frame(
+#     eta = abs(as.vector(eta_matrix)),
+#     edad = rep(edad_seq, n_draws),
+#     draw = rep(seq_len(n_draws), each = n_seq)
+# )
+# 
+# head(df_lines)
+# library(ggdist)
+# df_lines |>
+#   ggplot(aes(x = edad, y = expit(eta))) +
+#   stat_lineribbon(aes(fill_ramp = after_stat(level)), fill = "cyan", color = "grey20") + 
+#   labs(x = "Edad", y = "Predictor lineal") +
+#   theme_bw() +
+#   theme(legend.position = "none")
+
+```
 
 
 
@@ -382,7 +418,7 @@ if(correr_modelos){
   )
   save(stan_model, file="modelo_tecnologicas_ambas.stan")
 }
-load("modelo_tecnologicas_intensidad.stan")
+load("models/modelo_tecnologicas_intensidad.stan")
 stan_model
 
 # Visualizar trazas de las cadenas
@@ -404,7 +440,6 @@ Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viej
 
 ```{r}
 # tiene sentido hacerlo?
-#TODO ajustar solo marca y solo intensidad y comparar
 load("models/modelo_tecnologicas_run.stan") # solo marca
 loo_1tec <- loo(stan_model, pars = "log_likelihood")
 loo_1tec
@@ -443,14 +478,16 @@ pi_3 <- expit(eta_3)
 p_15 <- data.frame(x = pi_15) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Si se uso resonador de 1.5T)", y = NULL) +
+  labs(x = "P(Enfermo | Si se uso resonador de 1.5 T)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
 p_3 <- data.frame(x = pi_3) |> 
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
-  labs(x = "P(Enfermo | Si se uso resonador de 3T)", y = NULL) +
+  labs(x = "P(Enfermo | Si se uso resonador de 3 T)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
@@ -501,13 +538,12 @@ if(correr_modelos){
   save(stan_model, file="modelo_morfologicas_a14.stan")
 }
 load("models/modelo_morfologicas_a14.stan")
-stan_model
+#stan_model
 
 # Visualizar trazas de las cadenas
-traceplot(stan_model)
+#traceplot(stan_model)
 # Pares de parámetros para detectar correlaciones
-pairs(stan_model)
-
+#pairs(stan_model)
 mcmc_intervals(stan_model, pars = c("a","b1", "b4"))
 
 ```
@@ -549,7 +585,7 @@ ggplot(df_draws_long) +
 
 
 
-```{r}
+```{r, out.height=4}
 #mean(df_draws$a < 0)
 
 eta_morf_bajos<- df_draws$a + 
@@ -565,6 +601,7 @@ p_bajos <- data.frame(x = pi_morf_bajos) |>
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
   labs(x = "P(Enfermo | hipocampo y sup_frontal chicos)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
@@ -572,10 +609,63 @@ p_altos <- data.frame(x = pi_morf_altos) |>
   ggplot() + 
   geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
   labs(x = "P(Enfermo | hipocampo y sup_frontal grandes)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
   theme_bw() +
   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
 p_bajos/p_altos/plot_annotation(caption = "")&
+  theme(plot.caption = element_text(hjust = 0))
+```
+
+```{r}
+eta_hipo_bajos<- df_draws$a + 
+          df_draws$b1 * quantile(df$hipocampo_norm, .25)
+eta_hipo_altos<- df_draws$a + 
+          df_draws$b1 * quantile(df$hipocampo_norm, .75) 
+pi_hipo_bajos <- expit(eta_hipo_bajos)
+pi_hipo_altos <- expit(eta_hipo_altos)
+
+p_h_bajos <- data.frame(x = pi_hipo_bajos) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Valores chicos de Vol. de hipocampo)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_h_altos <- data.frame(x = pi_hipo_altos) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Valores grandes de Vol. de hipocampo)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+###############
+eta_sf_bajos<- df_draws$a + 
+          df_draws$b4 * quantile(df$sup_frontal_norm, .25)
+eta_sf_altos<- df_draws$a + 
+          df_draws$b4 * quantile(df$sup_frontal_norm, .75) 
+pi_sf_bajos <- expit(eta_sf_bajos)
+pi_sf_altos <- expit(eta_sf_altos)
+
+p_sf_bajos <- data.frame(x = pi_sf_bajos) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo | Valores chicos de Corteza Sup. frontal)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+p_sf_altos <- data.frame(x = pi_sf_altos) |> 
+  ggplot() + 
+  geom_histogram(aes(x = x), fill = "darkcyan")+#, bins = 30) +
+  labs(x = "P(Enfermo |Valores grandes de Corteza Sup. frontal)", y = NULL) +
+  scale_x_continuous(limits = c(0,1))+
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+
+
+(p_h_altos+p_h_bajos)/(p_sf_altos+p_sf_bajos)/plot_annotation(caption = "")&
   theme(plot.caption = element_text(hjust = 0))
 ```
 
