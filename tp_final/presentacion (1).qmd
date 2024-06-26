@@ -436,6 +436,22 @@ y_rep_1 <- extract(stan_model, "y_rep")$y_rep
 ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
 ```
 
+```{r}
+pi <- matrix( nrow = 200,ncol = 128)
+for (j in 1:200) {
+  pi[j,] <- rnorm(128,0,1.5)
+}
+
+pi <- expit(pi)
+#y_rep_1 <- extract(stan_model, "y_rep")$y_rep
+#y_rep_1[sample(2000, 200), ]
+bernoulli_matrix <- matrix(rbinom(200 * 128, size = 1, prob = c(pi)), nrow = 200, ncol = 128)
+
+
+ppc_bars(df$enfermedad,bernoulli_matrix)
+```
+
+
 Entendemos que hay mas resonadores de 3t marca siemmens, y que las personas viejas no pueden usar 3t por tema implantes y demas, por eso vemos una relacion entre la enfermedad y la intensidad del campo o la marca del resonador.
 
 ```{r}
@@ -506,6 +522,7 @@ $$Enfermedad_i | \pi_i \sim Bernoulli(\pi_i) $$
 $logit(\pi_i) = \beta_0 + \beta_1 . \text{Vol Hipocampo}_i + \beta_2 . \text{Espesor Corteza Sup Frontal}_i + \beta_3. \text{Vol Corteza Fusiforme}_i + \beta_4. \text{Vol Intracraneal}_i$
 
 ```{r}
+
 df$fusiforme_norm <- ((df$lh_cortex_fusiform_volume)-mean(df$lh_cortex_fusiform_volume))/sd(df$lh_cortex_fusiform_volume)
 df$hipocampo_norm <- ((df$lh_subcx_hippocampus_volume)-mean(df$lh_subcx_hippocampus_volume))/sd(df$lh_subcx_hippocampus_volume)
 df$intercraneal_norm <- ((df$xh_general_etiv_volume)-mean(df$xh_general_etiv_volume))/sd(df$xh_general_etiv_volume)
@@ -552,6 +569,22 @@ mcmc_intervals(stan_model, pars = c("a","b1", "b4"))
 y_rep_1 <- extract(stan_model, "y_rep")$y_rep
 #y_rep_1[sample(2000, 200), ]
 ppc_bars(df$enfermedad,y_rep_1[sample(2000, 200), ])
+
+```
+
+```{r}
+pi <- matrix( nrow = 200,ncol = 128)
+for (j in 1:200) {
+  pi[j,] <- rnorm(128,0,2)+ rnorm(128,0,1)*df$hipocampo_norm  + rnorm(128,0,1)*df$sup_frontal_norm
+}
+
+pi <- expit(pi)
+#y_rep_1 <- extract(stan_model, "y_rep")$y_rep
+#y_rep_1[sample(2000, 200), ]
+bernoulli_matrix <- matrix(rbinom(200 * 128, size = 1, prob = c(pi)), nrow = 200, ncol = 128)
+
+
+ppc_bars(df$enfermedad,bernoulli_matrix)
 
 ```
 
@@ -687,6 +720,42 @@ loo_compare(loo_1demo, loo_2tec, loo_1morf)
 el modelo de las morf es el que mejor explica.
 
 
+```{r}
+correr_modelos=FALSE
+if(correr_modelos){
+  # Definición de los datos para Stan
+  stan_data <- list(
+    N = nrow(df),
+    hipocampo = df$hipocampo_norm ,       
+    sup_frontal = df$sup_frontal_norm,
+    teslas_idx = df$teslas_idx,
+    menor_58 = df$menor_58,
+    menor_72 = df$menor_72,
+    menor_77 = df$menor_77,
+    mayor_77 = df$mayor_77,
+    y = df$enfermedad
+    )
+  
+  stan_model <- stan( 
+    file = "models/modelo_combinado.stan", 
+    data = stan_data,
+    chains = 4,           # Cantidad de cadenas
+    warmup = 500,         # Iteraciones de warmup
+    iter = 5000,          # Iteraciones totales (warmup + sampleo)
+    seed = 12119          # Para que el resultado sea reproducible
+  )
+  save(stan_model, file="models/modelo_combinado_rnu.stan")
+}
+
+
+mcmc_intervals(stan_model, pars = c("a","e1", "e2","e3", "e4", "m1", "m4", "t[1]", "t[2]"))
+
+
+load("models/modelo_combinado_rnu.stan")
+loo_1comb<- loo(stan_model, pars = "log_likelihood")
+
+loo_compare(loo_1morf, loo_1comb)
+```
 
 
 
