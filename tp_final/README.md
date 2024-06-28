@@ -99,3 +99,6 @@ La presentación deberá incluir:
 * Análisis exploratorio de los datos
 * Fundamentación y análisis de los modelos propuestos
 * Hallazgos, resultados y conclusiones
+
+
+![Presentación final en Prezi](https://prezi.com/p/pxu4s-13lhj9/?present=1)
