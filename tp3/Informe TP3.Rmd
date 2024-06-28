@@ -525,7 +525,7 @@ if(modo_prod){
   )
   save(stan_model, file="modelo1.RData")
 }
-load("modelo1.RData")
+load("models/modelo1.RData")
 #stan_model
 ```
 
@@ -714,7 +714,7 @@ if(modo_prod){
   x <- array(c(1.2,2.7),dim=2)
   stan_data <- list(N=2,x=x,y=y)
   stan_model_2 <- stan( 
-      file ="modelo_tp.stan", 
+      file ="models/modelo_tp.stan", 
       chains = 4,         # Cantidad de cadenas
       warmup = 100,
       data = stan_data,
@@ -722,9 +722,9 @@ if(modo_prod){
       seed = 12119       # Para que el resultado sea reproducible
   )
   stan_model_2
-  save(stan_model_2, file="modelo2.RData")
+  save(stan_model_2, file="models/modelo2.RData")
 }
-load("modelo2.RData")
+load("models/modelo2.RData")
 
 df_draws_2 <- as.data.frame(extract(stan_model_2))
 color_scheme_set(colores2)
@@ -916,9 +916,9 @@ if(modo_prod){
       seed = 12119       # Para que el resultado sea reproducible
   )
   stan_model_3
-  save(stan_model_3, file="modelo3.RData")
+  save(stan_model_3, file="models/modelo3.RData")
 }
-load("modelo3.RData")
+load("models/modelo3.RData")
 #stan_model_3 
 
 df_draws_3 <- as.data.frame(extract(stan_model_3))
