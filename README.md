@@ -48,7 +48,7 @@ The repository was created to streamline group work, so we apologize in advance 
 
 To run the ´.r´, ´.rmd´, or ´.qmd´ scripts, you only need to download the libraries and then render them.
 
-# library
+# Library
 
 To download libraries, run the following command in the console:
 
