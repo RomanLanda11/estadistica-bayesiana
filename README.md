@@ -9,7 +9,7 @@ This project was created to fulfill the objectives and assignments set throughou
 The repository was created to streamline group work, so we apologize in advance for any lack of organization.
 
 # Structure
-
+```
 ├──tp1              # Trabajo practico 1 files
 |   |
 |   ├──img              # Imagenes
@@ -42,6 +42,7 @@ The repository was created to streamline group work, so we apologize in advance 
     ├──img              # Auxiliary scripts
     |
     └──models           # Run models
+```
 
 # Instructions
 
@@ -51,7 +52,14 @@ To run the ´.r´, ´.rmd´, or ´.qmd´ scripts, you only need to download the 
 
 To download libraries, run the following command in the console:
 
-install.packages("")
+```r
+install.packages(c("dplyr", "ggplot2", "cowplot", "gridExtra", "kableExtra", 
+                   "mvtnorm", "pracma", "MASS", "rgl", "knitr", "gridGraphics", 
+                   "rstan", "bayesplot", "grid", "ggdist", "StanHeaders", 
+                   "ggthemes", "patchwork", "readr", "tidybayes", "loo"))
+```
+
+
 
 # Credits
 
@@ -60,3 +68,5 @@ install.packages("")
 - Contributor: ![Malena Irisarri](https://github.com/malenairisarri)
 
 - Contributor:  ![Simon Gazze](https://github.com/Simongazze)
+
+
