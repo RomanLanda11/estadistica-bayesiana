@@ -43,6 +43,16 @@ The repository was created to streamline group work, so we apologize in advance 
     |
     └──models           # Run models
 
+# Instructions
+
+To run the ´.r´, ´.rmd´, or ´.qmd´ scripts, you only need to download the libraries and then render them.
+
+# Libra
+
+To download libraries, run the following command in the console:
+
+install.packages("")
+
 # Credits
 
 - Repository Creator: Román Landa
